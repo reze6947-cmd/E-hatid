@@ -64,6 +64,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
 }) => {
   const [name, setName] = useState(item.name);
   const [description, setDescription] = useState(item.description || '');
