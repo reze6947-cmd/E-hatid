@@ -9,7 +9,7 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 
-const API_BASE = import.meta.env.VITE_OTP_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export const loginUser = (email: string, password: string) =>
   signInWithEmailAndPassword(auth, email, password);
