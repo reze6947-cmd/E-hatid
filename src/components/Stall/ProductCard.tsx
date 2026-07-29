@@ -23,7 +23,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, stallImage, onItemClick
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />
         {showPopularBadge && (
-          <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow">
+          <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow">
             🔥 Popular
           </span>
         )}
@@ -35,7 +35,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, stallImage, onItemClick
         )}
         <div className="flex items-center justify-between mt-2">
           <span className="font-semibold text-sm text-[var(--ion-color-primary)]">₱{item.price.toFixed(2)}</span>
-          <button className="text-xs font-semibold text-white bg-[var(--ion-color-primary)] hover:bg-[var(--ion-color-primary-shade)] px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition-all">
+          <button className="text-xs font-semibold text-white bg-[var(--ion-color-primary)] hover:bg-[var(--ion-color-primary-shade)] px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-all">
             + Add
           </button>
         </div>
