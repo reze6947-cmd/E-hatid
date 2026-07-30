@@ -38,20 +38,37 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // Allowed write fields for users updating their own profile
+    // ============================================================
+    function allowedUserFields() {
+      return ['name', 'phone', 'age', 'avatar', 'address', 'password',
+              'latitude', 'longitude'];
+    }
+
+    function isAllowedUserWrite() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(allowedUserFields());
+    }
+
+    // ============================================================
     // users/{uid}
-    // - User can read/write their own document
+    // - User can read their own document
+    // - User can update only allowed profile fields + OTP verification
     // - Admin can read/write any user document
+    // - Cloud Function (Admin SDK) handles role/roles/roleStatus changes
     // ============================================================
     match /users/{uid} {
       allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
-      allow write: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == uid && isAllowedUserWrite())
+        || isAdmin()
+      );
       allow delete: if isAdmin();
     }
 
     // ============================================================
     // Role subcollections (users/{uid}/vendorProfile, riderProfile, etc.)
-    // - Owner can read/write their own subcollection
-    // - Admin can read/write any
     // ============================================================
     match /users/{uid}/{roleProfile}/{document=**} {
       allow read: if isOwner(uid) || isAdmin();
@@ -60,10 +77,6 @@ service cloud.firestore {
 
     // ============================================================
     // stalls/{stallId}
-    // - Anyone can read a stall (public listing)
-    // - Vendor can create if they have the vendor role
-    // - Vendor can update their own stall
-    // - Admin can do everything
     // ============================================================
     match /stalls/{stallId} {
 
@@ -89,12 +102,6 @@ service cloud.firestore {
 
     // ============================================================
     // orders/{orderId}
-    // - Customer, vendor, rider, and admin can read relevant orders
-    // - Customer creates orders
-    // - Vendor updates order fulfillment
-    // - Rider updates delivery status
-    // - Customer can cancel their own order
-    // - Admin can do everything
     // ============================================================
     match /orders/{orderId} {
 
@@ -166,10 +173,6 @@ service cloud.firestore {
 
     // ============================================================
     // applications/{docId}
-    // - User can create their own application with pending status
-    // - Any authenticated user can read (for status checks)
-    // - Admin can update status (approve/reject)
-    // - No deletes by non-admin
     // ============================================================
     match /applications/{docId} {
 
@@ -190,8 +193,6 @@ service cloud.firestore {
 
     // ============================================================
     // riderLocation/{orderId}
-    // - Assigned rider can write their own location
-    // - Customer (userId), vendor, and admin can read
     // ============================================================
     match /riderLocation/{orderId} {
       allow read: if isAuthenticated()
@@ -210,13 +211,80 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // otp_requests/{docId}
+    // - COMPLETELY BLOCKED from client access
+    // - Only Cloud Functions (Admin SDK) can read/write
+    // - Protects hashed OTP and attempt tracking from client tampering
+    // ============================================================
+    match /otp_requests/{docId} {
+      allow read, write: if false;
+    }
+
+    // ============================================================
+    // suspicious_activity/{docId}
+    // - Only Cloud Functions (Admin SDK) can write
+    // - Admins can read for monitoring
+    // ============================================================
+    match /suspicious_activity/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ============================================================
     // config/{configId}
-    // - Public read (needed by customer/guest cart for fee calc)
-    // - Admin write only
     // ============================================================
     match /config/{configId} {
       allow read: if true;
       allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // notifications/{notificationId}
+    // ============================================================
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated()
+                  && (
+                    resource.data.userId == request.auth.uid
+                    || resource.data.vendorId == request.auth.uid
+                    || resource.data.riderId == request.auth.uid
+                    || isAdmin()
+                  );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated()
+                  && (
+                    resource.data.userId == request.auth.uid
+                    || resource.data.vendorId == request.auth.uid
+                    || resource.data.riderId == request.auth.uid
+                    || isAdmin()
+                  )
+                  && request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['read', 'isRead']);
+      allow delete: if isAdmin();
+    }
+
+    // ============================================================
+    // messages/{messageId}
+    // ============================================================
+    match /messages/{messageId} {
+      allow read: if isAuthenticated()
+                  && (
+                    resource.data.senderId == request.auth.uid
+                    || resource.data.recipientId == request.auth.uid
+                    || resource.data.receiverId == request.auth.uid
+                    || isAdmin()
+                  );
+      allow create: if isAuthenticated()
+                  && request.resource.data.senderId == request.auth.uid
+                  && request.resource.data.keys().hasAny(['content', 'senderId']);
+      allow update: if isAuthenticated()
+                  && (
+                    resource.data.recipientId == request.auth.uid
+                    || resource.data.receiverId == request.auth.uid
+                    || isAdmin()
+                  )
+                  && request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['read', 'isRead']);
       allow delete: if isAdmin();
     }
 

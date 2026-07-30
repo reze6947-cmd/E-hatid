@@ -13,9 +13,10 @@ interface NavbarProps {
   title?: string;
   showBack?: boolean;
   backHref?: string;
+  hideMobileTabBar?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref }) => {
+const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTabBar }) => {
   const history = useHistory();
   const location = useLocation();
   const { user, activeRole, logout } = useAuth();
@@ -163,7 +164,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref }) => {
       </header>
 
       {/* Mobile bottom tab bar */}
-      {!isGuest && links.length > 0 && (
+      {!isGuest && !hideMobileTabBar && links.length > 0 && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] safe-area-bottom shadow-lg">
           <div className="flex items-center justify-center h-16 px-2 gap-1">
             {links.map(link => {

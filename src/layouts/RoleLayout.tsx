@@ -6,6 +6,7 @@ import AppFooter from '../components/AppFooter';
 import { useAuth } from '../context/AuthContext';
 import RiderTrackingIndicator from '../components/RiderTrackingIndicator';
 
+const noMobileTabPaths = ['/verify-otp'];
 const noNavbarPaths = ['/login', '/register', '/role-selection', '/select-role', '/apply/vendor', '/apply/rider', '/admin/register'];
 
 const showFooterForRoles = ['customer'];
@@ -16,12 +17,13 @@ const RoleLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 
   const path = location.pathname;
   const showNavbar = !noNavbarPaths.some(p => path.startsWith(p));
+  const hideMobileTab = noMobileTabPaths.some(p => path.startsWith(p));
   const showFooter = showFooterForRoles.some(r => path.startsWith(`/${r}/`));
   const isRider = activeRole === 'rider' || path.startsWith('/rider/');
 
   return (
     <>
-      {showNavbar && <Navbar />}
+      {showNavbar && <Navbar hideMobileTabBar={hideMobileTab} />}
 
       <IonContent>
         <div className="min-h-full flex flex-col">

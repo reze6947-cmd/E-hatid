@@ -4,7 +4,6 @@ import { searchOutline, closeOutline, checkmarkCircle, closeCircle, personOutlin
 import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
 import { fetchAllUsers, getRoleProfile, setRoleStatus, updateUserRole, updateUserDocument, getUserDocument } from '../../services/userService';
-import { sendApprovedNotification, sendRejectedNotification } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import { User } from '../../types';
 
@@ -60,10 +59,6 @@ const AdminUsers: React.FC = () => {
     if (selectedUser?.id === uid) {
       setSelectedUser(prev => prev ? { ...prev, roleStatus: { ...prev.roleStatus, [role]: 'approved' } } : null);
     }
-    const u = users.find(x => x.id === uid);
-    if (u?.email) {
-      sendApprovedNotification(u.email, role).catch(() => {});
-    }
   };
 
   const handleReject = async (uid: string, role: string) => {
@@ -71,10 +66,6 @@ const AdminUsers: React.FC = () => {
     setUsers(prev => prev.map(u => u.id === uid ? { ...u, roleStatus: { ...u.roleStatus, [role]: 'rejected' } } : u));
     if (selectedUser?.id === uid) {
       setSelectedUser(prev => prev ? { ...prev, roleStatus: { ...prev.roleStatus, [role]: 'rejected' } } : null);
-    }
-    const u = users.find(x => x.id === uid);
-    if (u?.email) {
-      sendRejectedNotification(u.email, role).catch(() => {});
     }
   };
 

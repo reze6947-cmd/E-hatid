@@ -1,85 +1,71 @@
-You are a Senior Backend Engineer. Apply fixes to my existing Flask SMTP backend with the following STRICT rules:
+# OTP System — Implementation Summary
 
-CONSTRAINTS (VERY IMPORTANT):
+## Architecture
 
-* DO NOT restructure the project
-* DO NOT rename files
-* DO NOT change existing routes or API endpoints
-* DO NOT modify business logic (OTP generation, verification flow)
-* ONLY improve reliability, prevent timeouts, and fix CORS
-* Keep changes minimal and safe
-* Avoid scanning unrelated files
+```
+functions/
+  src/
+    index.ts              — Re-exports from controller
+    otp.controller.ts     — sendOtpEmail + verifyOtp callable functions
+    otp.service.ts        — Helpers (generateOtp, hashOtp, rate limits, IP tracking)
+src/
+  services/
+    otpService.ts         — Frontend httpsCallable wrapper with typed errors
+  pages/Auth/
+    VerifyOtp.tsx         — OTP verification UI
+  firebaseConfig.ts       — Firebase init (region: asia-southeast1)
+```
 
-GOALS:
+## Firestore Collections
 
-1. Fix SMTP timeout causing Gunicorn worker crash
-2. Prevent blocking request during email sending
-3. Ensure proper CORS headers for Vercel frontend
-4. Maintain existing API behavior
+| Collection | Access | Purpose |
+|------------|--------|---------|
+| `otp_requests` | Functions only (rules block client) | OTP hashes, attempts, expiry |
+| `suspicious_activity` | Admins read, Functions write | Abuse logging |
 
-IMPLEMENTATION STEPS:
+## Deployed Functions (asia-southeast1)
 
-1. UPDATE SMTP FUNCTION
+| Function | Runtime | Auth Required |
+|----------|---------|---------------|
+| `sendOtpEmail` | Node.js 22 | Yes |
+| `verifyOtp` | Node.js 22 | Yes |
 
-* Add timeout to SMTP connection (10 seconds)
-* Wrap in try/catch
-* Return success boolean instead of crashing
+## Rate Limits
 
-Expected pattern:
+- 60s cooldown between requests per user
+- Max 3 OTP requests per email per 10 minutes
+- Max 5 requests per IP per 10 minutes
+- Max 5 verify attempts per OTP
 
-* Use smtplib.SMTP(host, port, timeout=10)
-* Use starttls()
-* Use login()
-* Use send_message()
-* Catch exceptions and log error
+## To Enable Email Sending
 
-2. MAKE EMAIL SENDING NON-BLOCKING
+Edit `functions/.env` with real SMTP credentials:
 
-* Create a new helper function using threading
-* Run email sending in a background thread
-* DO NOT wait for SMTP inside request handler
+```env
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_USER=apikey
+SMTP_PASS=your_api_key
+SMTP_FROM=noreply@yourdomain.com
+```
 
-Pattern:
+Then rebuild and redeploy:
 
-* threading.Thread(target=send_email, args=(email, code)).start()
+```powershell
+cd functions; npm run build; firebase deploy --only functions
+```
 
-3. MODIFY ROUTES THAT SEND EMAIL (e.g. /send-otp, /resend-otp)
+## Deploy Commands
 
-* Replace direct send_email(...) with async version
-* Always return success response immediately
-* Do not block response waiting for SMTP
+```powershell
+# Functions only
+cd functions; npm run build; firebase deploy --only functions
 
-4. ADD CORS SUPPORT
+# Full deploy (functions + firestore rules)
+firebase deploy
+```
 
-* Install flask-cors if missing
-* Enable CORS globally
+## Common Issues
 
-Pattern:
-from flask_cors import CORS
-CORS(app, resources={r"/*": {"origins": "*"}})
-
-OR restrict to:
-https://e-hatid.vercel.app
-
-5. DO NOT CHANGE:
-
-* Request/response JSON structure
-* Endpoint names (/send-otp, /resend-otp, /verify-otp)
-* Existing OTP logic
-* Firebase or database logic (if any)
-
-6. OPTIONAL SAFE IMPROVEMENTS:
-
-* Add print logs for SMTP errors
-* Ensure environment variables are used (SMTP_EMAIL, SMTP_PASSWORD, SMTP_HOST, SMTP_PORT)
-
-EXPECTED RESULT:
-
-* No more Gunicorn WORKER TIMEOUT
-* API responds instantly
-* Emails send in background
-* No more CORS errors from Vercel
-* System remains fully compatible with existing frontend
-
-IMPORTANT:
-If unsure about any part of the system, DO NOT modify it. Only apply the changes above.
+- **CORS / ERR_BLOCKED_BY_CLIENT**: Disable browser adblockers for localhost, or test in Incognito
+- **500 on sendOtpEmail**: SMTP credentials not set — OTP is logged to Firebase console logs

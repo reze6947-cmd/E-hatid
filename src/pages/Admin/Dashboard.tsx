@@ -5,7 +5,6 @@ import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
 import AdminStatCard from '../../components/admin/AdminStatCard';
 import { fetchAllUsers, fetchPendingApprovals, setRoleStatus } from '../../services/userService';
-import { sendApprovedNotification, sendRejectedNotification } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminDashboard: React.FC = () => {
@@ -34,21 +33,13 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   const handleApprove = async (uid: string, role: string) => {
-    const u = pendingUsers.find(x => x.id === uid);
     await setRoleStatus(uid, role, 'approved');
     setPendingUsers(prev => prev.filter(x => x.id !== uid));
-    if (u?.email) {
-      sendApprovedNotification(u.email, role).catch(() => {});
-    }
   };
 
   const handleReject = async (uid: string, role: string) => {
-    const u = pendingUsers.find(x => x.id === uid);
     await setRoleStatus(uid, role, 'rejected');
     setPendingUsers(prev => prev.filter(x => x.id !== uid));
-    if (u?.email) {
-      sendRejectedNotification(u.email, role).catch(() => {});
-    }
   };
 
   const statCards = [

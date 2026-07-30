@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { loginUser, registerUser, logoutUser, onAuthChanged, sendOtp, verifyOtp, signInUser, sendApplicationNotification } from '../services/authService';
+import { loginUser, registerUser, logoutUser, onAuthChanged, signInUser } from '../services/authService';
 import { createUserDocument, getUserDocument, updateUserDocument, updateUserRole, saveRoleProfile } from '../services/userService';
 import { User } from '../types';
 import { UserRole } from '../types/auth';
@@ -26,7 +26,6 @@ interface AuthContextType {
   roles: string[];
   login: (email: string, password: string) => Promise<void>;
   register: (userData: Partial<User> & { password: string }) => Promise<void>;
-  completeRegistration: (otp: string) => Promise<void>;
   logout: () => void;
   continueAsGuest: () => void;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
@@ -163,7 +162,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (userData: Partial<User> & { password: string }) => {
     const { password, ...profile } = userData;
 
-    // Only customer registration — create Firebase user + doc, then send OTP
     isLoggingInRef.current = true;
     try {
       const credential = await registerUser(profile.email!, password);
@@ -175,7 +173,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsGuest(false);
         localStorage.setItem('user', JSON.stringify(normalizeUser(userData)));
       }
-      await sendOtp({ email: profile.email!, password });
     } catch (e: any) {
       if (e?.code === 'auth/email-already-in-use') {
         const credential = await signInUser(profile.email!, password);
@@ -188,25 +185,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsGuest(false);
           localStorage.setItem('user', JSON.stringify(normalizeUser(userData)));
         }
-        await sendOtp({ email: profile.email!, password });
       } else {
         isLoggingInRef.current = false;
         throw e;
       }
     }
     isLoggingInRef.current = false;
-  };
-
-  const completeRegistration = async (otp: string) => {
-    if (!user?.email || !user?.id) throw new Error('No authenticated user');
-
-    await verifyOtp({ email: user.email, otp });
-    await updateUserDocument(user.id, { emailVerified: true } as any);
-    const fresh = await getUserDocument(user.id);
-    if (fresh) {
-      setUser(normalizeUser(fresh));
-      localStorage.setItem('user', JSON.stringify(normalizeUser(fresh)));
-    }
   };
 
   const logout = async () => {
@@ -272,11 +256,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await updateUserRole(user.id, role as any);
     await saveRoleProfile(user.id, role, formData);
-    try {
-      await sendApplicationNotification(user.email!, role);
-    } catch {
-      // best-effort
-    }
 
     const fresh = await getUserDocument(user.id);
     if (fresh) {
@@ -292,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user, isGuest, isAuthenticated, authLoading,
       activeRole, roles,
-      login, register, completeRegistration, logout,
+      login, register, logout,
       continueAsGuest, updateUserProfile, refreshUser, isRoleAuthenticated,
       setActiveRole, applyForRole,
     }}>

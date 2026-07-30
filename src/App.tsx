@@ -55,8 +55,7 @@ const VendorLocationPicker = lazy(() => import('./pages/Vendor/VendorLocationPic
 const ActivityLog = lazy(() => import('./pages/Activities/ActivityLog'));
 const ReportIncident = lazy(() => import('./pages/Reports/ReportIncident'));
 const RoleSelection = lazy(() => import('./pages/Auth/RoleSelection'));
-const EmailVerification = lazy(() => import('./pages/Auth/EmailVerification'));
-const OtpVerification = lazy(() => import('./pages/Auth/OtpVerification'));
+const VerifyOtp = lazy(() => import('./pages/Auth/VerifyOtp'));
 const ApprovalPending = lazy(() => import('./pages/Auth/ApprovalPending'));
 const ApplicationRejected = lazy(() => import('./pages/Auth/ApplicationRejected'));
 import ProtectedRoute from './components/ProtectedRoute';
@@ -138,17 +137,14 @@ const App: React.FC = () => {
           <ProtectedRoute exact path="/select-role" requireAuth={true}>
             <L><RoleSelection /></L>
           </ProtectedRoute>
-          <ProtectedRoute exact path="/verify-email" requireAuth={true}>
-            <Redirect to="/verify-otp" />
+          <ProtectedRoute exact path="/verify-otp" requireAuth={true}>
+            <L><VerifyOtp /></L>
           </ProtectedRoute>
           <ProtectedRoute exact path="/approval-pending" requireAuth={true}>
             <IonPage><IonContent className="ion-content-center"><ApprovalPending /></IonContent></IonPage>
           </ProtectedRoute>
           <ProtectedRoute exact path="/application-rejected" requireAuth={true}>
             <IonPage><IonContent className="ion-content-center"><ApplicationRejected /></IonContent></IonPage>
-          </ProtectedRoute>
-          <ProtectedRoute exact path="/verify-otp" requireAuth={true}>
-            <L><OtpVerification /></L>
           </ProtectedRoute>
 
           {/* Apply Routes */}

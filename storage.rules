@@ -2,41 +2,56 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Application uploads — owner can write, any auth user can read
+    // ============================================================
+    // User avatars — owner can read/write, admin can manage
+    // ============================================================
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // Application / ID uploads — owner can write, any auth user can read
+    // ============================================================
     match /applications/{userId}/{allPaths=**} {
       allow read: if request.auth != null;
-
       allow write: if request.auth != null
         && request.auth.uid == userId
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-
       allow delete: if false;
     }
 
+    // ============================================================
     // Stall / product images — vendor can write their own, any auth user can read
+    // ============================================================
     match /stalls/{vendorId}/{allPaths=**} {
       allow read: if request.auth != null;
-
       allow write: if request.auth != null
         && request.auth.uid == vendorId
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-
       allow delete: if false;
     }
 
+    // ============================================================
     // Public logo assets — anyone can read
+    // ============================================================
     match /Logo/{allPaths=**} {
       allow read: if true;
       allow write: if false;
       allow delete: if false;
     }
 
+    // ============================================================
     // Deny everything else
+    // ============================================================
     match /{allPaths=**} {
       allow read, write: if false;
     }
-
   }
 }
