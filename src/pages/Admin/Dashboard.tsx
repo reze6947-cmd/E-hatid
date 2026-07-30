@@ -43,7 +43,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const statCards = [
-    { icon: peopleOutline, label: 'Total Users', value: String(realStats.totalUsers), gradient: 'linear-gradient(135deg, #FF5A1F 0%, #FF7A3D 100%)' },
+    { icon: peopleOutline, label: 'Total Users', value: String(realStats.totalUsers), gradient: 'linear-gradient(135deg, #6D28D9 0%, #8B5CF6 100%)' },
     { icon: bicycleOutline, label: 'Total Riders', value: String(realStats.totalRiders), gradient: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)' },
     { icon: cartOutline, label: 'Total Orders', value: String(realStats.totalOrders), gradient: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)' },
     { icon: trendingUpOutline, label: 'Total Revenue', value: `₱${realStats.totalRevenue.toLocaleString()}`, gradient: 'linear-gradient(135deg, #EF4444 0%, #F87171 100%)' },
@@ -73,8 +73,7 @@ const AdminDashboard: React.FC = () => {
                   <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>You can add new admins</p>
                 </div>
               </div>
-              <IonButton expand="block" onClick={() => history.push('/admin/users')}
-                style={{ '--background': '#EF4444', '--border-radius': '8px', height: '44px', fontSize: '14px' } as any}>
+              <IonButton expand="block" shape="round" color="danger" onClick={() => history.push('/admin/users')}>
                 <IonIcon icon={shieldCheckmarkOutline} style={{ marginRight: 8 }} />
                 Manage Admins
               </IonButton>

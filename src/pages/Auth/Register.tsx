@@ -1,19 +1,18 @@
-// src/pages/Auth/Register.tsx
 import React, { useState } from 'react';
 import {
   IonButton,
   IonInput,
   IonItem,
   IonIcon,
-  IonText,
   IonLoading,
   IonCheckbox,
   IonLabel,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/react';
 import { personOutline, mailOutline, lockClosedOutline, callOutline, eyeOutline, eyeOffOutline, calendarOutline, arrowBackOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { getAuthErrorMessage } from '../../services/authService';
 
 const COUNTRY_CODES = [
@@ -26,12 +25,9 @@ const COUNTRY_CODES = [
   { code: '+852', label: 'HK +852' },
 ];
 
-
-
 const Register: React.FC = () => {
   const history = useHistory();
   const { register } = useAuth();
-  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -80,219 +76,149 @@ const Register: React.FC = () => {
     }
   };
 
+  const formatPhone = (d: string) => {
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)} ${d.slice(3)}`;
+    return `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 10)}`;
+  };
+
   return (
     <>
       <div className="sticky top-0 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)]">
-        <button
-          onClick={() => history.goBack()}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--ion-color-primary)]"
-        >
-          <IonIcon icon={arrowBackOutline} className="text-lg" />
-        </button>
+        <IonButton fill="clear" onClick={() => history.goBack()} style={{ '--padding-start': '0', '--padding-end': '0', width: '44px', height: '44px' } as any}>
+          <IonIcon icon={arrowBackOutline} slot="icon-only" className="text-lg" />
+        </IonButton>
       </div>
-        <div style={{ maxWidth: '400px', margin: '0 auto', paddingTop: '40px', paddingBottom: '140px' }}>
-          {/* Header */}
-          <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-            <h1 style={{ 
-              fontSize: '32px', 
-              fontWeight: 800, 
-              color: 'var(--ion-color-primary)',
-              marginBottom: '8px',
-              margin: '0 0 12px 0'
-            }}>
-              Create Account
-            </h1>
-            <p style={{ color: 'var(--ion-text-color-secondary)', marginBottom: 0, fontSize: '15px' }}>
-              Join our community of food lovers
-            </p>
-          </div>
 
-          {error && (
-            <div style={{ 
-              background: '#fee2e2', 
-              padding: '12px', 
-              borderRadius: '8px', 
-              marginBottom: '24px',
-              color: '#991b1b',
-              fontSize: '14px',
-              border: '1px solid #fecaca'
-            }}>
-              {error}
-            </div>
-          )}
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Full Name</label>
-            <IonItem className="rider-input" style={{ marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any}>
-              <IonIcon icon={personOutline} slot="start" color="primary" />
-              <IonInput
-                placeholder="Your full name"
-                value={formData.name}
-                onIonChange={e => setFormData({...formData, name: e.detail.value!})}
-                style={{ '--color': 'var(--ion-text-color)' } as any}
-              />
-            </IonItem>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Email</label>
-            <IonItem className="rider-input" style={{ marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any}>
-              <IonIcon icon={mailOutline} slot="start" color="primary" />
-              <IonInput
-                type="email"
-                placeholder="your@email.com"
-                value={formData.email}
-                onIonChange={e => setFormData({...formData, email: e.detail.value!})}
-                style={{ '--color': 'var(--ion-text-color)' } as any}
-              />
-            </IonItem>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Phone</label>
-            <div style={{ display: 'flex' }}>
-              <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
-                style={{
-                  padding: '12px', flexShrink: 0,
-                  border: '1px solid var(--ion-border-color)',
-                  borderRight: 'none',
-                  borderRadius: '8px 0 0 8px',
-                  background: 'var(--ion-card-background)', color: 'var(--ion-text-color)',
-                  fontFamily: 'inherit', fontSize: '14px', cursor: 'pointer',
-                  width: '110px',
-                }}
-              >
-                {COUNTRY_CODES.map(c => (
-                  <option key={c.code} value={c.code}>{c.label}</option>
-                ))}
-              </select>
-              <input type="tel" value={(() => {
-                const d = phoneNumber;
-                if (d.length <= 3) return d;
-                if (d.length <= 6) return `${d.slice(0, 3)} ${d.slice(3)}`;
-                return `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 10)}`;
-              })()} onChange={e => {
-                const digits = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 10);
-                setPhoneNumber(digits);
-              }}
-                placeholder="912 345 6789"
-                style={{
-                  flex: 1, padding: '12px', borderRadius: '0 8px 8px 0',
-                  border: '1px solid var(--ion-border-color)',
-                  background: 'var(--ion-card-background)', color: 'var(--ion-text-color)',
-                  fontFamily: 'inherit', fontSize: '14px',
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Age</label>
-            <IonItem className="rider-input" style={{ marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any}>
-              <IonInput
-                type="number"
-                placeholder="Your age"
-                value={formData.age}
-                onIonChange={e => setFormData({...formData, age: e.detail.value!})}
-                style={{ '--color': 'var(--ion-text-color)' } as any}
-              />
-            </IonItem>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Delivery Address</label>
-            <IonItem className="rider-input" style={{ marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any}>
-              <IonInput
-                placeholder="Enter your delivery address"
-                value={formData.address}
-                onIonChange={e => setFormData({...formData, address: e.detail.value!})}
-                style={{ '--color': 'var(--ion-text-color)' } as any}
-              />
-            </IonItem>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Password</label>
-            <IonItem className="rider-input" style={{ '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any}>
-              <IonIcon icon={lockClosedOutline} slot="start" color="primary" />
-              <IonInput
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={formData.password}
-                onIonChange={e => setFormData({...formData, password: e.detail.value!})}
-                style={{ '--color': 'var(--ion-text-color)' } as any}
-              />
-              <IonButton 
-                fill="clear" 
-                slot="end"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <IonIcon icon={showPassword ? eyeOffOutline : eyeOutline} color="primary" />
-              </IonButton>
-            </IonItem>
-          </div>
-
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 }}>Confirm Password</label>
-            <IonItem className="rider-input" style={{ marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any}>
-              <IonIcon icon={lockClosedOutline} slot="start" color="primary" />
-              <IonInput
-                type="password"
-                placeholder="••••••••"
-                value={formData.confirmPassword}
-                onIonChange={e => setFormData({...formData, confirmPassword: e.detail.value!})}
-                style={{ '--color': 'var(--ion-text-color)' } as any}
-              />
-            </IonItem>
-          </div>
-
-          <IonItem lines="none" style={{ '--background': 'transparent', marginBottom: '24px' } as any}>
-            <IonCheckbox 
-              slot="start"
-              checked={agreed}
-              onIonChange={e => setAgreed(e.detail.checked)}
-              style={{ '--checkbox-background-checked': 'var(--ion-color-primary)', '--border-color-checked': 'var(--ion-color-primary)' } as any}
-            />
-            <IonLabel style={{ fontSize: '13px', color: 'var(--ion-text-color-secondary)' }}>
-              I agree to the <span style={{ color: 'var(--ion-color-primary)', fontWeight: 700 }}>Terms of Service</span> and{' '}
-              <span style={{ color: 'var(--ion-color-primary)', fontWeight: 700 }}>Privacy Policy</span>
-            </IonLabel>
-          </IonItem>
-
-          <IonButton
-            expand="block"
-            size="large"
-            className="rider-button"
-            style={{
-              '--background': 'var(--ion-color-primary)',
-              '--border-radius': '8px',
-              height: '48px',
-              fontSize: '16px',
-              fontWeight: 700,
-              marginBottom: '24px'
-            }}
-            onClick={handleRegister}
-          >
+      <div className="max-w-md mx-auto pt-10 pb-36 px-4 sm:px-0">
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--ion-color-primary)] m-0 mb-3">
             Create Account
-          </IonButton>
+          </h1>
+          <p className="text-sm sm:text-base text-[var(--ion-text-color-secondary)] m-0">
+            Join our community of food lovers
+          </p>
+        </div>
 
-          <div style={{ textAlign: 'center' }}>
-            <span style={{ color: 'var(--ion-text-color-secondary)', fontSize: '14px' }}>
-              Already have an account?{' '}
-              <span 
-                style={{ color: 'var(--ion-color-primary)', fontWeight: 700, cursor: 'pointer' }}
-                onClick={() => history.push('/login')}
-              >
-                Sign In
-              </span>
-            </span>
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-3 rounded-xl mb-6 text-sm border border-red-200 dark:border-red-800">
+            {error}
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Full Name</label>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonIcon icon={personOutline} slot="start" className="text-[var(--ion-color-primary)]" />
+            <IonInput placeholder="Your full name" value={formData.name} onIonChange={e => setFormData({...formData, name: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
+          </IonItem>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Email</label>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonIcon icon={mailOutline} slot="start" className="text-[var(--ion-color-primary)]" />
+            <IonInput type="email" placeholder="your@email.com" value={formData.email} onIonChange={e => setFormData({...formData, email: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
+          </IonItem>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Phone</label>
+          <div className="flex gap-0">
+            <IonItem className="rounded-l-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px 0 0 12px', '--min-height': '48px', '--inner-box-shadow': 'none', width: '120px' } as any}>
+              <IonSelect value={countryCode} onIonChange={e => setCountryCode(e.detail.value)} interface="popover" className="[--color:var(--ion-text-color)] text-sm">
+                {COUNTRY_CODES.map(c => (
+                  <IonSelectOption key={c.code} value={c.code}>{c.label}</IonSelectOption>
+                ))}
+              </IonSelect>
+            </IonItem>
+            <IonItem className="rounded-r-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '0 12px 12px 0', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+              <IonInput
+                type="tel"
+                placeholder="912 345 6789"
+                value={formatPhone(phoneNumber)}
+                onIonChange={e => {
+                  const digits = e.detail.value!.replace(/\D/g, '').replace(/^0+/, '').slice(0, 10);
+                  setPhoneNumber(digits);
+                }}
+                className="[--color:var(--ion-text-color)]"
+              />
+            </IonItem>
           </div>
         </div>
 
-        <p style={{ textAlign: 'center', margin: '32px 0 16px', fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>
-          By registering, you agree to our Terms of Service and Privacy Policy
-        </p>
-        <IonLoading isOpen={loading} message="Creating account..." />
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Age</label>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonIcon icon={calendarOutline} slot="start" className="text-[var(--ion-color-primary)]" />
+            <IonInput type="number" placeholder="Your age" value={formData.age} onIonChange={e => setFormData({...formData, age: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
+          </IonItem>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Delivery Address</label>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonInput placeholder="Enter your delivery address" value={formData.address} onIonChange={e => setFormData({...formData, address: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
+          </IonItem>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Password</label>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonIcon icon={lockClosedOutline} slot="start" className="text-[var(--ion-color-primary)]" />
+            <IonInput
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={formData.password}
+              onIonChange={e => setFormData({...formData, password: e.detail.value!})}
+              className="[--color:var(--ion-text-color)]"
+            />
+            <IonButton fill="clear" slot="end" onClick={() => setShowPassword(!showPassword)} className="min-h-[44px] min-w-[44px]">
+              <IonIcon icon={showPassword ? eyeOffOutline : eyeOutline} className="text-[var(--ion-color-primary)]" />
+            </IonButton>
+          </IonItem>
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Confirm Password</label>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonIcon icon={lockClosedOutline} slot="start" className="text-[var(--ion-color-primary)]" />
+            <IonInput type="password" placeholder="••••••••" value={formData.confirmPassword} onIonChange={e => setFormData({...formData, confirmPassword: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
+          </IonItem>
+        </div>
+
+        <IonItem lines="none" className="mb-6" style={{ '--background': 'transparent' } as any}>
+          <IonCheckbox slot="start" checked={agreed} onIonChange={e => setAgreed(e.detail.checked)} />
+          <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">
+            I agree to the <span className="text-[var(--ion-color-primary)] font-bold">Terms of Service</span> and{' '}
+            <span className="text-[var(--ion-color-primary)] font-bold">Privacy Policy</span>
+          </IonLabel>
+        </IonItem>
+
+        <IonButton
+          expand="block"
+          size="large"
+          shape="round"
+          className="min-h-[48px] font-bold"
+          onClick={handleRegister}
+        >
+          Create Account
+        </IonButton>
+
+        <div className="text-center mt-6">
+          <span className="text-sm text-[var(--ion-text-color-secondary)]">
+            Already have an account?{' '}
+            <span className="text-[var(--ion-color-primary)] font-bold cursor-pointer" onClick={() => history.push('/login')}>
+              Sign In
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <p className="text-center mt-8 mb-4 text-xs text-[var(--ion-text-color-secondary)] px-4">
+        By registering, you agree to our Terms of Service and Privacy Policy
+      </p>
+      <IonLoading isOpen={loading} message="Creating account..." />
     </>
   );
 };

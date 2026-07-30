@@ -237,7 +237,7 @@ const Messages: React.FC = () => {
                     <div style={{
                       width: '44px',
                       height: '44px',
-                      background: 'linear-gradient(135deg, #FF5A1F 0%, #FF7A3D 100%)',
+                      background: 'linear-gradient(135deg, #6D28D9 0%, #8B5CF6 100%)',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',

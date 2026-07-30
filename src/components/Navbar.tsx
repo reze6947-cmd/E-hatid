@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonIcon } from '@ionic/react';
+import { IonIcon, IonButton } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { logOutOutline, arrowBackOutline, sunny, moon } from 'ionicons/icons';
 import { useAuth } from '../context/AuthContext';
@@ -24,7 +24,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
   const { isDarkMode, toggleTheme } = useTheme();
 
   const isGuest = !user;
-  const links = isGuest ? [] : (navItemsByRole[activeRole || ''] || []);
+  const links = navItemsByRole[isGuest ? 'guest' : (activeRole || '')] || [];
   const desktopLinks = links;
   const cartCount = itemCount;
   const [riderOrderCount, setRiderOrderCount] = useState(0);
@@ -89,9 +89,9 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
         <div className="flex items-center w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-16">
           <div className="flex items-center gap-2 shrink-0">
             {showBack && (
-              <button onClick={() => history.push(backHref || '/')} className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--ion-color-primary)] hover:bg-[var(--ion-border-color)]/30 transition-colors -ml-1">
-                <IonIcon icon={arrowBackOutline} className="text-lg" />
-              </button>
+              <IonButton fill="clear" onClick={() => history.push(backHref || '/')} className="-ml-1" style={{ '--padding-start': '0', '--padding-end': '0', width: '36px', height: '36px' }}>
+                <IonIcon icon={arrowBackOutline} slot="icon-only" className="text-lg" />
+              </IonButton>
             )}
             <img
               src={isDarkMode ? '/Logo/Logo-dark-mode.png' : '/Logo/Logo-light-mode.png'}
@@ -104,10 +104,11 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
           {!isGuest && (
             <div className="flex items-center justify-center flex-1 gap-3">
               {desktopLinks.map(link => (
-                <button
+                <IonButton
                   key={link.path}
+                  fill="clear"
                   onClick={() => history.push(link.path)}
-                  className="flex items-center justify-center min-h-[36px]"
+                  style={{ '--padding-start': '0', '--padding-end': '0', '--background': 'transparent', '--box-shadow': 'none', height: 'auto', minHeight: '36px' }}
                 >
                   <div className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive(link.path)
@@ -132,78 +133,83 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
                       </span>
                     )}
                   </div>
-                </button>
+                </IonButton>
               ))}
             </div>
           )}
 
           <div className="flex items-center gap-1 ml-auto">
-            <button
+            <IonButton
+              fill="clear"
               onClick={toggleTheme}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-[var(--ion-text-color-secondary)] hover:bg-[var(--ion-border-color)]/30 transition-colors"
               aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{ '--padding-start': '0', '--padding-end': '0', width: '36px', height: '36px' }}
             >
-              <IonIcon icon={isDarkMode ? sunny : moon} className={`text-lg transition-transform duration-200 ${isDarkMode ? 'text-[var(--ion-color-warning)]' : ''}`} />
-            </button>
+              <IonIcon icon={isDarkMode ? sunny : moon} slot="icon-only" className={`text-lg transition-transform duration-200 ${isDarkMode ? 'text-[var(--ion-color-warning)]' : ''}`} />
+            </IonButton>
             <RoleSwitcher />
             {isGuest ? (
-              <button onClick={() => history.push('/login')} className="h-9 px-4 rounded-lg bg-[var(--ion-color-primary)] text-white text-sm font-semibold hover:opacity-90 transition-opacity">
+              <IonButton shape="round" fill="solid" color="primary" onClick={() => history.push('/login')}>
                 Log In
-              </button>
+              </IonButton>
             ) : (
-              <button
+              <IonButton
+                fill="clear"
                 onClick={handleLogout}
-                className="w-9 h-9 flex items-center justify-center rounded-lg text-[#EF4444] hover:bg-[#EF4444]/10 transition-colors"
                 aria-label="Logout"
+                style={{ '--padding-start': '0', '--padding-end': '0', width: '36px', height: '36px', color: '#EF4444' }}
               >
-                <IonIcon icon={logOutOutline} className="text-lg" />
-              </button>
+                <IonIcon icon={logOutOutline} slot="icon-only" className="text-lg" />
+              </IonButton>
             )}
           </div>
         </div>
       </header>
 
       {/* Mobile bottom tab bar */}
-      {!isGuest && !hideMobileTabBar && links.length > 0 && (
+      {!hideMobileTabBar && links.length > 0 && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] safe-area-bottom shadow-lg">
           <div className="flex items-center justify-center h-16 px-2 gap-1">
             {links.map(link => {
               const active = isActive(link.path);
               return (
-                <button
+                <IonButton
                   key={link.path}
+                  fill="clear"
                   onClick={() => history.push(link.path)}
-                  className={`flex flex-col items-center justify-center gap-0.5 flex-1 max-w-[80px] min-h-[44px] rounded-full transition-all duration-200 ${
-                    active ? 'bg-[var(--ion-color-primary)] px-4 py-2' : 'bg-[var(--ion-border-color)]/30 px-3 py-1.5'
-                  }`}
+                  style={{ '--padding-start': '0', '--padding-end': '0', '--background': 'transparent', '--box-shadow': 'none', height: 'auto', minHeight: '44px', '--border-radius': '9999px' }}
                 >
-                  <div className={`transition-transform duration-200 ${active ? 'scale-110' : ''}`}>
-                    <IonIcon
-                      icon={active ? link.activeIcon : link.icon}
-                      className={`text-xl ${active ? 'text-white' : 'text-[var(--ion-text-color-secondary)]'}`}
-                    />
-                  </div>
-                  <span className={`text-xs font-medium leading-tight ${
-                    active ? 'text-white font-semibold' : 'text-[var(--ion-text-color-secondary)]'
+                  <div className={`flex flex-col items-center justify-center gap-0.5 flex-1 max-w-[80px] min-h-[44px] rounded-full transition-all duration-200 ${
+                    active ? 'bg-[var(--ion-color-primary)] px-4 py-2' : 'bg-[var(--ion-border-color)]/30 px-3 py-1.5'
                   }`}>
-                    {link.label}
-                    {link.badge === 'cart' && cartCount > 0 && (
-                      <span style={badgeStyle(active)}>
-                        {cartCount > 99 ? '99+' : cartCount}
-                      </span>
-                    )}
-                    {activeRole === 'rider' && link.path === '/rider/orders' && riderOrderCount > 0 && (
-                      <span style={badgeStyle(active)}>
-                        {riderOrderCount > 99 ? '99+' : riderOrderCount}
-                      </span>
-                    )}
-                    {activeRole === 'customer' && link.path === '/customer/orders' && customerOrderCount > 0 && (
-                      <span style={badgeStyle(active)}>
-                        {customerOrderCount > 99 ? '99+' : customerOrderCount}
-                      </span>
-                    )}
-                  </span>
-                </button>
+                    <div className={`transition-transform duration-200 ${active ? 'scale-110' : ''}`}>
+                      <IonIcon
+                        icon={active ? link.activeIcon : link.icon}
+                        className={`text-xl ${active ? 'text-white' : 'text-[var(--ion-text-color-secondary)]'}`}
+                      />
+                    </div>
+                    <span className={`text-xs font-medium leading-tight ${
+                      active ? 'text-white font-semibold' : 'text-[var(--ion-text-color-secondary)]'
+                    }`}>
+                      {link.label}
+                      {link.badge === 'cart' && cartCount > 0 && (
+                        <span style={badgeStyle(active)}>
+                          {cartCount > 99 ? '99+' : cartCount}
+                        </span>
+                      )}
+                      {activeRole === 'rider' && link.path === '/rider/orders' && riderOrderCount > 0 && (
+                        <span style={badgeStyle(active)}>
+                          {riderOrderCount > 99 ? '99+' : riderOrderCount}
+                        </span>
+                      )}
+                      {activeRole === 'customer' && link.path === '/customer/orders' && customerOrderCount > 0 && (
+                        <span style={badgeStyle(active)}>
+                          {customerOrderCount > 99 ? '99+' : customerOrderCount}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </IonButton>
               );
             })}
           </div>

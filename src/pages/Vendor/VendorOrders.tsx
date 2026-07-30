@@ -15,7 +15,7 @@ import PageHeader from '../../components/ui/PageHeader';
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
   accepted: { color: '#3B82F6', label: 'Accepted' },
-  preparing: { color: '#FF5A1F', label: 'Preparing' },
+  preparing: { color: '#7C3AED', label: 'Preparing' },
   ready: { color: '#10B981', label: 'Ready' },
   delivering: { color: '#8B5CF6', label: 'Delivering' },
   delivered: { color: '#10B981', label: 'Delivered' },
@@ -153,7 +153,7 @@ const VendorOrders: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="text-center p-12"><IonSpinner name="crescent" /></div>
+            <div className="text-center p-12"><IonSpinner /></div>
           ) : filteredOrders.length === 0 ? (
             <IonCard className="rounded-xl shadow"><IonCardContent><p className="text-center text-[var(--ion-text-color-secondary)] m-0">You don't have any orders yet</p></IonCardContent></IonCard>
           ) : (
@@ -203,19 +203,21 @@ const VendorOrders: React.FC = () => {
                     {order.status === 'pending' && (
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <IonButton
-                          style={{ flex: 1, '--background': 'var(--ion-color-success)' }}
+                          className="flex-1"
+                          color="success"
                           disabled={isProcessing(order.id)}
                           onClick={(e) => { e.stopPropagation(); handleAccept(order); }}
                         >
-                          {isProcessing(order.id) ? <IonSpinner name="crescent" /> : <IonIcon icon={checkmarkOutline} slot="start" />}
+                          {isProcessing(order.id) ? <IonSpinner /> : <IonIcon icon={checkmarkOutline} slot="start" />}
                           Accept
                         </IonButton>
                         <IonButton
-                          style={{ flex: 1, '--background': 'var(--ion-color-danger)' }}
+                          className="flex-1"
+                          color="danger"
                           disabled={isProcessing(order.id)}
                           onClick={(e) => { e.stopPropagation(); openDeclineModal(order.id); }}
                         >
-                          {isProcessing(order.id) ? <IonSpinner name="crescent" /> : <IonIcon icon={closeOutline} slot="start" />}
+                          {isProcessing(order.id) ? <IonSpinner /> : <IonIcon icon={closeOutline} slot="start" />}
                           Decline
                         </IonButton>
                       </div>
@@ -224,7 +226,7 @@ const VendorOrders: React.FC = () => {
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <IonButton
                           expand="block"
-                          style={{ '--background': 'var(--ion-color-primary)' }}
+                          color="primary"
                           disabled={isProcessing(order.id)}
                           onClick={async (e) => {
                             e.stopPropagation();
@@ -241,7 +243,7 @@ const VendorOrders: React.FC = () => {
                             }
                           }}
                         >
-                          {isProcessing(order.id) ? <IonSpinner name="crescent" /> : <IonIcon icon={checkmarkOutline} slot="start" />}
+                          {isProcessing(order.id) ? <IonSpinner /> : <IonIcon icon={checkmarkOutline} slot="start" />}
                           Mark as Ready
                         </IonButton>
                       </div>
@@ -262,7 +264,7 @@ const VendorOrders: React.FC = () => {
             </IonButtons>
             <IonTitle>Decline Order</IonTitle>
             <IonButtons slot="end">
-              <IonButton onClick={confirmDecline} style={{ '--color': '#EF4444', fontWeight: 700 }}>Confirm</IonButton>
+              <IonButton onClick={confirmDecline} color="danger" className="font-bold">Confirm</IonButton>
             </IonButtons>
           </IonToolbar>
         </IonHeader>

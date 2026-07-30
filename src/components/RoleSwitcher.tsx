@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { swapHorizontalOutline, checkmarkCircle, time, closeCircle } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { roleHomePaths } from '../config/routesByRole';
 
@@ -18,6 +19,7 @@ const statusColor: Record<string, string> = {
 
 const RoleSwitcher: React.FC = () => {
   const { user, roles, setActiveRole, activeRole } = useAuth();
+  const history = useHistory();
   const [open, setOpen] = useState(false);
 
   if (!user || roles.length <= 1) return null;
@@ -26,9 +28,9 @@ const RoleSwitcher: React.FC = () => {
     try {
       await setActiveRole(role);
       setOpen(false);
-      window.location.href = roleHomePaths[role] || '/';
-    } catch {
-      // blocked
+      history.push(roleHomePaths[role] || '/');
+    } catch (err) {
+      console.error('Role switch failed:', err);
     }
   };
 

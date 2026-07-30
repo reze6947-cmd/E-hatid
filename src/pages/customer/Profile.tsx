@@ -1,10 +1,14 @@
-// src/pages/User/Profile.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import {
   IonButton,
   IonIcon,
+  IonInput,
+  IonItem,
+  IonSelect,
+  IonSelectOption,
+  IonLabel,
 } from '@ionic/react';
-import { personOutline, mailOutline, callOutline, locationOutline, logOutOutline, cameraOutline, checkmarkCircleOutline, closeCircleOutline, swapHorizontalOutline, checkmarkCircle, time, closeCircle, searchOutline } from 'ionicons/icons';
+import { personOutline, mailOutline, callOutline, locationOutline, logOutOutline, cameraOutline, checkmarkCircleOutline, closeCircleOutline, swapHorizontalOutline, checkmarkCircle, time, closeCircle } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -64,7 +68,6 @@ const formatPhone = (digits: string, code: string) => {
 
 const UserProfile: React.FC = () => {
   const { user, updateUserProfile, logout, roles, activeRole, setActiveRole, refreshUser } = useAuth();
-  const { itemCount } = useCart();
   const history = useHistory();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -127,219 +130,168 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <>
-
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 flex-1 md:pt-8">
-          {/* Avatar */}
-          <div className="text-center mb-4 pt-4">
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="w-[88px] h-[88px] rounded-full mx-auto mb-4 cursor-pointer relative overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center"
-            >
-              {user?.avatar ? (
-                <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <IonIcon icon={personOutline} className="text-[44px] text-white" />
-              )}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/40 py-1 flex items-center justify-center">
-                <IonIcon icon={cameraOutline} className="text-sm text-white" />
-              </div>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
-            <h1 className="text-2xl font-bold text-[var(--ion-text-color)] m-0 mb-1">
-              {name}
-            </h1>
-            <p className="text-sm text-[var(--ion-text-color-secondary)] m-0">
-              Member since 2024
-            </p>
+    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 flex-1 md:pt-8">
+      <div className="text-center mb-4 pt-4">
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="w-[88px] h-[88px] rounded-full mx-auto mb-4 cursor-pointer relative overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center"
+        >
+          {user?.avatar ? (
+            <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+          ) : (
+            <IonIcon icon={personOutline} className="text-[44px] text-white" />
+          )}
+          <div className="absolute bottom-0 left-0 right-0 bg-black/40 py-1 flex items-center justify-center">
+            <IonIcon icon={cameraOutline} className="text-sm text-white" />
           </div>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
+        <h1 className="text-2xl font-bold text-[var(--ion-text-color)] m-0 mb-1">{name}</h1>
+        <p className="text-sm text-[var(--ion-text-color-secondary)] m-0">Member since 2024</p>
+      </div>
 
-          {/* Contact Info */}
-          <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
-            <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
-              Contact Information
-            </h3>
+      <div className="bg-[var(--ion-card-background)] rounded-2xl p-4 sm:p-6 mb-4 border border-[var(--ion-border-color)]">
+        <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">Contact Information</h3>
 
-            {/* Name */}
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <IonIcon icon={personOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</span>
-              </div>
-              <input type="text" value={name} onChange={e => setName(e.target.value)}
-                className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-              />
-            </div>
-
-            {/* Email */}
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <IonIcon icon={mailOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">Email</span>
-                <span style={{ marginLeft: '8px', display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '2px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: 600, background: user?.emailVerified ? '#10B98120' : '#F59E0B20', color: user?.emailVerified ? '#10B981' : '#F59E0B' }}>
-                  <IonIcon icon={user?.emailVerified ? checkmarkCircleOutline : closeCircleOutline} style={{ fontSize: '11px' }} />
-                  {user?.emailVerified ? 'Verified' : 'Unverified'}
-                </span>
-              </div>
-              <input type="email" value={email} onChange={e => { setEmail(e.target.value); setEmailError(isValidEmail(e.target.value) ? '' : 'Invalid email address'); }}
-                className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-              />
-              {emailError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{emailError}</span>}
-            </div>
-
-            {/* Address */}
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <IonIcon icon={locationOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">Delivery Address</span>
-              </div>
-              <p className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0">
-                {user?.address || 'No address set'}
-              </p>
-            </div>
-
-            {/* Delivery Location */}
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <IonIcon icon={locationOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">Delivery Location</span>
-              </div>
-              {user?.latitude != null && user?.longitude != null && (
-                <p className="text-xs text-[var(--ion-color-primary)] mb-2">📍 {user.latitude.toFixed(6)}, {user.longitude.toFixed(6)}</p>
-              )}
-              <div className="w-full h-[200px] rounded-lg overflow-hidden border border-[var(--ion-border-color)]" style={{ position: 'relative', isolation: 'isolate' }}>
-                <MapContainer
-                  center={[user?.latitude || 14.5995, user?.longitude || 120.9842]}
-                  zoom={15}
-                  style={{ width: '100%', height: '100%' }}
-                  zoomControl={false}
-                  dragging={false}
-                  scrollWheelZoom={false}
-                  touchZoom={false}
-                  doubleClickZoom={false}
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  {user?.latitude != null && user?.longitude != null && (
-                    <Marker position={[user.latitude, user.longitude]} icon={profileMarkerIcon} />
-                  )}
-                  <MapFixer />
-                </MapContainer>
-              </div>
-              <IonButton
-                expand="block"
-                className="mt-3 h-12 text-base font-semibold"
-                style={{ '--border-radius': '8px' }}
-                onClick={() => history.push('/customer/location')}
-              >
-                Edit Address
-              </IonButton>
-            </div>
-
-            {/* Age */}
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">Age</span>
-              </div>
-              <input type="number" value={age} onChange={e => setAge(e.target.value)}
-                placeholder="Your age"
-                className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <div className="flex items-center mb-2">
-                <IonIcon icon={callOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">Phone</span>
-              </div>
-              <div className="flex gap-2">
-                <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
-                  className="p-2 rounded-lg shrink-0 border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm cursor-pointer"
-                >
-                  {COUNTRY_CODES.map(c => (
-                    <option key={c.code} value={c.code}>{c.label}</option>
-                  ))}
-                </select>
-                <input type="tel" value={phoneNumber} onChange={e => { const digits = e.target.value.replace(/\D/g, ''); setPhoneNumber(formatPhone(digits, countryCode)); setPhoneError(digits.length >= 7 ? '' : digits.length === 0 ? 'Phone is required' : 'Phone must be at least 7 digits'); }}
-                  placeholder="9123456789"
-                  className="flex-1 p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-                />
-              </div>
-              {phoneError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{phoneError}</span>}
-            </div>
+        <div className="mb-4">
+          <div className="flex items-center mb-2">
+            <IonIcon icon={personOutline} className="mr-2 text-[var(--ion-color-primary)]" />
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</IonLabel>
           </div>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+            <IonInput value={name} onIonChange={e => setName(e.detail.value!)} className="[--color:var(--ion-text-color)] text-sm" />
+          </IonItem>
+        </div>
 
-          {/* Save Button */}
-          <IonButton expand="block" onClick={handleSave} disabled={!!emailError || !!phoneError || !name.trim() || !email.trim()}
-            className="h-12 text-base font-semibold mb-3"
-            style={{
-              '--background': 'var(--ion-color-primary)',
-              '--border-radius': '8px',
-            }}
-          >
-            Save Changes
-          </IonButton>
-
-          {/* Switch Role */}
-          <div className="md:hidden w-full mb-4">
-            {roles.length > 1 && (
-              <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
-                <div className="flex items-center gap-2 mb-2">
-                  <IonIcon icon={swapHorizontalOutline} className="text-[var(--ion-color-primary)] text-base" />
-                  <h3 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 uppercase opacity-70">Switch Role</h3>
-                </div>
-                <div className="space-y-2">
-                  {roles.map(role => {
-                    const st = role === 'customer' ? (user?.emailVerified ? 'approved' : 'pending') : (user?.roleStatus?.[role] || 'pending');
-                    const disabled = st === 'pending' || st === 'rejected';
-                    const active = role === activeRole;
-                    const stIcon = st === 'approved' ? checkmarkCircle : st === 'rejected' ? closeCircle : time;
-                    const stColor = st === 'approved' ? '#10B981' : st === 'rejected' ? '#EF4444' : '#F59E0B';
-                    return (
-                      <button
-                        key={role}
-                        disabled={disabled}
-                        onClick={() => { setActiveRole(role); }}
-                        className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-lg transition-colors text-sm ${
-                          active ? 'bg-[var(--ion-color-primary)]/10' : 'hover:bg-[var(--ion-border-color)]/30'
-                        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        <span className="flex-1 text-left font-medium capitalize text-[var(--ion-text-color)]">{role}</span>
-                        <div className="flex items-center gap-2">
-                          {active && (
-                            <span className="text-[10px] font-semibold text-white bg-[var(--ion-color-primary)] px-2 py-0.5 rounded-full">Active</span>
-                          )}
-                          <IonIcon icon={stIcon} style={{ fontSize: '14px', color: stColor }} />
-                          <span className="text-xs capitalize text-[var(--ion-text-color-secondary)]">{st}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+        <div className="mb-4">
+          <div className="flex items-center mb-2">
+            <IonIcon icon={mailOutline} className="mr-2 text-[var(--ion-color-primary)]" />
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Email</IonLabel>
+            <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: user?.emailVerified ? '#10B98120' : '#F59E0B20', color: user?.emailVerified ? '#10B981' : '#F59E0B' }}>
+              <IonIcon icon={user?.emailVerified ? checkmarkCircleOutline : closeCircleOutline} className="text-[11px]" />
+              {user?.emailVerified ? 'Verified' : 'Unverified'}
+            </span>
           </div>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+            <IonInput type="email" value={email} onIonChange={e => { setEmail(e.detail.value!); setEmailError(isValidEmail(e.detail.value!) ? '' : 'Invalid email address'); }} className="[--color:var(--ion-text-color)] text-sm" />
+          </IonItem>
+          {emailError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{emailError}</span>}
+        </div>
 
-          {/* Sign Out */}
-          <IonButton expand="block" color="danger" className="md:hidden h-12 text-base font-semibold" onClick={() => { logout(); history.push('/guest/home'); }}
-            style={{
-              '--border-radius': '8px',
-            }}
-          >
-            <IonIcon icon={logOutOutline} slot="start" />
-            Sign Out
+        <div className="mb-4">
+          <div className="flex items-center mb-2">
+            <IonIcon icon={locationOutline} className="mr-2 text-[var(--ion-color-primary)]" />
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Delivery Address</IonLabel>
+          </div>
+          <p className="w-full p-3 rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0">
+            {user?.address || 'No address set'}
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex items-center mb-2">
+            <IonIcon icon={locationOutline} className="mr-2 text-[var(--ion-color-primary)]" />
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Delivery Location</IonLabel>
+          </div>
+          {user?.latitude != null && user?.longitude != null && (
+            <p className="text-xs text-[var(--ion-color-primary)] mb-2">📍 {user.latitude.toFixed(6)}, {user.longitude.toFixed(6)}</p>
+          )}
+          <div className="w-full h-[200px] rounded-xl overflow-hidden border border-[var(--ion-border-color)]" style={{ position: 'relative', isolation: 'isolate' }}>
+            <MapContainer center={[user?.latitude || 14.5995, user?.longitude || 120.9842]} zoom={15} style={{ width: '100%', height: '100%' }} zoomControl={false} dragging={false} scrollWheelZoom={false} touchZoom={false} doubleClickZoom={false}>
+              <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {user?.latitude != null && user?.longitude != null && <Marker position={[user.latitude, user.longitude]} icon={profileMarkerIcon} />}
+              <MapFixer />
+            </MapContainer>
+          </div>
+          <IonButton expand="block" shape="round" className="mt-3 font-semibold" onClick={() => history.push('/customer/location')}>
+            Edit Address
           </IonButton>
         </div>
-    </>
+
+        <div className="mb-4">
+          <div className="flex items-center mb-2">
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Age</IonLabel>
+          </div>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+            <IonInput type="number" placeholder="Your age" value={age} onIonChange={e => setAge(e.detail.value!)} className="[--color:var(--ion-text-color)] text-sm" />
+          </IonItem>
+        </div>
+
+        <div>
+          <div className="flex items-center mb-2">
+            <IonIcon icon={callOutline} className="mr-2 text-[var(--ion-color-primary)]" />
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Phone</IonLabel>
+          </div>
+          <div className="flex gap-2">
+            <IonItem className="rounded-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)', width: '130px' } as any}>
+              <IonSelect value={countryCode} onIonChange={e => setCountryCode(e.detail.value)} interface="popover" className="[--color:var(--ion-text-color)] text-sm">
+                {COUNTRY_CODES.map(c => (
+                  <IonSelectOption key={c.code} value={c.code}>{c.label}</IonSelectOption>
+                ))}
+              </IonSelect>
+            </IonItem>
+            <IonItem className="rounded-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+              <IonInput type="tel" placeholder="9123456789" value={phoneNumber} onIonChange={e => { const digits = e.detail.value!.replace(/\D/g, ''); setPhoneNumber(formatPhone(digits, countryCode)); setPhoneError(digits.length >= 7 ? '' : digits.length === 0 ? 'Phone is required' : 'Phone must be at least 7 digits'); }} className="[--color:var(--ion-text-color)] text-sm" />
+            </IonItem>
+          </div>
+          {phoneError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{phoneError}</span>}
+        </div>
+      </div>
+
+      <IonButton expand="block" shape="round" className="min-h-[48px] font-semibold mb-3" onClick={handleSave} disabled={!!emailError || !!phoneError || !name.trim() || !email.trim()}>
+        Save Changes
+      </IonButton>
+
+      <div className="md:hidden w-full mb-4">
+        {roles.length > 1 && (
+          <div className="bg-[var(--ion-card-background)] rounded-2xl p-4 border border-[var(--ion-border-color)]">
+            <div className="flex items-center gap-2 mb-2">
+              <IonIcon icon={swapHorizontalOutline} className="text-[var(--ion-color-primary)] text-base" />
+              <h3 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 uppercase opacity-70">Switch Role</h3>
+            </div>
+            <div className="space-y-2">
+              {roles.map(role => {
+                const st = role === 'customer' ? (user?.emailVerified ? 'approved' : 'pending') : (user?.roleStatus?.[role] || 'pending');
+                const disabled = st === 'pending' || st === 'rejected';
+                const active = role === activeRole;
+                const stIcon = st === 'approved' ? checkmarkCircle : st === 'rejected' ? closeCircle : time;
+                const stColor = st === 'approved' ? '#10B981' : st === 'rejected' ? '#EF4444' : '#F59E0B';
+                return (
+                  <IonButton
+                    key={role}
+                    disabled={disabled}
+                    fill="clear"
+                    onClick={() => { setActiveRole(role); }}
+                    className="w-full min-h-[48px]"
+                    style={{ '--background': active ? 'var(--ion-color-primary)' : 'transparent', '--border-radius': '12px', '--padding-start': '16px', '--padding-end': '16px', '--box-shadow': 'none' } as any}
+                  >
+                    <span className="flex-1 text-left font-medium capitalize">{role}</span>
+                    <div className="flex items-center gap-2">
+                      {active && (
+                        <span className="text-[10px] font-semibold text-white bg-[var(--ion-color-primary)] px-2 py-0.5 rounded-full">Active</span>
+                      )}
+                      <IonIcon icon={stIcon} style={{ fontSize: '14px', color: stColor }} />
+                      <span className="text-xs capitalize text-[var(--ion-text-color-secondary)]">{st}</span>
+                    </div>
+                  </IonButton>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <IonButton expand="block" shape="round" color="danger" className="md:hidden min-h-[48px] font-semibold mb-6" onClick={() => { logout(); history.push('/guest/home'); }}>
+        <IonIcon icon={logOutOutline} slot="start" />
+        Sign Out
+      </IonButton>
+    </div>
   );
 };
 

@@ -327,8 +327,8 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
               <IonButton
                 fill="clear"
                 size="small"
-                onClick={addOption}
-                style={{ '--color': 'var(--ion-color-primary)', fontSize: '12px' }}
+                color="primary"
+                style={{ fontSize: '12px' }}
               >
                 <IonIcon icon={addCircleOutline} slot="start" />
                 Add Group
@@ -486,8 +486,8 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
               <IonButton
                 fill="clear"
                 size="small"
-                onClick={addAddOn}
-                style={{ '--color': 'var(--ion-color-success)', fontSize: '12px' }}
+                color="success"
+                style={{ fontSize: '12px' }}
               >
                 <IonIcon icon={addCircleOutline} slot="start" />
                 Add Add-on
@@ -549,15 +549,10 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
                 {item.name && onDelete && (
                   <IonButton
                     fill="outline"
+                    color="danger"
+                    shape="round"
+                    className="font-semibold text-sm min-h-[42px]"
                     onClick={handleDelete}
-                    style={{
-                      '--border-color': 'var(--ion-color-danger)',
-                      '--color': 'var(--ion-color-danger)',
-                      '--border-radius': '10px',
-                      fontWeight: 600,
-                      fontSize: '13px',
-                      minHeight: '42px',
-                    }}
                   >
                     <IonIcon icon={trashOutline} slot="start" className="text-sm" />
                     Delete
@@ -567,28 +562,17 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
               <div className="flex gap-3">
                 <IonButton
                   fill="outline"
+                  shape="round"
+                  className="font-semibold text-sm min-h-[42px]"
                   onClick={onClose}
-                  style={{
-                    '--border-color': 'var(--ion-border-color)',
-                    '--color': 'var(--ion-text-color-secondary)',
-                    '--border-radius': '10px',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                    minHeight: '42px',
-                  }}
                 >
                   Cancel
                 </IonButton>
                 <IonButton
+                  shape="round"
+                  className="font-semibold text-sm min-h-[42px]"
                   onClick={handleSave}
                   disabled={!isValid || (!hasChanges && !!item.name)}
-                  style={{
-                    '--background': 'var(--ion-color-primary)',
-                    '--border-radius': '10px',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                    minHeight: '42px',
-                  }}
                 >
                   <IonIcon icon={checkmarkCircle} slot="start" className="text-sm" />
                   {item.name ? 'Save Product' : 'Create Product'}
@@ -604,33 +588,21 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
           {item.name && onDelete && (
             <IonButton
               fill="outline"
-              onClick={handleDelete}
-              className="min-h-[48px] shrink-0"
-              style={{
-                '--border-color': 'var(--ion-color-danger)',
-                '--color': 'var(--ion-color-danger)',
-                '--border-radius': '12px',
-                fontWeight: 600,
-                fontSize: '14px',
-                margin: 0,
-                minWidth: '56px',
-              }}
+              color="danger"
+              shape="round"
+              className="min-h-[48px] shrink-0 font-semibold"
+              style={{ margin: 0, minWidth: '56px' }}
             >
               <IonIcon icon={trashOutline} />
             </IonButton>
           )}
           <IonButton
             expand="block"
+            shape="round"
+            className="min-h-[48px] font-bold"
             onClick={handleSave}
             disabled={!isValid || (!hasChanges && !!item.name)}
-            className="min-h-[48px]"
-            style={{
-              '--background': 'var(--ion-color-primary)',
-              '--border-radius': '12px',
-              fontWeight: 700,
-              fontSize: '14px',
-              margin: 0,
-            }}
+            style={{ margin: 0 }}
           >
             <IonIcon icon={checkmarkCircle} slot="start" />
             {item.name ? 'Save Changes' : 'Create Product'}
@@ -704,17 +676,11 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
           </div>
           <IonButtons slot="end">
             <IonButton
+              shape="round"
+              className="font-semibold text-xs min-h-[32px]"
               onClick={handleSave}
               disabled={!isValid || (!hasChanges && !!item.name)}
-              style={{
-                '--background': 'rgba(255,255,255,0.2)',
-                '--color': '#fff',
-                '--border-radius': '8px',
-                fontWeight: 600,
-                fontSize: '12px',
-                minHeight: '32px',
-                backdropFilter: 'blur(8px)',
-              }}
+              style={{ '--background': 'rgba(255,255,255,0.2)', '--color': '#fff', backdropFilter: 'blur(8px)' }}
             >
               <IonIcon icon={checkmarkCircle} slot="start" className="text-xs" />
               Save

@@ -147,11 +147,7 @@ const UserCart: React.FC = () => {
               </div>
               <h2 className="m-0 mb-2 font-bold text-base sm:text-lg text-[var(--ion-text-color)]">Your cart is empty</h2>
               <p className="m-0 text-sm text-[var(--ion-text-color-secondary)]">Add some delicious food to get started!</p>
-              <IonButton
-                className="mt-6 min-h-[44px]"
-                style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px' }}
-                onClick={() => history.push('/customer/home')}
-              >
+              <IonButton shape="round" className="mt-6 min-h-[44px]" onClick={() => history.push('/customer/home')}>
                 Browse Stalls
               </IonButton>
             </div>
@@ -165,7 +161,7 @@ const UserCart: React.FC = () => {
                   <p className="m-0 mb-0.5 text-xs text-[var(--ion-text-color-secondary)]">Deliver to</p>
                   <p className="m-0 font-semibold text-sm sm:text-base text-[var(--ion-text-color)] truncate">Current Location</p>
                 </div>
-                <IonButton fill="clear" className="shrink-0 min-h-[44px] text-sm" style={{ '--color': 'var(--ion-color-primary)' }} onClick={() => history.push('/customer/location')}>Change</IonButton>
+                <IonButton fill="clear" size="small" className="font-semibold" onClick={() => history.push('/customer/location')}>Change</IonButton>
               </div>
 
               {stall && (
@@ -260,8 +256,8 @@ const UserCart: React.FC = () => {
                       <IonButton
                         size="small"
                         fill="outline"
+                        shape="round"
                         className="mt-2 min-h-[36px] w-full sm:w-auto"
-                        style={{ '--border-color': 'var(--ion-color-primary)', '--color': 'var(--ion-color-primary)' }}
                         onClick={() => history.push('/verify-otp')}
                       >
                         Go to Verification
@@ -269,15 +265,11 @@ const UserCart: React.FC = () => {
                     </div>
                   )}
                   <IonButton
-                    expand="block" size="large"
-                    className="min-h-[48px] sm:min-h-[56px]"
-                    style={{
-                      '--background': user?.emailVerified === true ? 'var(--ion-color-primary)' : '#9CA3AF',
-                      '--border-radius': '8px',
-                      fontSize: '15px', fontWeight: 700,
-                    }}
+                    expand="block" size="large" shape="round"
+                    className="min-h-[48px] sm:min-h-[56px] font-bold"
                     onClick={handlePayment}
                     disabled={loading || user?.emailVerified !== true}
+                    style={{ '--background': user?.emailVerified === true ? undefined : '#9CA3AF' } as any}
                   >
                     {loading ? 'Processing...' : user?.emailVerified === true ? `Pay ₱${finalTotal.toFixed(2)}` : 'Verify email to order'}
                   </IonButton>

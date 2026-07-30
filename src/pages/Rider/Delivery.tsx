@@ -35,7 +35,7 @@ const stallMarkerIcon = L.divIcon({
 
 const riderMarkerIcon = L.divIcon({
   className: '',
-  html: '<div style="background:#FF5A1F;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>',
+  html: '<div style="background:#6D28D9;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>',
   iconSize: [30, 30],
   iconAnchor: [15, 15],
 });
@@ -169,7 +169,7 @@ const RiderDelivery: React.FC = () => {
     return (
       <div className="text-center p-12">
         <p className="text-[var(--ion-text-color-secondary)]">Order not found</p>
-        <IonButton style={{ '--background': 'var(--ion-color-primary)' }} onClick={() => history.push('/rider/orders')}>
+        <IonButton color="primary" onClick={() => history.push('/rider/orders')}>
           Back to Orders
         </IonButton>
       </div>
@@ -414,12 +414,12 @@ const RiderDelivery: React.FC = () => {
         {order.status === 'delivering' && (
           <IonButton
             expand="block"
-            style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '12px' }}
+            shape="round"
             className="h-12 text-sm font-semibold"
             onClick={handleDelivered}
             disabled={deliveringId}
           >
-            {deliveringId ? <IonSpinner name="crescent" /> : <IonIcon icon={checkmarkCircleOutline} slot="start" />}
+            {deliveringId ? <IonSpinner /> : <IonIcon icon={checkmarkCircleOutline} slot="start" />}
             {deliveringId ? 'Marking...' : 'Mark Delivered'}
           </IonButton>
         )}

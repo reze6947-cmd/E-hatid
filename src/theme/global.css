@@ -24,17 +24,6 @@ a:hover {
   opacity: 0.8;
 }
 
-/* ==================== FOCUS STATES ==================== */
-button:focus,
-input:focus,
-select:focus,
-textarea:focus,
-ion-button:focus,
-ion-input:focus {
-  outline: 2px solid var(--ion-color-primary);
-  outline-offset: 2px;
-}
-
 /* ==================== ANIMATIONS ==================== */
 @keyframes pulse-bike {
   0%, 100% { transform: translateY(0); opacity: 0.8; }

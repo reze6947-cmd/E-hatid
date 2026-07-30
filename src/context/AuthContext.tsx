@@ -244,8 +244,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('user', JSON.stringify(updated));
     try {
       await updateUserDocument(user.id, { activeRole: role } as any);
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('Failed to persist activeRole to Firestore:', err);
     }
   };
 

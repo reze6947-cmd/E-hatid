@@ -51,7 +51,7 @@ const VendorReviews: React.FC = () => {
           <PageHeader title="Reviews" subtitle="See what your customers are saying" />
 
           {loading ? (
-            <div className="text-center p-12"><IonSpinner name="crescent" /></div>
+            <div className="text-center p-12"><IonSpinner /></div>
           ) : (
             <>
               <IonCard className="rounded-xl shadow mb-4">

@@ -22,7 +22,7 @@ const AdminOrders: React.FC = () => {
   };
 
   const getStatusColor = (s: string) => {
-    const colors: Record<string, string> = { pending: '#F59E0B', preparing: '#FF5A1F', delivering: 'var(--ion-color-primary)', delivered: '#10B981', cancelled: '#EF4444' };
+    const colors: Record<string, string> = { pending: '#F59E0B', preparing: '#7C3AED', delivering: 'var(--ion-color-primary)', delivered: '#10B981', cancelled: '#EF4444' };
     return colors[s] || '#9CA3AF';
   };
 

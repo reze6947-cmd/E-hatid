@@ -149,8 +149,8 @@ const RiderDashboard: React.FC = () => {
             icon={cashOutline}
             label="Today's Earnings"
             value={`₱${todayEarnings.toFixed(2)}`}
-            gradientFrom="#FF5A1F"
-            gradientTo="#FF7A3D"
+            gradientFrom="#6D28D9"
+            gradientTo="#8B5CF6"
           />
           <StatCard
             icon={checkmarkCircleOutline}

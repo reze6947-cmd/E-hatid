@@ -446,7 +446,7 @@ const ApplyRider: React.FC = () => {
           </div>
         )}
 
-        <IonButton expand="block" size="large" disabled={loading} className="w-full md:w-auto" style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px', height: '48px', fontSize: '16px', fontWeight: 700, marginBottom: '24px' }} onClick={handleApply}>
+        <IonButton expand="block" size="large" shape="round" disabled={loading} className="w-full md:w-auto font-bold mb-6" onClick={handleApply}>
           {loading ? 'Processing...' : 'Submit Application'}
         </IonButton>
       </div>

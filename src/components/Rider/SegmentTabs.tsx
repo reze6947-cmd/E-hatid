@@ -52,7 +52,7 @@ const SegmentTabs: React.FC<Props> = ({ tabs, selected, onChange }) => (
               countBadge(
                 tab.count,
                 tab.value === 'available' ? '#EF4444' :
-                tab.value === 'active' ? '#FF5A1F' :
+                tab.value === 'active' ? '#6D28D9' :
                 '#10B981'
               )
             )}

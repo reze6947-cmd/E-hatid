@@ -8,8 +8,11 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
+  IonTextarea,
 } from '@ionic/react';
-import { closeOutline, add, remove, cartOutline } from 'ionicons/icons';
+import { closeOutline, add, remove, cartOutline, logInOutline } from 'ionicons/icons';
+import { useAuth } from '../../context/AuthContext';
+import { useHistory } from 'react-router-dom';
 import { MenuItem, SelectedOption, SelectedAddOn } from '../../types';
 
 interface MenuItemModalProps {
@@ -32,6 +35,9 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
+  const { user } = useAuth();
+  const history = useHistory();
+  const isGuest = !user;
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [selectedAddOns, setSelectedAddOns] = useState<Record<string, boolean>>({});
@@ -87,6 +93,11 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
   }, [item.options, selectedOptions]);
 
   const handleAddToCart = () => {
+    if (isGuest) {
+      onClose();
+      history.push('/login');
+      return;
+    }
     onAddToCart({
       item,
       selectedOptions: selectedOptionsList,
@@ -188,48 +199,59 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
             <span className="font-medium text-xs sm:text-sm text-[var(--ion-text-color)]">Special Instructions</span>
             <span className="text-[10px] sm:text-xs bg-gray-100 dark:bg-slate-700 text-[var(--ion-text-color-secondary)] px-2 py-0.5 rounded-full">Optional</span>
           </div>
-          <textarea
-            className="w-full p-2.5 sm:p-3 rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ion-color-primary)] focus:border-transparent resize-none"
-            placeholder="e.g., allergic to peanuts, no onions, extra sauce..."
+          <IonTextarea
             value={specialInstructions}
-            onChange={e => setSpecialInstructions(e.target.value)}
+            onIonInput={e => setSpecialInstructions(e.detail.value || '')}
+            placeholder="e.g., allergic to peanuts, no onions, extra sauce..."
             rows={3}
+            className="text-xs sm:text-sm"
+            style={{ '--background': 'var(--ion-background-color)', '--padding-start': '10px', '--padding-end': '10px', '--padding-top': '10px', '--padding-bottom': '10px', '--border-radius': '8px', '--highlight-height': '0' } as any}
           />
         </div>
 
         <div className="mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)]">
           <span className="font-medium text-xs sm:text-sm text-[var(--ion-text-color)] mb-2 sm:mb-3 block">Quantity</span>
           <div className="flex items-center justify-center gap-3 sm:gap-4">
-            <button
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-w-[36px] min-h-[36px]"
+            <IonButton
+              fill="outline"
+              color="medium"
+              shape="round"
+              style={{ '--padding-start': '0', '--padding-end': '0', width: '40px', height: '40px' }}
               onClick={() => setQuantity(q => Math.max(1, q - 1))}
               disabled={quantity <= 1}
             >
-              <IonIcon icon={remove} className="text-sm sm:text-base text-[var(--ion-text-color)]" />
-            </button>
+              <IonIcon icon={remove} slot="icon-only" />
+            </IonButton>
             <span className="font-semibold text-base sm:text-lg w-10 sm:w-12 text-center text-[var(--ion-text-color)]">{quantity}</span>
-            <button
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-center min-w-[36px] min-h-[36px]"
+            <IonButton
+              fill="outline"
+              color="medium"
+              shape="round"
+              style={{ '--padding-start': '0', '--padding-end': '0', width: '40px', height: '40px' }}
               onClick={() => setQuantity(q => q + 1)}
             >
-              <IonIcon icon={add} className="text-sm sm:text-base text-[var(--ion-text-color)]" />
-            </button>
+              <IonIcon icon={add} slot="icon-only" />
+            </IonButton>
           </div>
         </div>
       </div>
 
       <div className="p-3 sm:p-4 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)]">
-        <IonButton
-          expand="block"
-          size="large"
-          className="min-h-[48px]"
-          style={{ '--border-radius': '8px', fontSize: '14px', fontWeight: 600, '--background': item.available ? 'var(--ion-color-primary)' : '#9CA3AF' }}
-          disabled={!allRequiredFilled || !item.available}
-          onClick={handleAddToCart}
-        >
-          <IonIcon icon={cartOutline} slot="start" className="mr-2" />
-          {item.available ? `Add to Cart • ₱${totalPrice.toFixed(2)}` : 'Currently Unavailable'}
-        </IonButton>
+          <IonButton
+            expand="block"
+            size="large"
+            shape="round"
+            className="min-h-[48px]"
+            style={{ fontSize: '14px', fontWeight: 600, '--background': !item.available ? '#9CA3AF' : 'var(--ion-color-primary)' }}
+            disabled={isGuest ? false : !allRequiredFilled || !item.available}
+            onClick={handleAddToCart}
+          >
+            {isGuest ? (
+              <><IonIcon icon={logInOutline} slot="start" className="mr-2" />Sign in to Order</>
+            ) : (
+              <><IonIcon icon={cartOutline} slot="start" className="mr-2" />{item.available ? `Add to Cart • ₱${totalPrice.toFixed(2)}` : 'Currently Unavailable'}</>
+            )}
+          </IonButton>
       </div>
     </div>
   );
@@ -238,9 +260,9 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
     return (
       <IonPage className="menu-item-page">
         <IonHeader className="ion-no-border">
-          <IonToolbar style={{ '--background': 'var(--ion-card-background)' }}>
+          <IonToolbar>
             <IonButtons slot="start">
-              <IonButton onClick={onClose} style={{ '--color': 'var(--ion-color-primary)' }}>
+              <IonButton onClick={onClose}>
                 <IonIcon icon={closeOutline} />
               </IonButton>
             </IonButtons>
@@ -261,7 +283,7 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
       style={{ '--max-width': 'min(560px, 95vw)', '--max-height': '90vh', '--border-radius': '16px' } as any}
     >
       <IonHeader className="ion-no-border">
-        <IonToolbar style={{ '--background': 'var(--ion-card-background)' }}>
+        <IonToolbar>
           <IonButtons slot="end">
             <IonButton onClick={onClose} className="min-h-[44px] min-w-[44px]">
               <IonIcon icon={closeOutline} className="text-xl" />

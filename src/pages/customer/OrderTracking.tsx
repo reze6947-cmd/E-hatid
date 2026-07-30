@@ -49,7 +49,7 @@ const stallMarkerIcon = L.divIcon({
 
 const riderMarkerIcon = L.divIcon({
   className: '',
-  html: '<div style="background:#FF5A1F;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>',
+  html: '<div style="background:#6D28D9;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>',
   iconSize: [30, 30],
   iconAnchor: [15, 15],
 });

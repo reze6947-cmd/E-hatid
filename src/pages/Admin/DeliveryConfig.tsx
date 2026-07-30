@@ -102,12 +102,12 @@ const AdminDeliveryConfig: React.FC = () => {
 
         <IonButton
           expand="block"
-          className="mt-4"
-          style={{ '--background': '#8B5CF6', '--border-radius': '12px', minHeight: '48px' } as any}
+          shape="round"
+          className="mt-4 min-h-[48px] font-semibold"
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? <IonSpinner name="crescent" /> : 'Save Config'}
+          {saving ? <IonSpinner /> : 'Save Config'}
         </IonButton>
       </div>
 

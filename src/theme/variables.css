@@ -1,53 +1,75 @@
 :root {
-  --ion-color-primary: #FF5A1F;
-  --ion-color-primary-rgb: 255, 90, 31;
+  /* PRIMARY (Purple → Gold Gradient Feel) */
+  --ion-color-primary: #7C3AED;
+  --ion-color-primary-rgb: 124, 58, 237;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #E04E1B;
-  --ion-color-primary-tint: #FF7A3D;
+  --ion-color-primary-shade: #6D28D9;
+  --ion-color-primary-tint: #A78BFA;
 
-  --ion-color-secondary: #FF7A3D;
-  --ion-color-secondary-rgb: 255, 122, 61;
-  --ion-color-secondary-contrast: #ffffff;
-  --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #E06B34;
-  --ion-color-secondary-tint: #FF9566;
+  /* SECONDARY (Gold Accent) */
+  --ion-color-secondary: #D4AF37;
+  --ion-color-secondary-rgb: 212, 175, 55;
+  --ion-color-secondary-contrast: #000000;
+  --ion-color-secondary-contrast-rgb: 0, 0, 0;
+  --ion-color-secondary-shade: #B8962E;
+  --ion-color-secondary-tint: #E6C65C;
 
-  --ion-color-success: #22C55E;
-  --ion-color-warning: #FACC15;
+  /* STATUS COLORS */
+  --ion-color-success: #10B981;
+  --ion-color-warning: #FBBF24;
   --ion-color-danger: #EF4444;
-  --ion-color-light: #F1F5F9;
-  --ion-color-medium: #94A3B8;
-  --ion-color-dark: #0F172A;
 
-  --ion-background-color: #F8FAFC;
-  --ion-background-color-rgb: 248, 250, 252;
-  --ion-text-color: #0F172A;
-  --ion-text-color-rgb: 15, 23, 42;
-  --ion-text-color-secondary: #64748B;
+  /* BACKGROUND */
+  --ion-background-color: #FAFAFA;
+  --ion-background-color-rgb: 250, 250, 250;
 
+  /* TEXT */
+  --ion-text-color: #1E1B4B;
+  --ion-text-color-rgb: 30, 27, 75;
+  --ion-text-color-secondary: #6B7280;
+
+  /* CARDS / UI */
   --ion-card-background: #FFFFFF;
   --ion-item-background: #FFFFFF;
   --ion-toolbar-background: #FFFFFF;
-
   --ion-border-color: #E5E7EB;
+
+  /* 🔥 GRADIENTS */
+  --app-gradient-primary: linear-gradient(135deg, #7C3AED, #D4AF37);
+  --app-gradient-secondary: linear-gradient(135deg, #A78BFA, #FDE68A);
 }
 
 .dark {
-  --ion-background-color: #0B0F19;
-  --ion-background-color-rgb: 11, 15, 25;
-  --ion-text-color: #F1F5F9;
-  --ion-text-color-rgb: 241, 245, 249;
-  --ion-text-color-secondary: #94A3B8;
+  --ion-background-color: #0F0B1F;
+  --ion-background-color-rgb: 15, 11, 31;
 
-  --ion-card-background: #1E293B;
-  --ion-item-background: #1E293B;
-  --ion-toolbar-background: #1E293B;
+  --ion-text-color: #F9FAFB;
+  --ion-text-color-rgb: 249, 250, 251;
+  --ion-text-color-secondary: #9CA3AF;
 
-  --ion-border-color: #334155;
+  --ion-card-background: #1E1B2E;
+  --ion-item-background: #1E1B2E;
+  --ion-toolbar-background: #1E1B2E;
+  --ion-border-color: #312E81;
 
-  --ion-color-light: #1E293B;
-  --ion-color-dark: #F1F5F9;
+  /* Purple becomes richer in dark */
+  --ion-color-primary: #A78BFA;
+  --ion-color-primary-rgb: 167, 139, 250;
+  --ion-color-primary-contrast: #000000;
+  --ion-color-primary-shade: #8B5CF6;
+  --ion-color-primary-tint: #C4B5FD;
+
+  /* Gold pops more */
+  --ion-color-secondary: #FBBF24;
+  --ion-color-secondary-rgb: 251, 191, 36;
+  --ion-color-secondary-contrast: #000000;
+  --ion-color-secondary-shade: #D97706;
+  --ion-color-secondary-tint: #FCD34D;
+
+  /* DARK GRADIENTS */
+  --app-gradient-primary: linear-gradient(135deg, #6D28D9, #FBBF24);
+  --app-gradient-secondary: linear-gradient(135deg, #8B5CF6, #FDE68A);
 }
 
 ion-select-option {

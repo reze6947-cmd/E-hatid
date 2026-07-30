@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { useParams, useHistory } from 'react-router-dom';
 import { IonIcon, IonButton } from '@ionic/react';
 import { locationOutline, star, timeOutline, carOutline, cartOutline, documentTextOutline } from 'ionicons/icons';
-import { fetchStallById } from '../../services/stallService';
-import { Stall, MenuItem, SelectedOption, SelectedAddOn } from '../../types';
-import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
-import MenuItemModal from '../../components/Stall/MenuItemModal';
-import ProductCard from '../../components/Stall/ProductCard';
+import { fetchStallById } from '../services/stallService';
+import { Stall, MenuItem, SelectedOption, SelectedAddOn } from '../types';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import MenuItemModal from '../components/Stall/MenuItemModal';
+import ProductCard from '../components/Stall/ProductCard';
+import { StallCardSkeleton } from '../components/ui/Skeleton';
 
 const StallDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,26 +19,20 @@ const StallDetail: React.FC = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const history = useHistory();
   const { user } = useAuth();
-  const { items, addToCart, total, itemCount } = useCart();
+  const { addToCart } = useCart();
   const [activeSection, setActiveSection] = useState<string>('');
   const sectionRefMap = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const setSectionRef = useCallback((id: string) => (el: HTMLDivElement | null) => {
-    if (el) {
-      sectionRefMap.current.set(id, el);
-    } else {
-      sectionRefMap.current.delete(id);
-    }
+    if (el) { sectionRefMap.current.set(id, el); }
+    else { sectionRefMap.current.delete(id); }
   }, []);
 
   const headerRefMap = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const setHeaderRef = useCallback((id: string) => (el: HTMLDivElement | null) => {
-    if (el) {
-      headerRefMap.current.set(id, el);
-    } else {
-      headerRefMap.current.delete(id);
-    }
+    if (el) { headerRefMap.current.set(id, el); }
+    else { headerRefMap.current.delete(id); }
   }, []);
 
   useEffect(() => {
@@ -110,23 +105,30 @@ const StallDetail: React.FC = () => {
 
     const refs = headerRefMap.current;
     refs.forEach(el => observer.observe(el));
-
     return () => observer.disconnect();
   }, [loading, stall, navItems.length]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-[var(--ion-text-color-secondary)]">Loading...</p>
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 p-4 md:p-6 lg:p-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <StallCardSkeleton key={i} />
+        ))}
       </div>
     );
   }
 
   if (!stall) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4">
+        <div className="w-20 h-20 rounded-full bg-[var(--ion-card-background)] border-2 border-[var(--ion-border-color)] flex items-center justify-center">
+          <IonIcon icon={documentTextOutline} className="text-3xl text-[var(--ion-color-primary)]" />
+        </div>
         <h2 className="text-xl font-bold text-[var(--ion-text-color)]">Stall not found</h2>
-        <IonButton routerLink={user ? '/customer/home' : '/guest/home'}>Go back home</IonButton>
+        <p className="text-sm text-[var(--ion-text-color-secondary)]">This stall may have been removed or is unavailable</p>
+        <IonButton shape="round" routerLink={user ? '/customer/home' : '/guest/home'}>
+          Go back home
+        </IonButton>
       </div>
     );
   }
@@ -146,6 +148,7 @@ const StallDetail: React.FC = () => {
             loading="lazy"
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         </div>
 
         {/* Logo + Info section */}
@@ -196,8 +199,8 @@ const StallDetail: React.FC = () => {
 
         {/* Sticky Category Navigation */}
         {navItems.length > 1 && (
-          <div className="sticky top-0 md:top-16 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)] mt-4">
-            <div className="flex gap-3 p-3 w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 overflow-x-auto whitespace-nowrap no-scrollbar">
+          <div className="sticky top-0 md:top-16 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)] mt-4 overflow-x-auto no-scrollbar">
+            <div className="flex gap-3 p-1 rounded-full w-max min-w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
               {navItems.map(nav => (
                 <button
                   key={nav.id}
@@ -206,17 +209,16 @@ const StallDetail: React.FC = () => {
                     const el = sectionRefMap.current.get(nav.id);
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="relative shrink-0 px-6 py-3 text-sm font-medium whitespace-nowrap transition-colors rounded-full"
+                  className="relative min-w-[100px] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-full"
                 >
                   {activeSection === nav.id && (
                     <motion.div
-                      layoutId="active-section-pill"
-                      layout="position"
+                      layoutId="active-pill"
                       className="absolute inset-0 bg-[var(--ion-color-primary)] rounded-full"
                       transition={{ type: "spring", stiffness: 300, damping: 50, mass: 1.2 }}
                     />
                   )}
-                  <span className={`relative z-10 block truncate ${activeSection === nav.id ? "text-white" : "text-[var(--ion-text-color-secondary)]"}`}>
+                  <span className={`relative z-10 block truncate ${activeSection === nav.id ? "text-white" : "text-gray-500 dark:text-gray-300"}`}>
                     {nav.label}
                   </span>
                 </button>
@@ -263,7 +265,6 @@ const StallDetail: React.FC = () => {
             );
           })}
         </div>
-
       </div>
 
       {selectedItem && (

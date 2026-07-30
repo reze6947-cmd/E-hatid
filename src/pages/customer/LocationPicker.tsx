@@ -4,6 +4,10 @@ import {
   IonButton,
   IonIcon,
   IonFooter,
+  IonInput,
+  IonItem,
+  IonList,
+  IonLabel,
 } from '@ionic/react';
 import { locationOutline, cartOutline, documentTextOutline, personOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -209,12 +213,13 @@ const LocationPicker: React.FC = () => {
             </label>
             <div className="relative">
               <IonIcon icon={locationOutline} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ion-color-primary)] text-lg z-[1]" />
-              <input
+              <IonInput
                 type="text"
                 placeholder="Search your address..."
                 value={query}
-                onChange={e => { setQuery(e.target.value); setSelectedAddress(null); }}
-                className="w-full p-3 pl-10 rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm outline-none focus:ring-2 focus:ring-[var(--ion-color-primary)] focus:border-transparent transition-all"
+                onIonInput={e => { setQuery(e.detail.value || ''); setSelectedAddress(null); }}
+                className="[--padding-start:36px] [--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
+                style={{ '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
               />
               {fetching && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--ion-text-color-secondary)]">
@@ -225,14 +230,12 @@ const LocationPicker: React.FC = () => {
 
             {/* Suggestions dropdown */}
             {suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-[100] bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] rounded-b-lg shadow-lg max-h-[200px] overflow-y-auto">
+              <div className="absolute left-0 right-0 top-full z-[100] bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] rounded-b-xl shadow-lg max-h-[200px] overflow-y-auto">
                 {suggestions.map((s, i) => (
-                  <div key={i} onClick={() => selectSuggestion(s)}
-                    className="flex items-center gap-2 px-3 py-2.5 cursor-pointer text-xs sm:text-sm text-[var(--ion-text-color)] hover:bg-[var(--ion-color-light)] border-b border-[var(--ion-border-color)] last:border-b-0 transition-colors"
-                  >
-                    <IonIcon icon={locationOutline} className="text-[var(--ion-color-primary)] text-sm shrink-0" />
-                    <span className="truncate">{s.display}</span>
-                  </div>
+                  <IonItem key={i} button onClick={() => selectSuggestion(s)} className="min-h-[44px] text-xs sm:text-sm" style={{ '--background': 'transparent', '--border-color': 'var(--ion-border-color)' } as any}>
+                    <IonIcon icon={locationOutline} slot="start" className="text-[var(--ion-color-primary)]" />
+                    <IonLabel className="truncate text-[var(--ion-text-color)]">{s.display}</IonLabel>
+                  </IonItem>
                 ))}
               </div>
             )}
@@ -262,9 +265,8 @@ const LocationPicker: React.FC = () => {
         <IonFooter style={{ '--background': 'var(--ion-card-background)' } as any}>
           <div className="border-t border-[var(--ion-border-color)] px-3 sm:px-4 py-3 sm:py-4">
             <div className="max-w-2xl mx-auto">
-              <IonButton expand="block" size="large"
-                className="min-h-[48px]"
-                style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px', fontSize: '15px', fontWeight: 700 }}
+              <IonButton expand="block" size="large" shape="round"
+                className="min-h-[48px] font-bold"
                 onClick={handleConfirm}
               >
                 <IonIcon slot="start" icon={locationOutline} />

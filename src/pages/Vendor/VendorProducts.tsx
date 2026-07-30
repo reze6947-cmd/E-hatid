@@ -124,14 +124,14 @@ const VendorProducts: React.FC = () => {
           <PageHeader title="Products" subtitle="Manage your menu items, options, and availability" />
 
           <div className="flex gap-3 mb-4">
-            <IonButton style={{ '--background': 'var(--ion-color-primary)' }} onClick={handleAddProduct}>
+            <IonButton color="primary" onClick={handleAddProduct}>
               <IonIcon icon={addOutline} slot="start" />
               Add Product
             </IonButton>
           </div>
 
           {loading ? (
-            <div className="text-center p-12"><IonSpinner name="crescent" /></div>
+            <div className="text-center p-12"><IonSpinner /></div>
           ) : products.length === 0 ? (
             <IonCard className="rounded-xl shadow"><IonCardContent><p className="text-center text-[var(--ion-text-color-secondary)] m-0">No products yet. Add your first menu item.</p></IonCardContent></IonCard>
           ) : (
@@ -191,11 +191,11 @@ const VendorProducts: React.FC = () => {
                     </div>
 
                     <div className="mt-3 flex gap-2">
-                      <IonButton size="small" fill="outline" style={{ flex: 1, '--border-color': 'var(--ion-color-primary)', '--color': 'var(--ion-color-primary)' }} onClick={() => setEditingItem(product)}>
+                      <IonButton size="small" fill="outline" color="primary" className="flex-1" onClick={() => setEditingItem(product)}>
                         <IonIcon icon={createOutline} slot="start" />
                         Edit
                       </IonButton>
-                      <IonButton size="small" fill="outline" style={{ '--border-color': 'var(--ion-color-danger)', '--color': 'var(--ion-color-danger)', minWidth: '44px' }} onClick={() => handleDeleteProduct(product.id)}>
+                      <IonButton size="small" fill="outline" color="danger" style={{ minWidth: '44px' }} onClick={() => handleDeleteProduct(product.id)}>
                         <IonIcon icon={trashOutline} />
                       </IonButton>
                     </div>

@@ -96,7 +96,7 @@ export const selectRoleConfig: SelectRolePageConfig = {
   },
 
   roles: {
-    customer: { label: 'Customer', icon: personOutline, description: 'Browse stalls and order food', accentColor: '#FF5A1F' },
+    customer: { label: 'Customer', icon: personOutline, description: 'Browse stalls and order food', accentColor: '#6D28D9' },
     rider: { label: 'Rider', icon: carOutline, description: 'Deliver orders and earn', accentColor: '#6366F1' },
     vendor: { label: 'Vendor', icon: storefrontOutline, description: 'Manage your store', accentColor: '#06B6D4' },
     admin: { label: 'Admin', icon: shieldCheckmarkOutline, description: 'Manage the platform', accentColor: '#DC2626' },

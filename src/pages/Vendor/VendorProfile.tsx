@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IonButton, IonIcon, IonSpinner, IonToast } from '@ionic/react';
+import { IonButton, IonIcon, IonSpinner, IonToast, IonInput, IonTextarea, IonToggle, IonItem } from '@ionic/react';
 import { storefrontOutline, timeOutline, notificationsOutline, cameraOutline, personOutline, callOutline, locationOutline, logOutOutline, swapHorizontalOutline, checkmarkCircle, closeCircle, time, colorPaletteOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
@@ -191,7 +191,7 @@ const VendorProfile: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <IonSpinner name="crescent" />
+        <IonSpinner />
       </div>
     );
   }
@@ -230,9 +230,9 @@ const VendorProfile: React.FC = () => {
             <IonIcon icon={personOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</span>
           </div>
-          <input type="text" value={vendorName} onChange={e => setVendorName(e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={vendorName} onIonInput={e => setVendorName(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div className="mb-4">
@@ -240,9 +240,9 @@ const VendorProfile: React.FC = () => {
             <IonIcon icon={callOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Phone</span>
           </div>
-          <input type="tel" value={vendorPhone} onChange={e => setVendorPhone(e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput type="tel" value={vendorPhone} onIonInput={e => setVendorPhone(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div>
@@ -267,18 +267,18 @@ const VendorProfile: React.FC = () => {
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Stall Name</span>
           </div>
-          <input type="text" value={stallName} onChange={e => setStallName(e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={stallName} onIonInput={e => setStallName(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div className="mb-4">
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Description</span>
           </div>
-          <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm resize-none"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonTextarea value={description} onIonInput={e => setDescription(e.detail.value!)} rows={3} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
@@ -286,17 +286,17 @@ const VendorProfile: React.FC = () => {
             <div className="flex items-center mb-2">
               <span className="text-xs text-[var(--ion-text-color-secondary)]">Open Time</span>
             </div>
-            <input type="time" value={openTime} onChange={e => setOpenTime(e.target.value)}
-              className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-            />
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput type="time" value={openTime} onIonInput={e => setOpenTime(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
           </div>
           <div>
             <div className="flex items-center mb-2">
               <span className="text-xs text-[var(--ion-text-color-secondary)]">Close Time</span>
             </div>
-            <input type="time" value={closeTime} onChange={e => setCloseTime(e.target.value)}
-              className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-            />
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput type="time" value={closeTime} onIonInput={e => setCloseTime(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
           </div>
         </div>
 
@@ -305,12 +305,7 @@ const VendorProfile: React.FC = () => {
             <IonIcon icon={storefrontOutline} className="text-base text-[var(--ion-color-primary)]" />
             <span className="text-sm font-medium text-[var(--ion-text-color)]">Show on Home Page</span>
           </div>
-          <div
-            onClick={() => setActive(!active)}
-            className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-200 ${active ? 'bg-[var(--ion-color-primary)]' : 'bg-[var(--ion-border-color)]'}`}
-          >
-            <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${active ? 'translate-x-5' : 'translate-x-0'}`} />
-          </div>
+          <IonToggle checked={active} onIonChange={e => setActive(e.detail.checked)} style={{ '--background-checked': 'var(--ion-color-primary)' }} />
         </div>
 
         <div className="flex items-center justify-between py-2 border-t border-[var(--ion-border-color)] mt-2 pt-3">
@@ -318,12 +313,7 @@ const VendorProfile: React.FC = () => {
             <IonIcon icon={notificationsOutline} className="text-base text-[var(--ion-color-primary)]" />
             <span className="text-sm font-medium text-[var(--ion-text-color)]">Push Notifications</span>
           </div>
-          <div
-            onClick={() => setNotifications(!notifications)}
-            className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-200 ${notifications ? 'bg-[var(--ion-color-primary)]' : 'bg-[var(--ion-border-color)]'}`}
-          >
-            <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${notifications ? 'translate-x-5' : 'translate-x-0'}`} />
-          </div>
+          <IonToggle checked={notifications} onIonChange={e => setNotifications(e.detail.checked)} style={{ '--background-checked': 'var(--ion-color-primary)' }} />
         </div>
       </div>
 
@@ -404,16 +394,13 @@ const VendorProfile: React.FC = () => {
             <MapFixer />
           </MapContainer>
         </div>
-        <IonButton expand="block" className="h-12 text-base font-semibold" style={{ '--border-radius': '8px' }} onClick={() => history.push('/vendor/location')}>
+        <IonButton expand="block" shape="round" className="h-12 text-base font-semibold" onClick={() => history.push('/vendor/location')}>
           Edit Location
         </IonButton>
       </div>
 
       {/* Save Button */}
-      <IonButton expand="block" disabled={saving} onClick={handleSave}
-        className="h-12 text-base font-semibold mb-3"
-        style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px' }}
-      >
+      <IonButton expand="block" disabled={saving} shape="round" className="h-12 text-base font-semibold mb-3" onClick={handleSave}>
         {saving ? 'Saving...' : 'Save Changes'}
       </IonButton>
 
@@ -451,9 +438,8 @@ const VendorProfile: React.FC = () => {
       )}
 
       {/* Sign Out */}
-      <IonButton expand="block" color="danger" className="md:hidden h-12 text-base font-semibold mb-6"
+      <IonButton expand="block" color="danger" shape="round" className="md:hidden h-12 text-base font-semibold mb-6"
         onClick={() => { logout(); history.push('/guest/home'); }}
-        style={{ '--border-radius': '8px' }}
       >
         <IonIcon icon={logOutOutline} slot="start" />
         Sign Out

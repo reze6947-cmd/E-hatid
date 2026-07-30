@@ -3,6 +3,7 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonBadge,
 } from '@ionic/react';
 import { receiptOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -16,26 +17,15 @@ import { Order } from '../../types';
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
   accepted: { color: '#3B82F6', label: 'Accepted' },
-  preparing: { color: '#FF5A1F', label: 'Preparing' },
+  preparing: { color: '#7C3AED', label: 'Preparing' },
   ready: { color: '#10B981', label: 'Ready' },
   delivering: { color: '#8B5CF6', label: 'Delivering' },
   delivered: { color: '#6B7280', label: 'Delivered' },
   cancelled: { color: '#EF4444', label: 'Cancelled' },
 };
 
-const badgestyle = (status: string): React.CSSProperties => {
-  const c = STATUS_BADGE[status]?.color || '#9CA3AF';
-  return {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '3px 10px',
-    borderRadius: 9999,
-    fontSize: 11,
-    fontWeight: 600,
-    backgroundColor: c + '1A',
-    color: c,
-    border: '1px solid ' + c + '30',
-  };
+const getBadgeColor = (status: string) => {
+  return (STATUS_BADGE[status]?.color || '#9CA3AF') as any;
 };
 
 const UserOrders: React.FC = () => {
@@ -98,11 +88,7 @@ const UserOrders: React.FC = () => {
             </div>
             <h2 className="m-0 mb-2 font-bold text-[var(--ion-text-color)]">You don't have any orders yet</h2>
             <p className="m-0 text-[var(--ion-text-color-secondary)]">Place an order to see it here!</p>
-            <IonButton
-              className="mt-6"
-              style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px' }}
-              onClick={() => history.push('/customer/home')}
-            >
+            <IonButton shape="round" className="mt-6" onClick={() => history.push('/customer/home')}>
               Browse Stalls
             </IonButton>
           </div>
@@ -119,7 +105,7 @@ const UserOrders: React.FC = () => {
                     <span className="font-bold text-sm text-[var(--ion-text-color)]">
                       {order.id}
                     </span>
-                    <span style={badgestyle(order.status)}>{STATUS_BADGE[order.status]?.label || order.status}</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style={{ backgroundColor: getBadgeColor(order.status) + '1A', color: getBadgeColor(order.status), border: '1px solid ' + getBadgeColor(order.status) + '30' }}>{STATUS_BADGE[order.status]?.label || order.status}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
@@ -133,12 +119,7 @@ const UserOrders: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {order.status === 'delivered' && (
-                        <IonButton
-                          size="small"
-                          fill="clear"
-                          style={{ '--color': '#8B5CF6' }}
-                          onClick={e => { e.stopPropagation(); history.push(`/customer/review/${order.id}`, { order }); }}
-                        >
+                        <IonButton size="small" fill="clear" color="secondary" onClick={e => { e.stopPropagation(); history.push(`/customer/review/${order.id}`, { order }); }}>
                           Review
                         </IonButton>
                       )}

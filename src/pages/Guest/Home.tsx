@@ -81,7 +81,7 @@ const GuestHome: React.FC = () => {
 
         {/* Categories */}
         <div className="py-1 sm:py-2 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 bg-light-200 dark:bg-dark-card p-1 rounded-full w-max min-w-full">
+          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-max min-w-full">
             {categories.map((cat) => (
               <button
                 key={cat}

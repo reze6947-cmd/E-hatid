@@ -49,6 +49,9 @@ export const navItemsByRole: Record<string, NavItem[]> = {
     { label: 'Reports', path: '/admin/reports', icon: barChartOutline, activeIcon: barChart },
     { label: 'Delivery', path: '/admin/delivery-config', icon: bicycleOutline, activeIcon: bicycleOutline },
   ],
+  guest: [
+    { label: 'Home', path: '/guest/home', icon: homeOutline, activeIcon: home },
+  ],
 };
 
 export const roleLabels: Record<string, string> = {

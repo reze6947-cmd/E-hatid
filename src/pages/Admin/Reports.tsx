@@ -140,7 +140,7 @@ const AdminReports: React.FC = () => {
                     <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                       <IonBadge style={{ '--background': getPriorityColor(selectedReport.priority || 'low'), color: 'white' }}>{selectedReport.priority}</IonBadge>
                       <IonBadge style={{ '--background': getStatusColor(selectedReport.status), color: 'white' }}>{selectedReport.status.replace('_', ' ')}</IonBadge>
-                      <IonBadge style={{ '--background': 'var(--ion-color-primary)', color: 'white' }}>{selectedReport.type}</IonBadge>
+                      <IonBadge color="primary">{selectedReport.type}</IonBadge>
                     </div>
                   </div>
 

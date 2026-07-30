@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonCard, IonCardContent, IonIcon, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton } from '@ionic/react';
+import { IonCard, IonCardContent, IonIcon, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonBadge, IonSpinner, IonInput, IonItem } from '@ionic/react';
 import { searchOutline, closeOutline, checkmarkCircle, closeCircle, personOutline, bicycleOutline, storefrontOutline, shieldCheckmarkOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
@@ -85,9 +85,10 @@ const AdminUsers: React.FC = () => {
       <AdminPageShell title="Users" subtitle="Manage all users, riders, vendors">
         <div className="px-4 pb-4">
           <div style={{ position: 'relative', marginBottom: '16px' }}>
-            <IonIcon icon={searchOutline} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ion-text-color-secondary)', fontSize: '16px' }} />
-            <input type="text" placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: '8px', border: '1px solid var(--ion-border-color)', background: 'var(--ion-card-background)', color: 'var(--ion-text-color)', fontSize: '14px', outline: 'none' }} />
+            <IonIcon icon={searchOutline} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ion-text-color-secondary)', fontSize: '16px', zIndex: 1 }} />
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden" style={{ '--padding-start': '36px', '--min-height': '44px', '--highlight-height': '0', '--background': 'var(--ion-card-background)' } as any}>
+              <IonInput type="text" placeholder="Search users..." value={search} onIonInput={e => setSearch(e.detail.value!)} className="text-sm" style={{ '--padding-start': '0', '--padding-end': '12px' } as any} />
+            </IonItem>
           </div>
 
           <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
@@ -245,8 +246,7 @@ const AdminUsers: React.FC = () => {
 
               {currentUser?.isMasterAdmin && !selectedUser.roles.includes('admin') && (
                 <div style={{ marginBottom: '16px' }}>
-                  <IonButton expand="block" onClick={() => handleAddAdmin(selectedUser.id)}
-                    style={{ '--background': '#EF4444', '--border-radius': '8px' } as any}>
+                  <IonButton expand="block" shape="round" color="danger" onClick={() => handleAddAdmin(selectedUser.id)}>
                     <IonIcon icon={shieldCheckmarkOutline} style={{ marginRight: 8 }} />
                     Add as Admin
                   </IonButton>

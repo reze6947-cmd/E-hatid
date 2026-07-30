@@ -4,6 +4,9 @@ import {
   IonIcon,
   IonSpinner,
   IonToast,
+  IonInput,
+  IonItem,
+  IonToggle,
 } from '@ionic/react';
 import {
   personOutline,
@@ -157,7 +160,7 @@ const RiderProfile: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <IonSpinner name="crescent" />
+        <IonSpinner />
       </div>
     );
   }
@@ -191,9 +194,9 @@ const RiderProfile: React.FC = () => {
             <IonIcon icon={personOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</span>
           </div>
-          <input type="text" value={profile.name} onChange={e => handleInputChange('name', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={profile.name} onIonInput={e => handleInputChange('name', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div className="mb-4">
@@ -201,9 +204,9 @@ const RiderProfile: React.FC = () => {
             <IonIcon icon={mailOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Email</span>
           </div>
-          <input type="email" value={profile.email} onChange={e => handleInputChange('email', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput type="email" value={profile.email} onIonInput={e => handleInputChange('email', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div>
@@ -211,9 +214,9 @@ const RiderProfile: React.FC = () => {
             <IonIcon icon={callOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Phone</span>
           </div>
-          <input type="tel" value={profile.phone} onChange={e => handleInputChange('phone', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput type="tel" value={profile.phone} onIonInput={e => handleInputChange('phone', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
       </div>
 
@@ -228,27 +231,27 @@ const RiderProfile: React.FC = () => {
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Vehicle Type</span>
           </div>
-          <input type="text" value={profile.vehicle} onChange={e => handleInputChange('vehicle', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={profile.vehicle} onIonInput={e => handleInputChange('vehicle', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div className="mb-4">
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">License Plate</span>
           </div>
-          <input type="text" value={profile.licensePlate} onChange={e => handleInputChange('licensePlate', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={profile.licensePlate} onIonInput={e => handleInputChange('licensePlate', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div>
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">License Number</span>
           </div>
-          <input type="text" value={profile.licenseNumber} onChange={e => handleInputChange('licenseNumber', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={profile.licenseNumber} onIonInput={e => handleInputChange('licenseNumber', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
       </div>
 
@@ -263,18 +266,18 @@ const RiderProfile: React.FC = () => {
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Bank Name</span>
           </div>
-          <input type="text" value={profile.bankName} onChange={e => handleInputChange('bankName', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={profile.bankName} onIonInput={e => handleInputChange('bankName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
 
         <div>
           <div className="flex items-center mb-2">
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Account Number</span>
           </div>
-          <input type="text" value={profile.bankAccount} onChange={e => handleInputChange('bankAccount', e.target.value)}
-            className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm"
-          />
+          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+            <IonInput value={profile.bankAccount} onIonInput={e => handleInputChange('bankAccount', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+          </IonItem>
         </div>
       </div>
 
@@ -293,8 +296,8 @@ const RiderProfile: React.FC = () => {
               <span
                 className="text-xs font-bold px-2.5 py-1 rounded-full capitalize"
                 style={{
-                  background: activeOrder.status === 'delivering' ? '#10B98120' : '#FF5A1F20',
-                  color: activeOrder.status === 'delivering' ? '#10B981' : '#FF5A1F',
+                  background: activeOrder.status === 'delivering' ? '#10B98120' : '#6D28D920',
+                  color: activeOrder.status === 'delivering' ? '#10B981' : '#6D28D9',
                 }}
               >
                 {activeOrder.status}
@@ -304,7 +307,7 @@ const RiderProfile: React.FC = () => {
               <p className="m-0 mb-1.5 text-xs text-[var(--ion-text-color-secondary)]">Delivery Progress</p>
               <div className="w-full h-2.5 rounded-full overflow-hidden bg-[var(--ion-border-color)]">
                 <div
-                  className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#FF5A1F] to-[#10B981]"
+                  className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[#6D28D9] to-[#10B981]"
                   style={{ width: `${getProgressPercent(activeOrder.status)}%` }}
                 />
               </div>
@@ -337,20 +340,12 @@ const RiderProfile: React.FC = () => {
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">Preferences</h3>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[var(--ion-text-color)]">Enable Notifications</span>
-          <div
-            onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-            className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-200 ${notificationsEnabled ? 'bg-[var(--ion-color-primary)]' : 'bg-[var(--ion-border-color)]'}`}
-          >
-            <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${notificationsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-          </div>
+          <IonToggle checked={notificationsEnabled} onIonChange={e => setNotificationsEnabled(e.detail.checked)} style={{ '--background-checked': 'var(--ion-color-primary)' }} />
         </div>
       </div>
 
       {/* Save Button */}
-      <IonButton expand="block" disabled={saving} onClick={handleSave}
-        className="h-12 text-base font-semibold mb-3"
-        style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px' }}
-      >
+      <IonButton expand="block" disabled={saving} shape="round" className="h-12 text-base font-semibold mb-3" onClick={handleSave}>
         {saving ? 'Saving...' : 'Save Changes'}
       </IonButton>
 
@@ -388,9 +383,8 @@ const RiderProfile: React.FC = () => {
       )}
 
       {/* Sign Out */}
-      <IonButton expand="block" color="danger" className="md:hidden h-12 text-base font-semibold mb-6"
+      <IonButton expand="block" color="danger" shape="round" className="md:hidden h-12 text-base font-semibold mb-6"
         onClick={handleLogout}
-        style={{ '--border-radius': '8px' }}
       >
         <IonIcon icon={logOutOutline} slot="start" />
         Sign Out

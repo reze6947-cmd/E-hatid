@@ -56,7 +56,7 @@ const RiderEarnings: React.FC = () => {
 
       {/* Total Earnings Hero */}
       <div className="pb-3">
-        <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #FF5A1F, #FF7A3D)' }}>
+        <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #6D28D9, #8B5CF6)' }}>
           <p className="m-0 mb-2 text-sm text-white/90">Total Earnings</p>
           <h2 className="m-0 text-4xl font-bold text-white">₱{periodTotal.toFixed(2)}</h2>
           <p className="m-0 mt-3 text-xs text-white/80">
@@ -115,7 +115,7 @@ const RiderEarnings: React.FC = () => {
                       className="w-full rounded-t-lg transition-all"
                       style={{
                         height: `${Math.max((day.amount / maxEarning) * 100, 4)}%`,
-                        background: 'linear-gradient(180deg, #FF5A1F, #FF7A3D)',
+                        background: 'linear-gradient(180deg, #6D28D9, #8B5CF6)',
                         minHeight: 20,
                       }}
                     />

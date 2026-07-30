@@ -1,4 +1,5 @@
 import React from 'react';
+import { IonCard, IonCardContent } from '@ionic/react';
 
 interface CardProps {
   children: React.ReactNode;
@@ -7,16 +8,25 @@ interface CardProps {
   hoverable?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ children, className = '', onClick, hoverable = false }) => (
-  <div
+const Card: React.FC<CardProps> = ({ children, className = '', onClick, hoverable }) => (
+  <IonCard
     onClick={onClick}
-    className={`rounded-2xl bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] p-4 md:p-6
-      ${hoverable ? 'transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer' : ''}
-      ${onClick ? 'cursor-pointer' : ''}
-      ${className}`}
+    className={`
+      ${hoverable || onClick ? 'cursor-pointer' : ''}
+      ${className}
+    `}
+    style={{
+      margin: 0,
+      '--border-radius': '16px',
+      '--box-shadow': 'none',
+      border: '1px solid var(--ion-border-color)',
+      background: 'var(--ion-card-background)',
+    } as React.CSSProperties}
   >
-    {children}
-  </div>
+    <IonCardContent style={{ padding: 0 }}>
+      <div className="p-4 md:p-6">{children}</div>
+    </IonCardContent>
+  </IonCard>
 );
 
 export default Card;

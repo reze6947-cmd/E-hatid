@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { IonIcon } from '@ionic/react';
+import { IonIcon, IonButton } from '@ionic/react';
 import { timeOutline, logOutOutline, swapHorizontalOutline } from 'ionicons/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -29,27 +29,25 @@ const ApprovalPending: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px', textAlign: 'center' }}>
-      <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#F59E0B20', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
-        <IonIcon icon={timeOutline} style={{ fontSize: '40px', color: '#F59E0B' }} />
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+      <div className="w-20 h-20 rounded-full bg-[var(--ion-color-warning)]/20 flex items-center justify-center mb-6">
+        <IonIcon icon={timeOutline} className="text-4xl text-[var(--ion-color-warning)]" />
       </div>
-      <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--ion-text-color)', margin: '0 0 12px' }}>Application Submitted</h1>
-      <p style={{ color: 'var(--ion-text-color-secondary)', fontSize: '14px', lineHeight: 1.6, maxWidth: '360px', margin: '0 0 32px' }}>
+      <h1 className="text-2xl font-bold text-[var(--ion-text-color)] m-0 mb-3">Application Submitted</h1>
+      <p className="text-sm text-[var(--ion-text-color-secondary)] leading-relaxed max-w-xs m-0 mb-8">
         Your <strong>{role}</strong> application is under review. You will be notified once approved.
       </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '300px' }}>
+      <div className="flex flex-col gap-3 w-full max-w-xs">
         {hasOtherRoles && (
-          <button onClick={() => history.push('/select-role')}
-            style={{ padding: '12px 24px', borderRadius: '8px', border: '1px solid var(--ion-border-color)', background: 'var(--ion-card-background)', color: 'var(--ion-text-color)', fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <IonIcon icon={swapHorizontalOutline} />
+          <IonButton shape="round" fill="outline" onClick={() => history.push('/select-role')}>
+            <IonIcon icon={swapHorizontalOutline} slot="start" />
             Switch Role
-          </button>
+          </IonButton>
         )}
-        <button onClick={handleLogout}
-          style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: 'transparent', color: 'var(--ion-text-color-secondary)', fontSize: '14px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          <IonIcon icon={logOutOutline} />
+        <IonButton shape="round" fill="clear" color="medium" onClick={handleLogout}>
+          <IonIcon icon={logOutOutline} slot="start" />
           Sign Out
-        </button>
+        </IonButton>
       </div>
     </div>
   );

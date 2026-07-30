@@ -32,7 +32,7 @@ const ReviewPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
         <p className="text-[var(--ion-text-color-secondary)]">Order not found</p>
-        <IonButton style={{ '--background': 'var(--ion-color-primary)' }} onClick={() => history.push('/customer/orders')}>
+        <IonButton shape="round" onClick={() => history.push('/customer/orders')}>
           Go to Orders
         </IonButton>
       </div>
@@ -75,7 +75,7 @@ const ReviewPage: React.FC = () => {
         <IonIcon icon={checkmarkCircle} className="text-5xl text-[#10B981] mb-4" />
         <h2 className="m-0 mb-2 text-xl font-bold text-[var(--ion-text-color)]">Thank you for your review!</h2>
         <p className="m-0 mb-4 text-sm text-[var(--ion-text-color-secondary)]">Your feedback helps us improve</p>
-        <IonButton style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px' }} onClick={() => history.push('/customer/orders')}>
+        <IonButton shape="round" onClick={() => history.push('/customer/orders')}>
           Back to Orders
         </IonButton>
       </div>
@@ -163,12 +163,13 @@ const ReviewPage: React.FC = () => {
         <div className="max-w-[360px] mx-auto">
           <IonButton
             expand="block"
-            style={{ '--background': '#8B5CF6', '--border-radius': '8px' }}
-            className="h-11 text-sm font-semibold"
+            shape="round"
+            color="secondary"
+            className="min-h-[44px] font-semibold"
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting ? <IonSpinner name="crescent" /> : 'Submit Review'}
+            {submitting ? <IonSpinner /> : 'Submit Review'}
           </IonButton>
         </div>
       </div>

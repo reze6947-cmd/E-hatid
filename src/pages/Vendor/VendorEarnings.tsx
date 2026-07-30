@@ -49,7 +49,7 @@ const VendorEarnings: React.FC = () => {
           <PageHeader title="Earnings" subtitle="Track your revenue and payouts" />
 
           {loading ? (
-            <div className="text-center p-12"><IonSpinner name="crescent" /></div>
+            <div className="text-center p-12"><IonSpinner /></div>
           ) : (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>

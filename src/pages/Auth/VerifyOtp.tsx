@@ -3,6 +3,7 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonInput,
 } from '@ionic/react';
 import { mailOutline, checkmarkCircleOutline, logOutOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -85,11 +86,6 @@ const VerifyOtp: React.FC = () => {
     }
   };
 
-  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-    setOtp(val);
-  };
-
   return (
     <div className="max-w-md mx-auto pt-8 sm:pt-12 md:pt-16 pb-32 sm:pb-40 text-center">
       <div className="px-4">
@@ -108,27 +104,29 @@ const VerifyOtp: React.FC = () => {
         </p>
 
         {sent && (
-          <div className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 p-4 rounded-lg mb-6 text-sm border border-green-200 dark:border-green-800 flex items-start gap-3 text-left">
+          <div className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 p-4 rounded-xl mb-6 text-sm border border-green-200 dark:border-green-800 flex items-start gap-3 text-left">
             <IonIcon icon={checkmarkCircleOutline} className="text-lg shrink-0 mt-0.5" />
             <span>OTP sent! Check your inbox and spam folder.</span>
           </div>
         )}
 
         <div className="mb-6">
-          <input
+          <IonInput
             type="text"
             inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
             value={otp}
-            onChange={handleOtpChange}
             placeholder="000000"
-            className="w-full max-w-[280px] mx-auto text-center text-3xl sm:text-4xl font-bold tracking-[0.5em] px-4 py-4 rounded-xl border-2 border-[var(--ion-color-primary)] bg-[var(--ion-card-background)] text-[var(--ion-text-color)] outline-none focus:border-[var(--ion-color-primary-shade)] placeholder:text-[var(--ion-text-color-secondary)]/40"
+            onIonInput={e => {
+              const val = e.detail.value!.replace(/\D/g, '').slice(0, 6);
+              setOtp(val);
+            }}
+            className="w-full max-w-[280px] mx-auto text-center text-3xl sm:text-4xl font-bold tracking-[0.5em] [--color:var(--ion-text-color)] [--placeholder-color:var(--ion-text-color-secondary)] [--background:var(--ion-card-background)] [--padding-start:16px] [--padding-end:16px] [--padding-top:16px] [--padding-bottom:16px] border-2 border-[var(--ion-color-primary)] rounded-xl"
+            style={{ '--border-radius': '12px', '--highlight-height': '0' } as any}
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-3 rounded-lg mb-6 text-sm border border-red-200 dark:border-red-800">
+          <div className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-3 rounded-xl mb-6 text-sm border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
@@ -136,14 +134,8 @@ const VerifyOtp: React.FC = () => {
         <IonButton
           expand="block"
           size="large"
-          className="min-h-[48px]"
-          style={{
-            '--background': 'var(--ion-color-primary)',
-            '--border-radius': '8px',
-            fontSize: '15px',
-            fontWeight: 700,
-            marginBottom: '12px',
-          }}
+          shape="round"
+          className="min-h-[48px] font-bold"
           onClick={handleVerify}
           disabled={otp.length !== 6 || verifying}
         >
@@ -153,38 +145,33 @@ const VerifyOtp: React.FC = () => {
         <IonButton
           expand="block"
           size="large"
+          shape="round"
           fill="outline"
-          className="min-h-[48px]"
-          style={{
-            '--border-radius': '8px',
-            fontSize: '15px',
-            fontWeight: 600,
-            marginBottom: '24px',
-            '--border-color': 'var(--ion-color-primary)',
-          }}
+          className="min-h-[48px] font-semibold mt-3"
           onClick={handleSendOtp}
           disabled={cooldown > 0 || loading}
         >
           {loading ? <IonSpinner /> : cooldown > 0 ? `Resend in ${cooldown}s` : 'Send OTP'}
         </IonButton>
 
-        <button
+        <IonButton
+          expand="block"
+          size="large"
+          shape="round"
+          fill="outline"
+          color="danger"
+          className="min-h-[48px] font-semibold mt-3 md:hidden"
           onClick={handleLogout}
-          className="md:hidden w-full max-w-[280px] mx-auto h-12 flex items-center justify-center gap-2 rounded-xl border-2 border-[#EF4444]/30 text-[#EF4444] font-semibold text-sm bg-transparent hover:bg-[#EF4444]/5 transition-colors mb-4"
         >
-          <IonIcon icon={logOutOutline} className="text-base" />
+          <IonIcon icon={logOutOutline} slot="start" />
           Log Out
-        </button>
+        </IonButton>
 
-        <div className="text-sm text-[var(--ion-text-color-secondary)]">
+        <div className="text-sm text-[var(--ion-text-color-secondary)] mt-6">
           Didn't receive the code? Check your spam folder or{' '}
-          <button
-            onClick={handleSendOtp}
-            disabled={cooldown > 0}
-            className="text-[var(--ion-color-primary)] font-semibold bg-transparent border-none p-0 cursor-pointer underline disabled:opacity-50"
-          >
+          <IonButton fill="clear" size="small" className="font-semibold underline align-baseline" onClick={handleSendOtp} disabled={cooldown > 0}>
             send again
-          </button>
+          </IonButton>
         </div>
       </div>
     </div>

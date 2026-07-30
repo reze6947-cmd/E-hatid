@@ -21,7 +21,7 @@ import '@ionic/react/css/display.css';
 /* Lazy-loaded pages */
 const Landing = lazy(() => import('./pages/Guest/Landing'));
 const CustomerHome = lazy(() => import('./pages/customer/Home'));
-const StallDetail = lazy(() => import('./pages/Guest/StallDetail'));
+const StallDetail = lazy(() => import('./pages/StallDetail'));
 const GuestCart = lazy(() => import('./pages/Guest/Cart'));
 const GuestLocationPicker = lazy(() => import('./pages/Guest/LocationPicker'));
 const Login = lazy(() => import('./pages/Auth/Login'));
