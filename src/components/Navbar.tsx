@@ -110,7 +110,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
                   onClick={() => history.push(link.path)}
                   style={{ '--padding-start': '0', '--padding-end': '0', '--background': 'transparent', '--box-shadow': 'none', height: 'auto', minHeight: '36px' }}
                 >
-                  <div className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                  <div className={`flex items-center justify-center gap-2 px-3 lg:px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive(link.path)
                       ? 'bg-[var(--ion-color-primary)] text-white'
                       : 'text-[var(--ion-text-color-secondary)] hover:bg-[var(--ion-border-color)]/30'
@@ -168,7 +168,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
 
       {/* Mobile bottom tab bar */}
       {!hideMobileTabBar && links.length > 0 && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] safe-area-bottom shadow-lg">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] pb-[env(safe-area-inset-bottom,0px)] shadow-lg">
           <div className="flex items-center justify-center h-16 px-2 gap-1">
             {links.map(link => {
               const active = isActive(link.path);
@@ -179,7 +179,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
                   onClick={() => history.push(link.path)}
                   style={{ '--padding-start': '0', '--padding-end': '0', '--background': 'transparent', '--box-shadow': 'none', height: 'auto', minHeight: '44px', '--border-radius': '9999px' }}
                 >
-                  <div className={`flex flex-col items-center justify-center gap-0.5 flex-1 max-w-[80px] min-h-[44px] rounded-full transition-all duration-200 ${
+                  <div className={`flex flex-col items-center justify-center gap-0.5 flex-1 max-w-[72px] sm:max-w-[80px] min-h-[44px] rounded-full transition-all duration-200 ${
                     active ? 'bg-[var(--ion-color-primary)] px-4 py-2' : 'bg-[var(--ion-border-color)]/30 px-3 py-1.5'
                   }`}>
                     <div className={`transition-transform duration-200 ${active ? 'scale-110' : ''}`}>

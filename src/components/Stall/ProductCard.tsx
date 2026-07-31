@@ -13,10 +13,10 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ item, stallImage, onItemClick, showPopularBadge }) => {
   return (
     <div
-      className="rounded-xl bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+      className="flex rounded-xl bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer"
       onClick={() => onItemClick(item)}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative w-24 xs:w-28 sm:w-32 md:w-40 lg:w-48 xl:w-56 shrink-0 self-start aspect-square overflow-hidden bg-[var(--ion-background-color)]">
         <img
           src={item.image || stallImage}
           alt={item.name}
@@ -31,14 +31,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, stallImage, onItemClick
           </span>
         )}
       </div>
-      <div className="p-3">
-        <h3 className="font-medium text-sm text-[var(--ion-text-color)] line-clamp-2">{item.name}</h3>
+      <div className="flex flex-col flex-1 min-w-0 p-3 sm:p-4">
+        <h3 className="font-semibold text-sm text-[var(--ion-text-color)] line-clamp-2 leading-snug">{item.name}</h3>
         {item.description && (
           <p className="text-xs text-[var(--ion-text-color-secondary)] line-clamp-2 mt-1">{item.description}</p>
         )}
-        <div className="flex items-center justify-between mt-2">
-          <span className="font-semibold text-sm text-[var(--ion-color-primary)]">₱{item.price.toFixed(2)}</span>
-          <IonButton fill="outline" shape="round" size="small" color="primary" className="min-h-[32px] text-xs font-semibold m-0">
+        <div className="flex items-center justify-between gap-2 mt-auto pt-2 sm:pt-3">
+          <span className="font-bold text-sm sm:text-base text-[var(--ion-color-primary)]">₱{item.price.toFixed(2)}</span>
+          <IonButton fill="outline" shape="round" size="small" color="primary" className="min-h-[34px] text-xs font-semibold m-0 shrink-0">
             <IonIcon icon={add} slot="start" className="text-xs" />
             Add
           </IonButton>

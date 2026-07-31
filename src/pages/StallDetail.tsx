@@ -110,7 +110,7 @@ const StallDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 p-4 md:p-6 lg:p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {Array.from({ length: 6 }).map((_, i) => (
           <StallCardSkeleton key={i} />
         ))}
@@ -167,7 +167,7 @@ const StallDetail: React.FC = () => {
           <div className={`pt-4 md:pt-5 ${stall.logo ? 'ml-28 md:ml-32' : ''}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[var(--ion-text-color)] m-0 truncate">{stall.name}</h1>
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[var(--ion-text-color)] m-0 line-clamp-2">{stall.name}</h1>
                 <p className="text-sm text-[var(--ion-color-primary)] font-medium mt-0.5">{stall.category}</p>
               </div>
               <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full text-sm font-semibold shrink-0 mt-1">
@@ -209,7 +209,7 @@ const StallDetail: React.FC = () => {
                     const el = sectionRefMap.current.get(nav.id);
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="relative min-w-[100px] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-full"
+                  className="relative min-w-[88px] sm:min-w-[100px] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors rounded-full"
                 >
                   {activeSection === nav.id && (
                     <motion.div
@@ -239,7 +239,7 @@ const StallDetail: React.FC = () => {
                 <p className="text-sm text-[var(--ion-text-color-secondary)] m-0">Most ordered items</p>
                 <div className="mt-3 border-b border-[var(--ion-border-color)]" />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 mt-4">
                 {popularItems.map(item => (
                   <ProductCard key={item.id} item={item} stallImage={stall.image} onItemClick={handleItemClick} />
                 ))}
@@ -256,7 +256,7 @@ const StallDetail: React.FC = () => {
                 <div ref={setHeaderRef(sectionId)} data-header={sectionId} className="mb-3 sm:mb-4">
                   <h2 className="text-base sm:text-lg md:text-xl font-bold text-[var(--ion-text-color)] m-0">{category}</h2>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                   {items.map(item => (
                     <ProductCard key={item.id} item={item} stallImage={stall.image} onItemClick={handleItemClick} showPopularBadge={!!item.popular} />
                   ))}

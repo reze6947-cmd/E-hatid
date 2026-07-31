@@ -184,32 +184,30 @@ const UserProfile: React.FC = () => {
           {emailError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{emailError}</span>}
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center mb-2">
-            <IonIcon icon={locationOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Delivery Address</IonLabel>
-          </div>
-          <p className="w-full p-3 rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0">
+        {/* Delivery Location */}
+        <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+          <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
+            <IonIcon icon={locationOutline} className="mr-1.5 align-middle" />
+            Delivery Location
+          </h3>
+
+          <p className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0 mb-3">
             {user?.address || 'No address set'}
           </p>
-        </div>
 
-        <div className="mb-4">
-          <div className="flex items-center mb-2">
-            <IonIcon icon={locationOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Delivery Location</IonLabel>
-          </div>
           {user?.latitude != null && user?.longitude != null && (
-            <p className="text-xs text-[var(--ion-color-primary)] mb-2">📍 {user.latitude.toFixed(6)}, {user.longitude.toFixed(6)}</p>
+            <p className="text-xs text-[var(--ion-color-primary)] mb-2">
+              📍 {user.latitude.toFixed(6)}, {user.longitude.toFixed(6)}
+            </p>
           )}
-          <div className="w-full h-[200px] rounded-xl overflow-hidden border border-[var(--ion-border-color)]" style={{ position: 'relative', isolation: 'isolate' }}>
+          <div className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-[var(--ion-border-color)] mb-3" style={{ position: 'relative', isolation: 'isolate' }}>
             <MapContainer center={[user?.latitude || 14.5995, user?.longitude || 120.9842]} zoom={15} style={{ width: '100%', height: '100%' }} zoomControl={false} dragging={false} scrollWheelZoom={false} touchZoom={false} doubleClickZoom={false}>
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               {user?.latitude != null && user?.longitude != null && <Marker position={[user.latitude, user.longitude]} icon={profileMarkerIcon} />}
               <MapFixer />
             </MapContainer>
           </div>
-          <IonButton expand="block" shape="round" className="mt-3 font-semibold" onClick={() => history.push('/customer/location')}>
+          <IonButton expand="block" shape="round" className="h-12 text-base font-semibold" onClick={() => history.push('/customer/location')}>
             Edit Address
           </IonButton>
         </div>

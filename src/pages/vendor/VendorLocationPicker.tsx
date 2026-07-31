@@ -19,6 +19,10 @@ interface Suggestion {
   lon: string;
 }
 
+const geocodeCache = new Map<string, Suggestion[]>();
+const reverseCache = new Map<string, Suggestion>();
+let lastGeocodeCall = 0;
+
 const markerIcon = L.divIcon({
   className: '',
   html: '<div style="background:var(--ion-color-primary);width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
@@ -27,9 +31,21 @@ const markerIcon = L.divIcon({
 });
 
 const reverseGeocode = async (lat: number, lng: number): Promise<Suggestion | null> => {
+  const key = `${lat},${lng}`;
+  const cached = reverseCache.get(key);
+  if (cached) return cached;
+
   try {
+    const now = Date.now();
+    const elapsed = now - lastGeocodeCall;
+    if (elapsed < 1000) {
+      await new Promise(r => setTimeout(r, 1000 - elapsed));
+    }
+    lastGeocodeCall = Date.now();
+
     const res = await fetch(
-      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`
+      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`,
+      { headers: { 'User-Agent': 'E-Hatid/1.0' } }
     );
     const data = await res.json();
     const f = data.features?.[0];
@@ -42,12 +58,15 @@ const reverseGeocode = async (lat: number, lng: number): Promise<Suggestion | nu
       f.properties.city || '',
       f.properties.state || '',
     ].filter(Boolean);
-    return {
+    const result = {
       display: parts.join(', '),
       lat: f.geometry.coordinates[1],
       lon: f.geometry.coordinates[0],
     };
-  } catch {
+    reverseCache.set(key, result);
+    return result;
+  } catch (err) {
+    console.error('Reverse geocode error:', err);
     return null;
   }
 };
@@ -94,15 +113,29 @@ const VendorLocationPicker: React.FC = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim()) { setSuggestions([]); return; }
 
+    const trimmed = query.trim();
+    const cached = geocodeCache.get(trimmed.toLowerCase());
+    if (cached) {
+      setSuggestions(cached);
+      return;
+    }
+
     debounceRef.current = setTimeout(async () => {
       setFetching(true);
       try {
+        const now = Date.now();
+        const elapsed = now - lastGeocodeCall;
+        if (elapsed < 1000) {
+          await new Promise(r => setTimeout(r, 1000 - elapsed));
+        }
+        lastGeocodeCall = Date.now();
+
         const res = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en&countrycode=PH`,
+          { headers: { 'User-Agent': 'E-Hatid/1.0' } }
         );
         const data = await res.json();
-        setSuggestions(
-          (data.features || []).map((f: any) => {
+        const results = (data.features || []).map((f: any) => {
             const parts = [
               f.properties.name && f.properties.street
                 ? `${f.properties.name} ${f.properties.street}`
@@ -116,9 +149,11 @@ const VendorLocationPicker: React.FC = () => {
               lat: f.geometry.coordinates[1],
               lon: f.geometry.coordinates[0],
             };
-          })
-        );
-      } catch {
+          });
+        geocodeCache.set(query.trim().toLowerCase(), results);
+        setSuggestions(results);
+      } catch (err) {
+        console.error('Geocode search error:', err);
         setSuggestions([]);
       } finally {
         setFetching(false);
@@ -194,8 +229,8 @@ const VendorLocationPicker: React.FC = () => {
                 placeholder="Search your stall address..."
                 value={query}
                 onIonInput={e => { setQuery(e.detail.value || ''); setSelectedAddress(null); }}
-                className="[--padding-start:36px] [--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
-                style={{ '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
+                className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
+                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
               />
               {fetching && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--ion-text-color-secondary)]">

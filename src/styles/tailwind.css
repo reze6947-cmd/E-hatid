@@ -105,6 +105,27 @@ body {
   .icon-container {
     @apply w-12 h-12 min-w-12 min-h-12 flex items-center justify-center rounded-xl;
   }
+
+  .field-box {
+    border: 1px solid var(--ion-border-color) !important;
+    border-radius: 12px;
+    --background: var(--ion-background-color) !important;
+    --color: var(--ion-text-color) !important;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --min-height: 44px;
+    --highlight-height: 0;
+    --inner-border-width: 0;
+    --inner-box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .field-box:focus-within {
+    border-color: var(--ion-color-primary) !important;
+    box-shadow: 0 0 0 3px var(--ion-color-primary-tint);
+  }
 }
 
 @keyframes loading {
@@ -185,16 +206,50 @@ ion-button {
   padding-right: 10px;
 }
 
-.product-editor-modal ion-toggle::part(track),
-.product-editor-page ion-toggle::part(track) {
-  height: 22px;
-  width: 40px;
+.product-editor-modal ion-toggle,
+.product-editor-page ion-toggle {
+  --width: 44px;
+  --height: 24px;
+  --handle-width: 20px;
+  --handle-height: 20px;
 }
 
-.product-editor-modal ion-toggle::part(handle),
-.product-editor-page ion-toggle::part(handle) {
-  width: 18px;
-  height: 18px;
+.product-editor-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ion-color-primary) transparent;
+}
+
+.product-editor-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.product-editor-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.product-editor-scroll::-webkit-scrollbar-thumb {
+  background: var(--ion-color-primary);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.product-editor-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ion-color-primary-shade);
+}
+
+.product-sort {
+  --background: transparent;
+  --color: var(--ion-text-color);
+  --padding-start: 0;
+  --padding-end: 0;
+  --highlight-height: 0;
+  --border-color: transparent;
+  --inner-border-width: 0;
+  min-width: 140px;
+  height: 100%;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 @media (max-width: 767px) {

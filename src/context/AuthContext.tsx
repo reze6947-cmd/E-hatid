@@ -85,6 +85,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         const normalized = normalizeUser(userData);
+
+        // Restore activeRole from localStorage as fallback
+        try {
+          const cachedRole = localStorage.getItem('activeRole');
+          const userRoles: string[] = normalized.roles || [];
+          if (cachedRole && userRoles.includes(cachedRole) && cachedRole !== normalized.activeRole) {
+            normalized.activeRole = cachedRole;
+            await updateUserDocument(firebaseUser.uid, { activeRole: cachedRole } as any).catch(() => {});
+          }
+        } catch {}
+
         setUser(normalized);
         localStorage.setItem('user', JSON.stringify(normalized));
       } else {
@@ -198,6 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setIsGuest(false);
     localStorage.removeItem('user');
+    localStorage.removeItem('activeRole');
   };
 
   const updateUserProfile = async (data: Partial<User>) => {
@@ -241,6 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updated = { ...user, activeRole: role };
     setUser(updated);
+    localStorage.setItem('activeRole', role);
     localStorage.setItem('user', JSON.stringify(updated));
     try {
       await updateUserDocument(user.id, { activeRole: role } as any);
