@@ -61,10 +61,10 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
             title="Decrease quantity"
             style={{ '--background': item.quantity === 1 ? 'var(--ion-color-danger)' : 'var(--ion-color-primary)', '--color': '#fff', '--padding': '0' }}
           >
-            <IonIcon icon={item.quantity === 1 ? trash : remove} className="text-sm" />
+            <IonIcon icon={item.quantity === 1 ? trash : remove} className="text-xl" />
           </IonButton>
 
-          <span className="font-medium text-sm w-8 text-center text-[var(--ion-text-color)]">{item.quantity}</span>
+          <span className="font-medium text-xl w-10 text-center text-[var(--ion-text-color)]">{item.quantity}</span>
 
           <IonButton
             className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-lg"
@@ -72,7 +72,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
             title="Increase quantity"
             style={{ '--background': 'var(--ion-color-primary)', '--color': '#fff', '--padding': '0' }}
           >
-            <IonIcon icon={add} className="text-sm" />
+            <IonIcon icon={add} className="text-xl" />
           </IonButton>
         </div>
 

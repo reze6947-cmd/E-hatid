@@ -3,8 +3,9 @@ import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSpinner,
   IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonTextarea, IonToast,
 } from '@ionic/react';
-import { checkmarkOutline, closeOutline, personOutline, callOutline, timeOutline, locationOutline } from 'ionicons/icons';
+import { checkmarkOutline, closeOutline, personOutline, callOutline, timeOutline, locationOutline, listOutline, carOutline, checkmarkCircle, closeCircle } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 import { useAuth } from '../../context/AuthContext';
 import { updateOrderStatus, subscribeVendorOrders } from '../../services/orderService';
@@ -121,6 +122,20 @@ const VendorOrders: React.FC = () => {
 
   const isProcessing = (id: string) => processingOrders.has(id);
 
+  const FILTER_PILLS: {
+    tab: FilterTab;
+    label: string;
+    icon: string;
+    accent: string;
+    count: number;
+  }[] = [
+    { tab: 'all', label: 'All', icon: listOutline, accent: 'text-[var(--ion-text-color)]', count: orders.length },
+    { tab: 'pending', label: 'Pending', icon: timeOutline, accent: 'text-[#F59E0B]', count: orders.filter(o => o.status === 'pending').length },
+    { tab: 'active', label: 'Active', icon: carOutline, accent: 'text-[var(--ion-color-primary)]', count: orders.filter(o => ['accepted', 'preparing', 'ready', 'delivering'].includes(o.status)).length },
+    { tab: 'completed', label: 'Completed', icon: checkmarkCircle, accent: 'text-[var(--ion-color-success)]', count: orders.filter(o => o.status === 'delivered').length },
+    { tab: 'cancelled', label: 'Cancelled', icon: closeCircle, accent: 'text-[var(--ion-color-danger)]', count: orders.filter(o => o.status === 'cancelled').length },
+  ];
+
   const formatTime = (iso: string | Date | any) => {
     if (!iso) return '';
     if (typeof iso?.toDate === 'function') iso = iso.toDate();
@@ -139,17 +154,29 @@ const VendorOrders: React.FC = () => {
         <div className="p-4">
           <PageHeader title="Orders" subtitle="View and manage incoming orders" />
 
-          <div className="flex gap-4 mb-4 overflow-x-auto pb-2">
-            {(['all', 'pending', 'active', 'completed', 'cancelled'] as FilterTab[]).map(tab => (
-              <IonButton
-                key={tab}
-                style={filter === tab ? { '--background': 'var(--ion-color-primary)', flexShrink: 0 } : { '--border-color': 'var(--ion-color-primary)', '--color': 'var(--ion-color-primary)', flexShrink: 0 }}
-                fill={filter === tab ? 'solid' : 'outline'}
-                onClick={() => setFilter(tab)}
-              >
-                {tab === 'active' ? 'Active' : tab === 'completed' ? 'Completed' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </IonButton>
-            ))}
+          <div className="flex flex-wrap gap-2 sm:gap-2.5 mb-5">
+            {FILTER_PILLS.map(pill => {
+              const active = filter === pill.tab;
+              return (
+                <motion.button
+                  key={pill.tab}
+                  type="button"
+                  layout
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setFilter(pill.tab)}
+                  aria-pressed={active}
+                  className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 min-h-[44px] shadow-sm transition-colors cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2 ${
+                    active
+                      ? 'bg-[var(--ion-color-primary)] border-[var(--ion-color-primary)]'
+                      : 'bg-[var(--ion-card-background)] border-[var(--ion-border-color)] hover:border-[var(--ion-color-primary)]/50'
+                  }`}
+                >
+                  <IonIcon icon={pill.icon} className={`text-base shrink-0 ${active ? 'text-white' : pill.accent}`} />
+                  <span className={`text-sm font-bold tabular-nums leading-none ${active ? 'text-white' : 'text-[var(--ion-text-color)]'}`}>{pill.count}</span>
+                  <span className={`text-xs font-medium leading-none ${active ? 'text-white/80' : 'text-[var(--ion-text-color-secondary)]'}`}>{pill.label}</span>
+                </motion.button>
+              );
+            })}
           </div>
 
           {loading ? (

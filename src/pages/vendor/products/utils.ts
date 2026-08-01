@@ -11,6 +11,8 @@ export const sanitizeMoney = (raw: string): number => {
 
 export const formatPrice = (value: number) => `₱${(value || 0).toFixed(2)}`;
 
+export const inputClasses = 'w-full h-11 px-3 text-sm rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] text-[var(--ion-text-color)] placeholder:text-[var(--ion-text-color-secondary)] outline-none focus:border-[var(--ion-color-primary)] focus:ring-2 focus:ring-[var(--ion-color-primary-tint)] transition-all';
+
 export const MAX_IMAGE_SIZE_MB = 8;
 
 export const isImageFile = (file: File): boolean =>

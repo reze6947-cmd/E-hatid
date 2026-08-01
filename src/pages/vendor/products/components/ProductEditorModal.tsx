@@ -20,7 +20,7 @@ import {
   copyOutline,
 } from 'ionicons/icons';
 import { MenuItem, MenuItemOption, MenuItemAddOn } from '../../../../types';
-import { sanitizeMoney, isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB } from '../utils';
+import { sanitizeMoney, isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB, inputClasses } from '../utils';
 import { useIsMobile } from '../hooks/useIsMobile';
 import SectionCard from './SectionCard';
 import ProductImageUploader from './ProductImageUploader';
@@ -32,6 +32,7 @@ const ProductImageCropper = React.lazy(() => import('./ProductImageCropper'));
 interface ProductEditorModalProps {
   item: MenuItem;
   isOpen: boolean;
+  isNew: boolean;
   onClose: () => void;
   onSave: (updated: MenuItem) => void;
   onDelete?: () => void;
@@ -46,17 +47,16 @@ type IonStyle = React.CSSProperties & { [key: `--${string}`]: string };
 
 const SECTIONS = [
   { id: 'details', label: 'Details', icon: 'text-outline' },
-  { id: 'pricing', label: 'Pricing', icon: 'pricetag-outline' },
   { id: 'status', label: 'Status', icon: 'eye-outline' },
+  { id: 'pricing', label: 'Pricing', icon: 'pricetag-outline' },
   { id: 'options', label: 'Options', icon: 'list-outline' },
   { id: 'addons', label: 'Add-ons', icon: 'add-circle-outline' },
 ];
 
-const inputClasses = 'w-full h-11 px-3 text-sm rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] text-[var(--ion-text-color)] placeholder:text-[var(--ion-text-color-secondary)] outline-none focus:border-[var(--ion-color-primary)] focus:ring-2 focus:ring-[var(--ion-color-primary-tint)] transition-all';
-
 const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
   item,
   isOpen,
+  isNew,
   onClose,
   onSave,
   onDelete,
@@ -81,6 +81,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
   const [activeSection, setActiveSection] = useState('details');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLIonInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const nameError = name.trim() === '' ? 'Product name is required' : null;
   const priceError = price <= 0 ? 'Enter a price greater than 0' : null;
@@ -122,15 +123,14 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
   }, [isOpen, handleFile]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    const container = document.querySelector('.product-editor-scroll');
+    if (!isOpen || !scrollRef.current) return;
     const observer = new IntersectionObserver(
       entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting) setActiveSection(entry.target.id);
         });
       },
-      { root: container, threshold: 0.15 },
+      { root: scrollRef.current, threshold: 0.15 },
     );
     SECTIONS.forEach(s => {
       const el = document.getElementById(s.id);
@@ -177,7 +177,13 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
   };
 
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveSection(id);
+    const container = scrollRef.current;
+    const el = document.getElementById(id);
+    if (container && el) {
+      const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+      container.scrollTo({ top: Math.max(0, top - 12), behavior: 'smooth' });
+    }
   };
 
   const hasChanges = name !== item.name
@@ -258,9 +264,9 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
               <div className="min-w-0 @container">
                 {uploader}
 
-                <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3 sm:gap-4 @3xl:grid-cols-2 @3xl:items-start">
-                  <div className="min-w-0 space-y-3 sm:space-y-4">
-                    <SectionCard id="details" title="Details">
+                <div className="mt-3 sm:mt-4 grid grid-cols-1 gap-3 sm:gap-4 @3xl:grid-cols-2">
+                  <div className="min-w-0 flex flex-col">
+                    <SectionCard id="details" title="Details" className="flex-1">
                   <div className="space-y-3 sm:space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
@@ -304,49 +310,6 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
                     </div>
                   </div>
                 </SectionCard>
-
-                <SectionCard id="pricing" title="Pricing & Category">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-[var(--ion-text-color-secondary)] mb-1.5">Price</label>
-                      <IonItem className="field-box">
-                        <span className="text-sm font-semibold text-[var(--ion-text-color-secondary)] pr-1">₱</span>
-                        <IonInput
-                          value={price}
-                          inputmode="decimal"
-                          type="text"
-                          onIonChange={e => setPrice(sanitizeMoney(e.detail.value ?? ''))}
-                          onIonBlur={() => setPriceTouched(true)}
-                          placeholder="0.00"
-                          className="text-sm"
-                        />
-                      </IonItem>
-                      {priceTouched && priceError && (
-                        <p className="text-[11px] text-[var(--ion-color-danger)] mt-1 font-medium">{priceError}</p>
-                      )}
-                      {!(priceTouched && priceError) && (
-                        <p className="text-[11px] text-[var(--ion-text-color-secondary)] mt-1">Base price. Extra charges can be added in Options or Add-ons below</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-[var(--ion-text-color-secondary)] mb-1.5">Category</label>
-                      <input
-                        type="text"
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
-                        maxLength={40}
-                        placeholder="e.g., Main Course"
-                        list="product-categories"
-                        aria-label="Category"
-                        className={inputClasses}
-                      />
-                      <datalist id="product-categories">
-                        {categorySuggestions.map(c => <option key={c} value={c} />)}
-                      </datalist>
-                      <p className="text-[11px] text-[var(--ion-text-color-secondary)] mt-1">Group similar items (e.g., Main Course, Drinks, Desserts)</p>
-                    </div>
-                  </div>
-                    </SectionCard>
                   </div>
                   <div className="min-w-0 space-y-3 sm:space-y-4">
                     <SectionCard id="status" title="Status" className="mb-0 lg:mb-0">
@@ -386,7 +349,52 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
                       />
                     </div>
                   </div>
-                  <p className="text-[11px] text-[var(--ion-text-color-secondary)] mt-2">Toggle Available off to hide from menu · Toggle Popular on to highlight as bestseller</p>
+                    <p className="text-[11px] text-[var(--ion-text-color-secondary)] mt-2">Toggle Available off to hide from menu · Toggle Popular on to highlight as bestseller</p>
+                    </SectionCard>
+
+                    <SectionCard id="pricing" title="Pricing & Category">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                          <label className="block text-xs font-medium text-[var(--ion-text-color-secondary)] mb-1.5">Price</label>
+                          <div className="relative">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[var(--ion-text-color-secondary)]">₱</span>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={price}
+                              onChange={e => setPrice(sanitizeMoney(e.target.value))}
+                              onBlur={() => setPriceTouched(true)}
+                              placeholder="0.00"
+                              aria-label="Price"
+                              style={{ paddingLeft: '1.75rem' }}
+                              className={inputClasses}
+                            />
+                          </div>
+                          {priceTouched && priceError && (
+                            <p className="text-[11px] text-[var(--ion-color-danger)] mt-1 font-medium">{priceError}</p>
+                          )}
+                          {!(priceTouched && priceError) && (
+                            <p className="text-[11px] text-[var(--ion-text-color-secondary)] mt-1">Base price. Extra charges can be added in Options or Add-ons below</p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[var(--ion-text-color-secondary)] mb-1.5">Category</label>
+                          <input
+                            type="text"
+                            value={category}
+                            onChange={e => setCategory(e.target.value)}
+                            maxLength={40}
+                            placeholder="e.g., Main Course"
+                            list="product-categories"
+                            aria-label="Category"
+                            className={inputClasses}
+                          />
+                          <datalist id="product-categories">
+                            {categorySuggestions.map(c => <option key={c} value={c} />)}
+                          </datalist>
+                          <p className="text-[11px] text-[var(--ion-text-color-secondary)] mt-1">Group similar items (e.g., Main Course, Drinks, Desserts)</p>
+                        </div>
+                      </div>
                     </SectionCard>
                   </div>
                 </div>
@@ -433,36 +441,25 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
           className="relative bg-[var(--ion-color-primary)]"
           style={{ minHeight: '56px', paddingTop: 'env(safe-area-inset-top)' }}
         >
-          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center min-h-[52px] sm:min-h-[56px]">
-            <div className="flex items-center">
-              <IonButton
-                onClick={onClose}
-                aria-label="Close"
-                style={{
-                  '--color': '#fff',
-                  '--background': 'rgba(0,0,0,0.2)',
-                  '--background-hover': 'rgba(0,0,0,0.35)',
-                  '--border-radius': '9999px',
-                  '--padding-start': '0',
-                  '--padding-end': '0',
-                  width: '36px',
-                  height: '36px',
-                  margin: isMobile ? '6px 0 0 6px' : '0',
-                } as IonStyle}
-              >
-                <IonIcon icon={closeOutline} />
-              </IonButton>
-            </div>
+          <div className="relative grid grid-cols-[1fr_auto_1fr] items-center min-h-[52px] sm:min-h-[56px] px-3 sm:px-4">
+            <div />
             <span className="text-center font-semibold text-sm sm:text-base text-white truncate max-w-[60vw]">{item.name || 'New Product'}</span>
             <div className="flex items-center justify-end">
-              <div className="w-11" />
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="w-10 h-10 rounded-full bg-black/20 hover:bg-black/35 active:scale-95 text-white flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              >
+                <IonIcon icon={closeOutline} className="text-lg" />
+              </button>
             </div>
           </div>
         </div>
       </IonHeader>
 
       <IonContent style={{ '--background': 'var(--ion-background-color)', '--overflow': 'hidden' }} className="product-editor-content">
-        <div className="h-full overflow-y-auto product-editor-scroll">
+        <div ref={scrollRef} className="h-full overflow-y-auto product-editor-scroll">
           {content}
         </div>
       </IonContent>
@@ -505,7 +502,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
         </IonButton>
         <button
           onClick={handleSave}
-          disabled={!isValid || (!hasChanges && !!item.name)}
+          disabled={!isValid || (!hasChanges && !isNew)}
           className="flex-[2] min-w-0 min-h-[48px] rounded-full bg-[var(--ion-color-primary)] hover:bg-[var(--ion-color-primary-shade)] text-white font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2"
         >
           <IonIcon icon={checkmarkCircle} className="text-base" />

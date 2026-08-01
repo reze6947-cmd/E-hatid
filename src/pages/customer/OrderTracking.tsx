@@ -440,7 +440,25 @@ const OrderTracking: React.FC = () => {
           {isDelivering && (
             <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-sm text-green-700 dark:text-green-400 text-center border border-green-200 dark:border-green-800">
               <IonIcon icon={bicycleOutline} className="align-middle mr-1" />
-              {riderLocation ? 'Your rider is on the way!' : 'Rider assigned — heading to pickup'}
+              {riderUser
+                ? `Kuya ${riderUser.name.split(' ')[0]} is on the way!`
+                : 'Your rider is on the way!'}
+              {riderUser && (riderUser.phone || riderUser.licensePlate) && (
+                <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800 text-left space-y-1">
+                  {riderUser.phone && (
+                    <p className="m-0 text-xs">
+                      <IonIcon icon={callOutline} className="align-middle mr-1" />
+                      {riderUser.phone}
+                    </p>
+                  )}
+                  {riderUser.licensePlate && (
+                    <p className="m-0 text-xs">
+                      <IonIcon icon={bicycleOutline} className="align-middle mr-1" />
+                      {riderUser.licensePlate}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -555,7 +573,7 @@ const OrderTracking: React.FC = () => {
           )}
 
           {/* Rider Info */}
-          {!loading && riderUser && (isDelivering || isDelivered) && (
+          {!loading && riderUser && isDelivered && (
             <div className="mb-4 bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <IonIcon icon={bicycleOutline} className="text-[var(--ion-color-primary)] text-lg" />

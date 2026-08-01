@@ -1,3 +1,4 @@
+@import './theme/ionic.css';
 @import './styles/tailwind.css';
 @import './theme/variables.css';
 @import './theme/global.css';

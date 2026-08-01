@@ -9,7 +9,7 @@ import RiderTrackingIndicator from '../components/RiderTrackingIndicator';
 const noMobileTabPaths = ['/verify-otp'];
 const noNavbarPaths = ['/login', '/register', '/role-selection', '/select-role', '/apply/vendor', '/apply/rider', '/admin/register'];
 
-const showFooterForRoles = ['customer'];
+const showFooterForRoles = ['customer', 'stall'];
 
 const RoleLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const location = useLocation();

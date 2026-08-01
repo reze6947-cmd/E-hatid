@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { IonButton, IonIcon, IonItem, IonInput, IonLabel, IonToggle } from '@ionic/react';
 import { addOutline, add, remove, trashOutline, chevronDownOutline, chevronUpOutline } from 'ionicons/icons';
 import { MenuItemOption, OptionChoice } from '../../../../types';
-import { sanitizeMoney } from '../utils';
+import { sanitizeMoney, inputClasses } from '../utils';
 import SectionCard from './SectionCard';
 
 interface OptionsEditorProps {
@@ -58,7 +58,7 @@ const OptionsEditor: React.FC<OptionsEditorProps> = ({ options, onChange, id }) 
     <SectionCard
       id={id}
       title="Options"
-      className="mb-0"
+      className="mb-0 @container"
       bodyClassName="space-y-3 sm:space-y-4"
       right={options.length > 0 ? (
         <span className="bg-[var(--ion-color-primary)] text-white px-2 py-0.5 text-[10px] sm:text-xs rounded-full font-semibold">{options.length}</span>
@@ -114,60 +114,60 @@ const OptionsEditor: React.FC<OptionsEditorProps> = ({ options, onChange, id }) 
 
               {!isCollapsed && (
                 <div className="p-3 sm:p-4 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3 px-3 py-2 min-h-[52px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)]">
-                      <div className="flex flex-col">
+                  <div className="grid grid-cols-1 @2xl:grid-cols-2 gap-3">
+                    <div className="px-3 py-2 min-h-[52px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] flex flex-col justify-center">
+                      <div className="flex items-center justify-between gap-3">
                         <IonLabel className="text-xs font-medium text-[var(--ion-text-color-secondary)] shrink-0">Required</IonLabel>
-                        <span className="text-[11px] text-[var(--ion-text-color-secondary)]">Customer must pick from this group</span>
+                        <IonToggle
+                          checked={option.required}
+                          className="shrink-0"
+                          onIonChange={e => updateOption(option.id, 'required', e.detail.checked)}
+                          style={{
+                            '--background': 'var(--ion-border-color)',
+                            '--background-checked': 'var(--ion-color-danger)',
+                            '--handle-background': '#fff',
+                            '--handle-background-checked': '#fff',
+                          } as React.CSSProperties & Record<string, string>}
+                        />
                       </div>
-                      <IonToggle
-                        checked={option.required}
-                        className="ml-auto"
-                        onIonChange={e => updateOption(option.id, 'required', e.detail.checked)}
-                        style={{
-                          '--background': 'var(--ion-border-color)',
-                          '--background-checked': 'var(--ion-color-danger)',
-                          '--handle-background': '#fff',
-                          '--handle-background-checked': '#fff',
-                        } as React.CSSProperties & Record<string, string>}
-                      />
+                      <span className="text-[11px] text-[var(--ion-text-color-secondary)] mt-1">Customer must pick from this group</span>
                     </div>
-                    <div className="flex items-center gap-3 px-3 py-2 min-h-[52px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)]">
-                      <div className="flex flex-col">
+                    <div className="px-3 py-2 min-h-[52px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] flex flex-col justify-center">
+                      <div className="flex items-center justify-between gap-3">
                         <IonLabel className="text-xs font-medium text-[var(--ion-text-color-secondary)] shrink-0">Max picks</IonLabel>
-                        <span className="text-[11px] text-[var(--ion-text-color-secondary)]">How many choices can they select?</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            className="w-7 h-7 rounded-full border border-[var(--ion-border-color)] text-[var(--ion-text-color)] flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)]"
+                            onClick={() => updateOption(option.id, 'maxSelections', Math.max(1, option.maxSelections - 1))}
+                            aria-label="Decrease max picks"
+                          >
+                            <IonIcon icon={remove} className="text-sm" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold tabular-nums text-[var(--ion-text-color)]">{option.maxSelections}</span>
+                          <button
+                            className="w-7 h-7 rounded-full bg-[var(--ion-color-primary)] text-white flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2"
+                            onClick={() => updateOption(option.id, 'maxSelections', Math.min(Math.max(1, option.choices.length), option.maxSelections + 1))}
+                            aria-label="Increase max picks"
+                          >
+                            <IonIcon icon={add} className="text-sm" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 ml-auto shrink-0">
-                        <button
-                          className="w-7 h-7 rounded-full border border-[var(--ion-border-color)] text-[var(--ion-text-color)] flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)]"
-                          onClick={() => updateOption(option.id, 'maxSelections', Math.max(1, option.maxSelections - 1))}
-                          aria-label="Decrease max picks"
-                        >
-                          <IonIcon icon={remove} className="text-sm" />
-                        </button>
-                        <span className="w-8 text-center text-sm font-semibold tabular-nums text-[var(--ion-text-color)]">{option.maxSelections}</span>
-                        <button
-                          className="w-7 h-7 rounded-full bg-[var(--ion-color-primary)] text-white flex items-center justify-center text-sm active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2"
-                          onClick={() => updateOption(option.id, 'maxSelections', Math.min(Math.max(1, option.choices.length), option.maxSelections + 1))}
-                          aria-label="Increase max picks"
-                        >
-                          <IonIcon icon={add} className="text-sm" />
-                        </button>
-                      </div>
+                      <span className="text-[11px] text-[var(--ion-text-color-secondary)] mt-1">How many choices can they select?</span>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-[var(--ion-text-color-secondary)] mb-1.5">Option Name</label>
-                    <IonItem className="field-box">
-                      <IonInput
-                        value={option.name}
-                        onIonChange={e => updateOption(option.id, 'name', e.detail.value!)}
-                        placeholder="e.g., Choice of Drink"
-                        maxlength={30}
-                        className="text-sm"
-                      />
-                    </IonItem>
+                    <input
+                      type="text"
+                      value={option.name}
+                      onChange={e => updateOption(option.id, 'name', e.target.value)}
+                      placeholder="e.g., Choice of Drink"
+                      maxLength={30}
+                      aria-label="Option name"
+                      className={inputClasses}
+                    />
                   </div>
 
                   <div>

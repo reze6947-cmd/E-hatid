@@ -6,10 +6,11 @@ import {
   IonIcon,
   IonLoading,
 } from '@ionic/react';
-import { arrowBackOutline, personOutline, mailOutline, callOutline, checkmarkCircleOutline, timeOutline, closeCircleOutline, locationOutline, idCardOutline, bicycleOutline, carOutline, businessOutline, fileTrayFullOutline, alertCircleOutline } from 'ionicons/icons';
+import { arrowBackOutline, personOutline, mailOutline, checkmarkCircleOutline, timeOutline, closeCircleOutline, locationOutline, idCardOutline, bicycleOutline, carOutline, businessOutline, fileTrayFullOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { submitApplicationDoc } from '../../services/userService';
+import { SUFFIXES, PH_REGIONS, formatNationalPH, fromStoredPhone, toStoredPhone, splitFullName, joinName, joinAddress } from '../../utils/profile';
 import { storage } from '../../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -32,18 +33,29 @@ const ApplyRider: React.FC = () => {
   const formRef = useRef<HTMLDivElement>(null);
   const [applicationType, setApplicationType] = useState<'individual' | 'business'>('individual');
   const [vehicleType, setVehicleType] = useState<'bike' | 'motorcycle' | 'car'>('bike');
-  const [formData, setFormData] = useState<Record<string, string>>({
-    fullName: user?.name || '',
-    contactEmail: user?.email || '',
-    contactPhone: user?.phone || '',
-    address: '',
-    governmentIdType: '',
-    governmentIdNumber: '',
-    driverLicenseNumber: '',
-    companyName: '',
-    companyRegistrationNumber: '',
-    assignedRiderName: '',
-    assignedRiderLicenseNumber: '',
+  const [formData, setFormData] = useState<Record<string, string>>(() => {
+    const nameParts = splitFullName(user?.name);
+    return {
+      firstName: nameParts.firstName,
+      middleName: nameParts.middleName,
+      lastName: nameParts.lastName,
+      suffix: nameParts.suffix,
+      contactEmail: user?.email || '',
+      contactPhone: fromStoredPhone(user?.phone),
+      addressStreet: '',
+      addressBarangay: '',
+      addressCity: '',
+      addressProvince: '',
+      addressRegion: '',
+      addressZip: '',
+      governmentIdType: '',
+      governmentIdNumber: '',
+      driverLicenseNumber: '',
+      companyName: '',
+      companyRegistrationNumber: '',
+      assignedRiderName: '',
+      assignedRiderLicenseNumber: '',
+    };
   });
   const [files, setFiles] = useState<Record<string, File | null>>({
     governmentIdImage: null,
@@ -181,12 +193,16 @@ const ApplyRider: React.FC = () => {
 
   const validate = (): FormErrors => {
     const e: FormErrors = {};
-    if (!formData.fullName || formData.fullName.trim().length < 2) e.fullName = 'Please enter your full name';
+    if (!formData.firstName || formData.firstName.trim().length < 2) e.firstName = 'Please enter your first name';
+    if (!formData.lastName || formData.lastName.trim().length < 2) e.lastName = 'Please enter your last name';
     if (!formData.contactEmail) e.contactEmail = 'Contact email is required';
     else if (!EMAIL_RE.test(formData.contactEmail)) e.contactEmail = 'Enter a valid email address';
-    if (!formData.contactPhone) e.contactPhone = 'Contact phone is required';
-    else if ((formData.contactPhone.match(PHONE_DIGITS_RE) || []).length < 8) e.contactPhone = 'Phone must have at least 8 digits';
-    if (!formData.address) e.address = 'Address is required';
+    const phoneDigits = (formData.contactPhone.match(PHONE_DIGITS_RE) || []);
+    if (phoneDigits.length === 0) e.contactPhone = 'Contact phone is required';
+    else if (phoneDigits.length < 10) e.contactPhone = 'Enter a complete 10-digit mobile number';
+    if (!formData.addressStreet) e.addressStreet = 'Street is required';
+    if (!formData.addressBarangay) e.addressBarangay = 'Barangay is required';
+    if (!formData.addressCity) e.addressCity = 'City / Municipality is required';
     if (applicationType === 'individual') {
       if (!formData.governmentIdType) e.governmentIdType = 'Select an ID type';
       if (!formData.governmentIdNumber) e.governmentIdNumber = 'ID number is required';
@@ -247,8 +263,25 @@ const ApplyRider: React.FC = () => {
       return;
     }
 
+    const composedName = joinName({
+      firstName: formData.firstName,
+      middleName: formData.middleName,
+      lastName: formData.lastName,
+      suffix: formData.suffix,
+    });
+    const composedAddress = joinAddress({
+      addressStreet: formData.addressStreet,
+      addressBarangay: formData.addressBarangay,
+      addressCity: formData.addressCity,
+      addressProvince: formData.addressProvince,
+      addressRegion: formData.addressRegion,
+      addressZip: formData.addressZip,
+    });
     const payload: Record<string, any> = {
       ...formData,
+      fullName: composedName,
+      address: composedAddress,
+      contactPhone: toStoredPhone(formData.contactPhone),
       ...uploadedUrls,
       applicationType,
       vehicleType,
@@ -394,10 +427,38 @@ const ApplyRider: React.FC = () => {
         <div className="mb-6">
           <h3 className="text-[15px] font-bold text-[var(--ion-text-color)] m-0 mb-4">Applicant Info</h3>
           <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-            {renderField('fullName', 'Full Name *', 'Your full name', personOutline)}
+            {renderField('firstName', 'First Name *', 'First name', personOutline)}
+            {renderField('middleName', 'Middle Name (optional)', 'Middle name', personOutline)}
+            {renderField('lastName', 'Last Name *', 'Last name', personOutline)}
+            <div>
+              <label style={labelStyle}>Suffix</label>
+              <select value={formData.suffix || ''} onChange={e => updateField('suffix', e.target.value)} style={selectStyle}>
+                <option value="">None</option>
+                {SUFFIXES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
             {renderField('contactEmail', 'Contact Email *', 'your@email.com', mailOutline, 'email')}
-            {renderField('contactPhone', 'Contact Phone *', '(02) 8-634-1111', callOutline, 'tel')}
-            <div className="md:col-span-2">{renderField('address', 'Address *', 'Your address', locationOutline)}</div>
+            <div data-error={!!errors.contactPhone ? 'true' : undefined}>
+              <label style={labelStyle}>Contact Phone *</label>
+              <div className="flex items-stretch">
+                <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', border: '1px solid var(--ion-border-color)', borderRight: 'none', borderRadius: '8px 0 0 8px', background: 'var(--ion-background-color)', fontSize: '14px', fontWeight: 600, color: 'var(--ion-text-color)' }}>+63</span>
+                <IonItem style={{ ...itemStyle, borderRadius: '0 8px 8px 0', flex: 1 }}>
+                  <IonInput type="tel" placeholder="917 123 4567" value={formData.contactPhone} onIonChange={e => updateField('contactPhone', formatNationalPH(e.detail.value!))} style={inputStyle} />
+                </IonItem>
+              </div>
+              {errors.contactPhone && <p style={errorTextStyle}><IonIcon icon={alertCircleOutline} style={{ fontSize: '12px' }} />{errors.contactPhone}</p>}
+            </div>
+            <div className="md:col-span-2">
+              <h4 className="text-[13px] font-bold text-[var(--ion-text-color)] m-0 mb-4">Address</h4>
+              <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+                <div className="md:col-span-2">{renderField('addressStreet', 'Street / Unit *', 'e.g. 123 Mabini St.', locationOutline)}</div>
+                <div>{renderField('addressBarangay', 'Barangay *', 'e.g. Barangay San Jose', locationOutline)}</div>
+                <div>{renderField('addressCity', 'City / Municipality *', 'e.g. Quezon City', locationOutline)}</div>
+                <div>{renderField('addressProvince', 'Province', 'e.g. Metro Manila', locationOutline)}</div>
+                <div>{renderSelect('addressRegion', 'Region', PH_REGIONS, 'Select region')}</div>
+                <div className="md:col-span-2">{renderField('addressZip', 'ZIP Code', 'e.g. 1100', locationOutline)}</div>
+              </div>
+            </div>
           </div>
         </div>
 

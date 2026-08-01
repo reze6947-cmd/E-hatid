@@ -28,12 +28,17 @@ import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getRoleProfile, updateRoleProfile, updateUserDocument } from '../../services/userService';
 import { subscribeRiderOrders } from '../../services/orderService';
+import { SUFFIXES, PH_REGIONS, formatNationalPH, fromStoredPhone, toStoredPhone, splitFullName, joinName, joinAddress } from '../../utils/profile';
 import type { Order } from '../../types';
 
 const initialProfile = {
   name: '',
   email: '',
   phone: '',
+  firstName: '',
+  middleName: '',
+  lastName: '',
+  suffix: '',
   vehicle: '',
   licensePlate: '',
   licenseNumber: '',
@@ -41,6 +46,12 @@ const initialProfile = {
   totalDeliveries: 0,
   bankAccount: '',
   bankName: '',
+  addressStreet: '',
+  addressBarangay: '',
+  addressCity: '',
+  addressProvince: '',
+  addressRegion: '',
+  addressZip: '',
 };
 
 const RiderProfile: React.FC = () => {
@@ -82,10 +93,15 @@ const RiderProfile: React.FC = () => {
     const loadProfile = async () => {
       try {
         const profileData = await getRoleProfile(user.id, 'rider');
+        const nameParts = splitFullName(profileData?.fullName || user.name);
         setProfile({
           name: user.name || profileData?.fullName || '',
           email: user.email || profileData?.contactEmail || '',
-          phone: user.phone || profileData?.contactPhone || '',
+          phone: fromStoredPhone(user.phone || profileData?.contactPhone),
+          firstName: user.firstName || nameParts.firstName,
+          middleName: user.middleName || nameParts.middleName,
+          lastName: user.lastName || nameParts.lastName,
+          suffix: user.suffix || nameParts.suffix,
           vehicle: profileData?.vehicleType || user.vehicle || '',
           licensePlate: profileData?.licensePlate || user.licensePlate || '',
           licenseNumber: profileData?.driverLicenseNumber || user.licenseNumber || '',
@@ -93,6 +109,12 @@ const RiderProfile: React.FC = () => {
           totalDeliveries: profileData?.totalDeliveries || 0,
           bankAccount: user.bankAccount || profileData?.bankAccount || '',
           bankName: user.bankName || profileData?.bankName || '',
+          addressStreet: user.addressStreet || profileData?.addressStreet || '',
+          addressBarangay: user.addressBarangay || profileData?.addressBarangay || '',
+          addressCity: user.addressCity || profileData?.addressCity || '',
+          addressProvince: user.addressProvince || profileData?.addressProvince || '',
+          addressRegion: user.addressRegion || profileData?.addressRegion || '',
+          addressZip: user.addressZip || profileData?.addressZip || '',
         });
       } catch (err) {
         console.error('Error loading rider profile:', err);
@@ -111,9 +133,36 @@ const RiderProfile: React.FC = () => {
     if (!user) return;
     setSaving(true);
     try {
+      const composedName = joinName({
+        firstName: profile.firstName,
+        middleName: profile.middleName,
+        lastName: profile.lastName,
+        suffix: profile.suffix,
+      });
+      const composedAddress = joinAddress({
+        addressStreet: profile.addressStreet,
+        addressBarangay: profile.addressBarangay,
+        addressCity: profile.addressCity,
+        addressProvince: profile.addressProvince,
+        addressRegion: profile.addressRegion,
+        addressZip: profile.addressZip,
+      });
+      const storedPhone = toStoredPhone(profile.phone);
+      setProfile(prev => ({ ...prev, name: composedName }));
       await updateUserDocument(user.id, {
-        name: profile.name,
-        phone: profile.phone,
+        name: composedName,
+        firstName: profile.firstName,
+        middleName: profile.middleName,
+        lastName: profile.lastName,
+        suffix: profile.suffix,
+        phone: storedPhone,
+        address: composedAddress,
+        addressStreet: profile.addressStreet,
+        addressBarangay: profile.addressBarangay,
+        addressCity: profile.addressCity,
+        addressProvince: profile.addressProvince,
+        addressRegion: profile.addressRegion,
+        addressZip: profile.addressZip,
         vehicle: profile.vehicle,
         licensePlate: profile.licensePlate,
         licenseNumber: profile.licenseNumber,
@@ -121,9 +170,20 @@ const RiderProfile: React.FC = () => {
         bankName: profile.bankName,
       } as any);
       await updateRoleProfile(user.id, 'rider', {
-        fullName: profile.name,
+        fullName: composedName,
+        firstName: profile.firstName,
+        middleName: profile.middleName,
+        lastName: profile.lastName,
+        suffix: profile.suffix,
         contactEmail: profile.email,
-        contactPhone: profile.phone,
+        contactPhone: storedPhone,
+        address: composedAddress,
+        addressStreet: profile.addressStreet,
+        addressBarangay: profile.addressBarangay,
+        addressCity: profile.addressCity,
+        addressProvince: profile.addressProvince,
+        addressRegion: profile.addressRegion,
+        addressZip: profile.addressZip,
         vehicleType: profile.vehicle,
         licensePlate: profile.licensePlate,
         driverLicenseNumber: profile.licenseNumber,
@@ -192,11 +252,38 @@ const RiderProfile: React.FC = () => {
         <div className="mb-4">
           <div className="flex items-center mb-2">
             <IonIcon icon={personOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-            <span className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</span>
+            <span className="text-xs text-[var(--ion-text-color-secondary)]">Name</span>
           </div>
-          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={profile.name} onIonInput={e => handleInputChange('name', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
-          </IonItem>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">First Name</label>
+              <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+                <IonInput value={profile.firstName} onIonInput={e => handleInputChange('firstName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              </IonItem>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Middle Name <span className="opacity-60">(optional)</span></label>
+              <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+                <IonInput value={profile.middleName} onIonInput={e => handleInputChange('middleName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              </IonItem>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Last Name</label>
+              <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+                <IonInput value={profile.lastName} onIonInput={e => handleInputChange('lastName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              </IonItem>
+            </div>
+            <div className="col-span-2 sm:col-span-1">
+              <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Suffix</label>
+              <select
+                value={profile.suffix}
+                onChange={e => handleInputChange('suffix', e.target.value)}
+                className="w-full h-[40px] px-2.5 rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] text-sm text-[var(--ion-text-color)] focus:outline-none"
+              >
+                {SUFFIXES.map(s => <option key={s} value={s}>{s || 'None'}</option>)}
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -212,11 +299,67 @@ const RiderProfile: React.FC = () => {
         <div>
           <div className="flex items-center mb-2">
             <IonIcon icon={callOutline} className="mr-2 text-[var(--ion-color-primary)]" />
-            <span className="text-xs text-[var(--ion-text-color-secondary)]">Phone</span>
+            <span className="text-xs text-[var(--ion-text-color-secondary)]">Phone Number</span>
           </div>
-          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput type="tel" value={profile.phone} onIonInput={e => handleInputChange('phone', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
-          </IonItem>
+          <div className="flex items-stretch">
+            <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-sm font-semibold text-[var(--ion-text-color)]">+63</span>
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-r-lg overflow-hidden flex-1">
+              <IonInput type="tel" value={profile.phone} onIonInput={e => handleInputChange('phone', formatNationalPH(e.detail.value!))} placeholder="917 123 4567" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
+          </div>
+          <p className="m-0 mt-1 text-[11px] text-[var(--ion-text-color-secondary)]">Philippine mobile number, e.g. 0917 123 4567</p>
+        </div>
+      </div>
+
+      {/* Address */}
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+        <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
+          <IonIcon icon={locationOutline} className="mr-1.5 align-middle" />
+          Address
+        </h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Street / Unit</label>
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput value={profile.addressStreet} onIonInput={e => handleInputChange('addressStreet', e.detail.value!)} placeholder="e.g. 123 Mabini St." className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Barangay</label>
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput value={profile.addressBarangay} onIonInput={e => handleInputChange('addressBarangay', e.detail.value!)} placeholder="e.g. Barangay San Jose" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">City / Municipality</label>
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput value={profile.addressCity} onIonInput={e => handleInputChange('addressCity', e.detail.value!)} placeholder="e.g. Quezon City" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Province</label>
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput value={profile.addressProvince} onIonInput={e => handleInputChange('addressProvince', e.detail.value!)} placeholder="e.g. Metro Manila" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Region</label>
+            <select
+              value={profile.addressRegion}
+              onChange={e => handleInputChange('addressRegion', e.target.value)}
+              className="w-full h-[40px] px-2.5 rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] text-sm text-[var(--ion-text-color)] focus:outline-none"
+            >
+              <option value="">Select region</option>
+              {PH_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div className="col-span-2">
+            <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">ZIP Code</label>
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
+              <IonInput type="tel" value={profile.addressZip} onIonInput={e => handleInputChange('addressZip', e.detail.value!.replace(/\D/g, '').slice(0, 4))} placeholder="e.g. 1100" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            </IonItem>
+          </div>
         </div>
       </div>
 

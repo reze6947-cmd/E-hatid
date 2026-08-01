@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSpinner, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonTextarea, IonToast } from '@ionic/react';
-import { trendingUpOutline, cartOutline, starOutline, peopleOutline, storefrontOutline, cashOutline, personOutline, clipboardOutline, checkmarkOutline, closeOutline, locationOutline, callOutline } from 'ionicons/icons';
+import { trendingUpOutline, cartOutline, starOutline, peopleOutline, personOutline, checkmarkOutline, closeOutline, locationOutline, callOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
@@ -55,14 +55,6 @@ const VendorDashboard: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [detailsOrder, setDetailsOrder] = useState<Order | null>(null);
-
-  const quickLinks = [
-    { label: 'Products', icon: storefrontOutline, route: '/vendor/products', color: 'var(--ion-color-primary)' },
-    { label: 'Orders', icon: clipboardOutline, route: '/vendor/orders', color: '#10B981' },
-    { label: 'Earnings', icon: cashOutline, route: '/vendor/earnings', color: '#F59E0B' },
-    { label: 'Reviews', icon: starOutline, route: '/vendor/reviews', color: '#EC4899' },
-    { label: 'Profile', icon: personOutline, route: '/vendor/profile', color: '#14B8A6' },
-  ];
 
   const loadStats = useCallback(async () => {
     if (!user) return;
@@ -157,36 +149,17 @@ const VendorDashboard: React.FC = () => {
             <PageHeader title="Dashboard" subtitle="Overview of your stall's performance" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
               {stats.map((stat, i) => (
-                <IonCard key={i} className="rounded-xl shadow" style={{ borderTop: `4px solid ${stat.color}` }}>
+                <IonCard key={i} className="m-0 rounded-xl shadow">
                   <IonCardContent>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg" style={{ background: `${stat.color}20`, color: stat.color }}>
-                        <IonIcon icon={stat.icon} />
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${stat.color}20` }}>
+                        <IonIcon icon={stat.icon} className="text-2xl" style={{ color: stat.color }} />
                       </div>
-                      <div>
-                        <p className="text-sm text-[var(--ion-text-color-secondary)]">{stat.label}</p>
-                        <h3 className="text-xl font-bold text-[var(--ion-text-color)]">{loading ? '...' : stat.value}</h3>
+                      <div className="min-w-0">
+                        <p className="m-0 mb-1 text-xs font-medium text-[var(--ion-text-color-secondary)]">{stat.label}</p>
+                        <h3 className="m-0 text-xl font-bold text-[var(--ion-text-color)] truncate">{loading ? '...' : stat.value}</h3>
                       </div>
                     </div>
-                  </IonCardContent>
-                </IonCard>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-[var(--ion-text-color)]">Quick Links</h2>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
-              {quickLinks.map((link, i) => (
-                <IonCard key={i} button onClick={() => history.push(link.route)}
-                  className="m-0 rounded-xl hover:shadow-lg transition-shadow duration-200" style={{ borderTop: `3px solid ${link.color}` }}>
-                  <IonCardContent className="text-center p-4">
-                    <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center" style={{ background: `${link.color}20` }}>
-                      <IonIcon icon={link.icon} className="text-xl" style={{ color: link.color }} />
-                    </div>
-                    <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)]">{link.label}</p>
                   </IonCardContent>
                 </IonCard>
               ))}

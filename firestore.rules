@@ -42,7 +42,12 @@ service cloud.firestore {
     // ============================================================
     function allowedUserFields() {
       return ['name', 'phone', 'age', 'avatar', 'address', 'password',
-              'latitude', 'longitude'];
+              'latitude', 'longitude',
+              'vehicle', 'licensePlate', 'licenseNumber',
+              'bankAccount', 'bankName', 'riderAvailable',
+              'firstName', 'middleName', 'lastName', 'suffix',
+              'addressStreet', 'addressBarangay', 'addressCity',
+              'addressProvince', 'addressRegion', 'addressZip'];
     }
 
     function isAllowedUserWrite() {

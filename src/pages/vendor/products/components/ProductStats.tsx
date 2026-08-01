@@ -18,30 +18,31 @@ const ProductStats: React.FC<ProductStatsProps> = ({ counts, activeFilter, onFil
     value: number;
     icon: string;
     accent: string;
-    bg: string;
   }[] = [
-    { key: 'all', label: 'Total', value: counts.total, icon: restaurantOutline, accent: 'text-[var(--ion-text-color)]', bg: 'bg-[var(--ion-color-primary)]/10' },
-    { key: 'available', label: 'Available', value: counts.available, icon: checkmarkCircle, accent: 'text-[var(--ion-color-success)]', bg: 'bg-[var(--ion-color-success)]/10' },
-    { key: 'unavailable', label: 'Unavailable', value: counts.unavailable, icon: closeCircle, accent: 'text-[var(--ion-color-danger)]', bg: 'bg-[var(--ion-color-danger)]/10' },
-    { key: null, label: 'Popular', value: counts.popular, icon: star, accent: 'text-[var(--ion-color-warning)]', bg: 'bg-[var(--ion-color-warning)]/10' },
+    { key: 'all', label: 'Total', value: counts.total, icon: restaurantOutline, accent: 'text-[var(--ion-text-color)]' },
+    { key: 'available', label: 'Available', value: counts.available, icon: checkmarkCircle, accent: 'text-[var(--ion-color-success)]' },
+    { key: 'unavailable', label: 'Unavailable', value: counts.unavailable, icon: closeCircle, accent: 'text-[var(--ion-color-danger)]' },
+    { key: null, label: 'Popular', value: counts.popular, icon: star, accent: 'text-[var(--ion-color-warning)]' },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
+    <div className="flex flex-wrap gap-2 sm:gap-2.5 mb-5">
       {items.map(stat => {
         const active = stat.key !== null && activeFilter === stat.key;
         const clickable = stat.key !== null;
         const inner = (
           <>
-            <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${stat.bg}`}>
-              <IonIcon icon={stat.icon} className={`text-lg ${stat.accent}`} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-lg sm:text-xl font-bold m-0 leading-none tabular-nums text-[var(--ion-text-color)]">{stat.value}</p>
-              <p className="text-[11px] text-[var(--ion-text-color-secondary)] m-0 mt-1 font-medium truncate">{stat.label}</p>
-            </div>
+            <IonIcon icon={stat.icon} className={`text-base shrink-0 ${active ? 'text-white' : stat.accent}`} />
+            <span className={`text-sm font-bold tabular-nums leading-none ${active ? 'text-white' : 'text-[var(--ion-text-color)]'}`}>{stat.value}</span>
+            <span className={`text-xs font-medium leading-none ${active ? 'text-white/80' : 'text-[var(--ion-text-color-secondary)]'}`}>{stat.label}</span>
           </>
         );
+
+        const pillClass = `inline-flex items-center gap-2 rounded-full border px-3.5 py-2 min-h-[44px] shadow-sm transition-colors ${
+          active
+            ? 'bg-[var(--ion-color-primary)] border-[var(--ion-color-primary)]'
+            : 'bg-[var(--ion-card-background)] border-[var(--ion-border-color)] hover:border-[var(--ion-color-primary)]/50'
+        }`;
 
         if (clickable) {
           return (
@@ -49,15 +50,10 @@ const ProductStats: React.FC<ProductStatsProps> = ({ counts, activeFilter, onFil
               key={stat.label}
               type="button"
               layout
-              whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onFilterChange(stat.key as AvailabilityFilter)}
               aria-pressed={active}
-              className={`flex items-center gap-2.5 sm:gap-3 rounded-2xl border p-3 sm:p-4 shadow-sm text-left cursor-pointer transition-colors ${
-                active
-                  ? 'border-[var(--ion-color-primary)] ring-2 ring-[var(--ion-color-primary)]/30 bg-[var(--ion-card-background)]'
-                  : 'border-[var(--ion-border-color)] bg-[var(--ion-card-background)] hover:border-[var(--ion-color-primary)]/50'
-              }`}
+              className={`${pillClass} cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2`}
             >
               {inner}
             </motion.button>
@@ -65,11 +61,7 @@ const ProductStats: React.FC<ProductStatsProps> = ({ counts, activeFilter, onFil
         }
 
         return (
-          <motion.div
-            key={stat.label}
-            layout
-            className="flex items-center gap-2.5 sm:gap-3 rounded-2xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-3 sm:p-4 shadow-sm"
-          >
+          <motion.div key={stat.label} layout className={`${pillClass} pointer-events-none select-none`}>
             {inner}
           </motion.div>
         );

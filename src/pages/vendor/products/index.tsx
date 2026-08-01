@@ -253,6 +253,7 @@ const VendorProducts: React.FC = () => {
           key={editingItem.id}
           item={editingItem}
           isOpen={!!editingItem}
+          isNew={!products.some(p => p.id === editingItem.id)}
           onClose={() => setEditingItem(null)}
           onSave={upsertProduct}
           onDelete={products.some(p => p.id === editingItem.id) ? () => deleteProduct(editingItem.id) : undefined}

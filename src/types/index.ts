@@ -1,11 +1,21 @@
 export interface User {
   id: string;
   name: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  suffix?: string;
   email: string;
   phone?: string;
   age?: number;
   avatar?: string;
   address?: string;
+  addressStreet?: string;
+  addressBarangay?: string;
+  addressCity?: string;
+  addressProvince?: string;
+  addressRegion?: string;
+  addressZip?: string;
   role: 'customer' | 'rider' | 'admin' | 'vendor';
   roles: ('customer' | 'rider' | 'admin' | 'vendor')[];
   activeRole?: string;

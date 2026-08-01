@@ -98,7 +98,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
           : 'border-[var(--ion-border-color)] hover:shadow-md hover:border-[var(--ion-color-primary)]/60'
       }`}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--ion-background-color)]">
+      <div className="relative aspect-square w-full overflow-hidden bg-[var(--ion-background-color)]">
         <ProductImage product={product} />
         {selecting && (
           <div className={`absolute top-2.5 left-2.5 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center shadow-sm transition-colors ${
