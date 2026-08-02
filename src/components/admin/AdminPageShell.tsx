@@ -17,13 +17,13 @@ interface AdminPageShellProps {
 const AdminPageShell: React.FC<AdminPageShellProps> = ({
   title, subtitle, search, loading, skeleton, children
 }) => (
-  <div className="page-container py-6">
-    <div className="px-4 mb-4">
-      <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: 'var(--ion-text-color)' }}>
+  <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+    <div className="mb-1">
+      <h1 className="m-0 text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--ion-text-color)]">
         {title}
       </h1>
       {subtitle && (
-        <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--ion-text-color-secondary)' }}>
+        <p className="m-0 mt-1 sm:mt-2 text-sm xs:text-base sm:text-lg text-[var(--ion-text-color-secondary)]">
           {subtitle}
         </p>
       )}

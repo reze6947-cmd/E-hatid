@@ -11,10 +11,6 @@ const quickLinks = [
   { label: 'Apply as a Rider', path: '/apply/rider' },
 ];
 
-const supportLinks = [
-  { label: 'Report an Issue', path: '/report' },
-];
-
 const socialLinks = [
   { icon: logoFacebook, href: 'https://facebook.com', label: 'Facebook' },
   { icon: logoTwitter, href: 'https://twitter.com', label: 'Twitter' },
@@ -28,7 +24,7 @@ const AppFooter: React.FC = () => {
   return (
     <footer className="hidden md:block bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] py-8 sm:py-12 mt-auto">
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10 mb-8 sm:mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10 mb-8 sm:mb-10">
           {/* Brand */}
           <div className="space-y-3 sm:space-y-4">
             <img
@@ -60,23 +56,6 @@ const AppFooter: React.FC = () => {
             <h3 className="text-sm sm:text-base font-bold text-[var(--ion-text-color)]">Quick Links</h3>
             <ul className="space-y-2 sm:space-y-2.5">
               {quickLinks.map(link => (
-                <li key={link.label}>
-                  <button
-                    onClick={() => history.push(link.path)}
-                    className="text-xs sm:text-sm text-[var(--ion-text-color-secondary)] hover:text-[var(--ion-color-primary)] transition-colors min-h-[36px] text-left"
-                  >
-                    {link.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-sm sm:text-base font-bold text-[var(--ion-text-color)]">Support</h3>
-            <ul className="space-y-2 sm:space-y-2.5">
-              {supportLinks.map(link => (
                 <li key={link.label}>
                   <button
                     onClick={() => history.push(link.path)}

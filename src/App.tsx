@@ -42,8 +42,6 @@ const VendorEarnings = lazy(() => import('./pages/vendor/VendorEarnings'));
 const VendorReviews = lazy(() => import('./pages/vendor/VendorReviews'));
 const VendorProfile = lazy(() => import('./pages/vendor/VendorProfile'));
 const VendorLocationPicker = lazy(() => import('./pages/vendor/VendorLocationPicker'));
-const ActivityLog = lazy(() => import('./pages/Activities/ActivityLog'));
-const ReportIncident = lazy(() => import('./pages/Reports/ReportIncident'));
 const RoleSelection = lazy(() => import('./pages/Auth/RoleSelection'));
 const VerifyOtp = lazy(() => import('./pages/Auth/VerifyOtp'));
 const ApprovalPending = lazy(() => import('./pages/Auth/ApprovalPending'));
@@ -196,16 +194,6 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute exact path="/vendor/location" requiredRole="vendor">
             <L><VendorLocationPicker /></L>
-          </ProtectedRoute>
-
-          {/* Activity Routes */}
-          <ProtectedRoute exact path="/activities" requireAuth={true}>
-            <L><ActivityLog /></L>
-          </ProtectedRoute>
-
-          {/* Report Routes */}
-          <ProtectedRoute exact path="/report" requireAuth={true}>
-            <L><ReportIncident /></L>
           </ProtectedRoute>
 
           {/* Legacy redirects */}

@@ -10,6 +10,7 @@ import { useHistory } from 'react-router-dom';
 import { auth } from '../../firebaseConfig';
 import { useAuth } from '../../context/AuthContext';
 import { roleHomePaths } from '../../config/routesByRole';
+import { isVerifiedOrAdmin } from '../../utils/isVerifiedOrAdmin';
 import {
   sendOtpEmail,
   verifyOtp,
@@ -19,7 +20,7 @@ import {
 
 const VerifyOtp: React.FC = () => {
   const history = useHistory();
-  const { logout, refreshUser, roles } = useAuth();
+  const { user, logout, refreshUser, roles } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -39,6 +40,15 @@ const VerifyOtp: React.FC = () => {
       setEmail(auth.currentUser.email);
     }
   }, []);
+
+  useEffect(() => {
+    if (isVerifiedOrAdmin(user)) {
+      const target = roles.length === 1
+        ? (roleHomePaths[roles[0]] || `/${roles[0]}/home`)
+        : '/select-role';
+      history.replace(target);
+    }
+  }, [user, roles, history]);
 
   useEffect(() => {
     if (cooldown > 0) {

@@ -176,8 +176,8 @@ const VendorLocationPicker: React.FC = () => {
   return (
     <>
       <div className="w-full flex-1 md:pt-8">
-        <div className="flex-1 max-w-2xl mx-auto w-full px-3 sm:px-4 md:px-6 pt-4 sm:pt-6 pb-6 sm:pb-8">
-          <div className="w-full h-[35vh] sm:h-[40vh] md:h-[45vh] rounded-2xl overflow-hidden mb-4 border border-[var(--ion-border-color)]">
+        <div className="flex-1 max-w-2xl mx-auto w-full px-3 sm:px-4 md:px-6 pt-2 sm:pt-3 pb-6 sm:pb-8 flex flex-col space-y-3 sm:space-y-4">
+          <div className="w-full h-[35vh] sm:h-[40vh] md:h-[45vh] rounded-2xl overflow-hidden border border-[var(--ion-border-color)]">
             <LeafletMap
               center={[selectedLocation?.lat || 14.5995, selectedLocation?.lng || 120.9842]}
               zoom={15}
@@ -190,7 +190,7 @@ const VendorLocationPicker: React.FC = () => {
             </LeafletMap>
           </div>
 
-          <div className="mb-4 relative">
+          <div className="relative">
             <label className="block mb-2 text-xs sm:text-sm font-semibold text-[var(--ion-text-color)] uppercase opacity-70">
               Stall Address
             </label>
@@ -224,7 +224,7 @@ const VendorLocationPicker: React.FC = () => {
           </div>
 
           {selectedAddress && (
-            <div className="bg-[var(--ion-card-background)] p-4 md:p-6 rounded-2xl border border-[var(--ion-border-color)] mb-6">
+            <div className="bg-[var(--ion-card-background)] p-4 md:p-6 rounded-2xl border border-[var(--ion-border-color)]">
               <div className="flex gap-3">
                 <IonIcon icon={locationOutline} className="text-[var(--ion-color-primary)] text-lg shrink-0 mt-0.5" />
                 <div className="min-w-0">

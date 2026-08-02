@@ -133,12 +133,10 @@ const RiderDashboard: React.FC = () => {
   };
 
   return (
-    <>
-      <div className="pb-2">
-        <RiderPageHeader title="Dashboard" subtitle="Manage your deliveries" />
-      </div>
+    <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+      <RiderPageHeader title="Dashboard" subtitle="Manage your deliveries" />
 
-      <div className="pb-3 space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <StatusToggle
           checked={isAvailable}
           onChange={toggleAvailability}
@@ -164,7 +162,7 @@ const RiderDashboard: React.FC = () => {
 
       {/* Active Delivery Summary */}
       {activeDelivery && (
-        <div className="pb-3">
+        <div>
           <h3 className="m-0 mb-2 text-xs font-bold uppercase tracking-wide text-[var(--ion-text-color-secondary)]">
             Active Delivery
           </h3>
@@ -182,7 +180,7 @@ const RiderDashboard: React.FC = () => {
       {/* Available Orders */}
       {isAvailable && (
         <>
-          <div className="pb-2">
+          <div>
             <div className="flex items-center gap-2">
               <h2 className="m-0 text-sm font-bold text-[var(--ion-text-color)]">Available Orders</h2>
               {filterDeclined(availableOrders).length > 0 && (
@@ -193,7 +191,7 @@ const RiderDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="pb-4 space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {processedOrders.length === 0 ? (
               <EmptyState
                 icon="cube-outline"
@@ -235,7 +233,7 @@ const RiderDashboard: React.FC = () => {
           subtitle="Toggle above to go online and start accepting orders"
         />
       )}
-    </>
+    </div>
   );
 };
 

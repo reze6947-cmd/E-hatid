@@ -226,9 +226,9 @@ const RiderProfile: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
       {/* Avatar */}
-      <div className="text-center mb-6 pt-4">
+      <div className="text-center">
         <div className="w-[88px] h-[88px] rounded-full mx-auto mb-4 overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center">
           <span className="text-[36px] font-bold text-white">
             {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
@@ -246,7 +246,7 @@ const RiderProfile: React.FC = () => {
       </div>
 
       {/* Contact Information */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">Contact Information</h3>
 
         <div className="mb-4">
@@ -312,7 +312,7 @@ const RiderProfile: React.FC = () => {
       </div>
 
       {/* Address */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={locationOutline} className="mr-1.5 align-middle" />
           Address
@@ -364,7 +364,7 @@ const RiderProfile: React.FC = () => {
       </div>
 
       {/* Vehicle Information */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={carOutline} className="mr-1.5 align-middle" />
           Vehicle Information
@@ -399,7 +399,7 @@ const RiderProfile: React.FC = () => {
       </div>
 
       {/* Banking Information */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={cashOutline} className="mr-1.5 align-middle" />
           Banking Information
@@ -425,7 +425,7 @@ const RiderProfile: React.FC = () => {
       </div>
 
       {/* Delivery Status */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={bicycleOutline} className="mr-1.5 align-middle" />
           Delivery Status
@@ -479,7 +479,7 @@ const RiderProfile: React.FC = () => {
       </div>
 
       {/* Preferences */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">Preferences</h3>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[var(--ion-text-color)]">Enable Notifications</span>
@@ -494,7 +494,7 @@ const RiderProfile: React.FC = () => {
 
       {/* Switch Role */}
       {roles.length > 1 && (
-        <div className="md:hidden bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)] mb-4">
+        <div className="md:hidden bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
           <div className="flex items-center gap-2 mb-2">
             <IonIcon icon={swapHorizontalOutline} className="text-[var(--ion-color-primary)] text-base" />
             <h3 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 uppercase opacity-70">Switch Role</h3>
@@ -536,7 +536,7 @@ const RiderProfile: React.FC = () => {
       <IonToast isOpen={showToast} message={toastMessage} duration={3000} onDidDismiss={() => setShowToast(false)} position="bottom"
         color={toastMessage.includes('Failed') ? 'danger' : 'success'}
       />
-    </>
+    </div>
   );
 };
 

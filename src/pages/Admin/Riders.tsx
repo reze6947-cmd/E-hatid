@@ -24,7 +24,7 @@ const AdminRiders: React.FC = () => {
       title="Manage Riders"
       search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search riders by name or email...' }}
     >
-      <div className="px-4">
+      <div>
         <IonSegment value={filterStatus} onIonChange={e => setFilterStatus(e.detail.value as string)} className="mb-4">
           <IonSegmentButton value="all"><IonLabel>All</IonLabel></IonSegmentButton>
           <IonSegmentButton value="online"><IonLabel>Online</IonLabel></IonSegmentButton>
@@ -33,7 +33,7 @@ const AdminRiders: React.FC = () => {
         </IonSegment>
       </div>
 
-      <div className="px-4 pb-4">
+      <div>
         {filteredRiders.length === 0 ? (
           <IonCard style={{ margin: 0, background: 'var(--ion-card-background)', textAlign: 'center', padding: '40px 20px' }}>
             <p style={{ color: 'var(--ion-text-color-secondary)' }}>No riders found</p>

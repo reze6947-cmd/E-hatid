@@ -34,7 +34,7 @@ const countBadge = (count: number, color: string) => (
 );
 
 const SegmentTabs: React.FC<Props> = ({ tabs, selected, onChange }) => (
-  <div className="px-4 pb-1">
+  <div className="pb-1">
     <IonSegment
       value={selected}
       onIonChange={e => onChange(e.detail.value as string)}

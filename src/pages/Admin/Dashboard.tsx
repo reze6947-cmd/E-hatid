@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <AdminPageShell title="Admin Dashboard" subtitle="Welcome back, Administrator">
-        <div className="px-4 pb-4">
+        <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           {statCards.map((card, i) => (
             <AdminStatCard key={i} {...card} />
@@ -61,7 +61,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {user?.isMasterAdmin && (
-        <div className="px-4 pb-4">
+        <div>
           <IonCard style={{ margin: 0, background: 'var(--ion-card-background)', border: '1px solid #EF444440' }}>
             <IonCardContent style={{ padding: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
@@ -83,7 +83,7 @@ const AdminDashboard: React.FC = () => {
       )}
 
       {pendingUsers.length > 0 && (
-        <div className="px-4 pb-4">
+        <div>
           <h3 className="mb-4" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--ion-text-color)' }}>
             Pending Approvals ({pendingUsers.length})
           </h3>

@@ -65,10 +65,10 @@ const GuestCart: React.FC = () => {
     <>
 
         <div className="flex flex-col min-h-full">
-        <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-3 sm:px-4 md:px-6 pb-10 sm:pb-16">
+        <div className="w-full flex-1 flex flex-col pb-10 sm:pb-16 md:pt-8">
           {/* Page Title */}
-          <div className="py-4 sm:py-5 md:py-6">
-            <h2 className="m-0 text-2xl xs:text-3xl sm:text-4xl font-bold text-[var(--ion-text-color)]">
+          <div className="pt-1 sm:pt-2 pb-2 sm:pb-3">
+            <h2 className="m-0 text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--ion-text-color)]">
               Your Cart
             </h2>
           </div>

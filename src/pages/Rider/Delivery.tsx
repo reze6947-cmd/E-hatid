@@ -156,15 +156,15 @@ const RiderDelivery: React.FC = () => {
   if (riderLocation) allMapPoints.push([riderLocation.lat, riderLocation.lng]);
 
   return (
-    <>
-      <div className="flex items-center gap-3 pt-1 pb-2">
+    <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+      <div className="flex items-center gap-3">
         <IonButton fill="clear" onClick={handleBack} style={{ '--color': 'var(--ion-color-primary)', margin: 0, minHeight: 36 }}>
           <IonIcon icon={arrowBackOutline} slot="icon-only" className="text-lg" />
         </IonButton>
         <h2 className="m-0 text-lg font-bold text-[var(--ion-text-color)]">Delivery</h2>
       </div>
         {/* Order Header */}
-        <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] overflow-hidden mb-4">
+        <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] overflow-hidden">
           <div className="p-4">
             <div className="flex items-center gap-3 mb-3">
               {stall?.logo && (
@@ -199,7 +199,7 @@ const RiderDelivery: React.FC = () => {
 
         {/* Ordered Items */}
         {order.items.length > 0 && (
-          <div className="mb-4 bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] overflow-hidden">
+          <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] overflow-hidden">
             <div className="flex items-center gap-2 px-4 pt-3 pb-2">
               <IonIcon icon={storefrontOutline} className="text-[var(--ion-color-primary)] text-base" />
               <span className="text-xs font-bold text-[var(--ion-text-color-secondary)] uppercase tracking-[0.3px]">Ordered Items</span>
@@ -256,7 +256,7 @@ const RiderDelivery: React.FC = () => {
 
         {/* Map */}
         {allMapPoints.length >= 2 && (
-          <div className={`flex flex-col bg-[var(--ion-card-background)] overflow-hidden ${fullscreen ? 'fixed inset-0 z-[9999]' : 'mb-4 rounded-2xl border border-[var(--ion-border-color)]'}`}>
+          <div className={`flex flex-col bg-[var(--ion-card-background)] overflow-hidden ${fullscreen ? 'fixed inset-0 z-[9999]' : 'rounded-2xl border border-[var(--ion-border-color)]'}`}>
             <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
               <div className="flex items-center gap-2">
                 <IonIcon icon={navigateOutline} className="text-[var(--ion-color-primary)] text-base" />
@@ -299,7 +299,7 @@ const RiderDelivery: React.FC = () => {
 
         {/* Customer Info */}
         {customerUser && (
-          <div className="mb-4 bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-4">
+          <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <IonIcon icon={personOutline} className="text-[var(--ion-color-primary)] text-lg" />
               <span className="text-xs font-bold text-[var(--ion-text-color-secondary)] uppercase tracking-[0.3px]">Customer</span>
@@ -355,7 +355,7 @@ const RiderDelivery: React.FC = () => {
         onDidDismiss={() => setShowToast(false)}
         position="bottom"
       />
-    </>
+    </div>
   );
 };
 

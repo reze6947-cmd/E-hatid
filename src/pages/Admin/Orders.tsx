@@ -31,7 +31,7 @@ const AdminOrders: React.FC = () => {
       title="Manage Orders"
       search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search by stall, customer, or order ID...' }}
     >
-      <div className="px-4">
+      <div>
         <IonSegment value={filterStatus} onIonChange={e => setFilterStatus(e.detail.value as string)} scrollable className="mb-4">
           <IonSegmentButton value="all"><IonLabel>All</IonLabel></IonSegmentButton>
           {statusList.map(s => (
@@ -40,7 +40,7 @@ const AdminOrders: React.FC = () => {
         </IonSegment>
       </div>
 
-      <div className="px-4 pb-4">
+      <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <IonCard style={{ margin: 0, background: 'var(--ion-card-background)' }}>
             <IonCardContent style={{ padding: '16px' }}>

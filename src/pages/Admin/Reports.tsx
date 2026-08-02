@@ -57,7 +57,7 @@ const AdminReports: React.FC = () => {
         title="Manage Reports"
         search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search reports...' }}
       >
-        <div className="px-4">
+        <div>
           <IonSegment value={filterStatus} onIonChange={e => setFilterStatus(e.detail.value as string)} scrollable className="mb-4">
             <IonSegmentButton value="all"><IonLabel>All</IonLabel></IonSegmentButton>
             <IonSegmentButton value="open"><IonLabel>Open</IonLabel></IonSegmentButton>
@@ -88,7 +88,7 @@ const AdminReports: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-4 pb-4">
+        <div>
           {filteredReports.length === 0 ? (
             <IonCard style={{ margin: 0, background: 'var(--ion-card-background)', textAlign: 'center', padding: '40px 20px' }}>
               <p style={{ color: 'var(--ion-text-color-secondary)' }}>No reports found</p>

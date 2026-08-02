@@ -61,15 +61,15 @@ const AdminDeliveryConfig: React.FC = () => {
 
   return (
     <AdminPageShell title="Delivery Config" subtitle="Manage delivery fee formula variables">
-      <div style={{ padding: '0 16px 24px', maxWidth: '480px' }}>
+      <div style={{ padding: '0 0 24px', maxWidth: '400px', margin: '0 auto', width: '100%' }}>
         <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] overflow-hidden">
-          <div className="p-4 bg-[var(--ion-background-color)] border-b border-[var(--ion-border-color)]">
+          <div className="px-4 py-3 bg-[var(--ion-background-color)] border-b border-[var(--ion-border-color)]">
             <h4 className="text-sm font-semibold text-[var(--ion-text-color)] m-0">Formula</h4>
             <p className="text-xs text-[var(--ion-text-color-secondary)] mt-1 m-0 leading-relaxed">
               Fare = ceil(km) × perKmRate + (gasPrice ÷ km/L × actual km) + bonus
             </p>
           </div>
-          <div className="p-4 space-y-5">
+          <div className="p-4 space-y-3">
             {fields.map(f => (
               <div key={f.key}>
                 <label className="block text-xs font-medium text-[var(--ion-text-color-secondary)] mb-1">{f.label}</label>
@@ -78,8 +78,9 @@ const AdminDeliveryConfig: React.FC = () => {
                   <IonInput
                     type="number"
                     value={String(config[f.key])}
-                    onIonChange={e => setConfig(prev => ({ ...prev, [f.key]: Number(e.detail.value) }))}
+                    onIonInput={e => setConfig(prev => ({ ...prev, [f.key]: Number(e.detail.value) }))}
                     className="text-sm"
+                    style={{ '--padding-start': '12px', '--padding-end': '12px', '--min-height': '40px', '--highlight-height': '0' } as any}
                   />
                 </IonItem>
               </div>
@@ -87,11 +88,11 @@ const AdminDeliveryConfig: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 p-4 rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)]">
-          <h4 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 mb-3">Fee Preview</h4>
-          <div className="flex gap-2 justify-center">
+        <div className="mt-3 p-3 rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)]">
+          <h4 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 mb-2">Fee Preview</h4>
+          <div className="flex gap-1.5 justify-center">
             {[0.5, 1, 3, 5, 10].map(km => (
-              <div key={km} className="flex-1 text-center p-2 rounded-lg bg-[var(--ion-background-color)]">
+              <div key={km} className="flex-1 text-center p-1.5 rounded-lg bg-[var(--ion-background-color)]">
                 <div className="text-[10px] text-[var(--ion-text-color-secondary)]">{km} km</div>
                 <div className="text-[9px] text-[var(--ion-text-color-secondary)]">→ {Math.max(1, Math.ceil(km))} km</div>
                 <div className="text-xs font-bold text-[var(--ion-color-primary)]">₱{formulaPreview(km)}</div>
@@ -103,7 +104,7 @@ const AdminDeliveryConfig: React.FC = () => {
         <IonButton
           expand="block"
           shape="round"
-          className="mt-4 min-h-[48px] font-semibold"
+          className="mt-3 min-h-[44px] font-semibold"
           onClick={handleSave}
           disabled={saving}
         >

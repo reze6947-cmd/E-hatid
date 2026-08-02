@@ -83,7 +83,7 @@ const AdminUsers: React.FC = () => {
   return (
     <>
       <AdminPageShell title="Users" subtitle="Manage all users, riders, vendors">
-        <div className="px-4 pb-4">
+        <div>
           <div style={{ position: 'relative', marginBottom: '16px' }}>
             <IonIcon icon={searchOutline} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ion-text-color-secondary)', fontSize: '16px', zIndex: 1 }} />
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden" style={{ '--padding-start': '36px', '--min-height': '44px', '--highlight-height': '0', '--background': 'var(--ion-card-background)' } as any}>

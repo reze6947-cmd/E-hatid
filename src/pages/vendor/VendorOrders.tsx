@@ -151,7 +151,7 @@ const VendorOrders: React.FC = () => {
   return (
     <>
 
-        <div className="p-4">
+        <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
           <PageHeader title="Orders" subtitle="View and manage incoming orders" />
 
           <div className="flex flex-wrap gap-2 sm:gap-2.5 mb-5">

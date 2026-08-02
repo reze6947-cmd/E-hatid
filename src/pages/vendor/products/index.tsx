@@ -142,11 +142,11 @@ const VendorProducts: React.FC = () => {
 
   return (
     <>
-      <div className="pb-8 md:pb-16">
-        <div className="flex items-center justify-between gap-3 pt-4 sm:pt-5 pb-3 sm:pb-4">
+      <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="m-0 text-2xl sm:text-[28px] font-bold text-[var(--ion-text-color)] truncate">Products</h2>
-            <p className="m-0 mt-1 text-sm text-[var(--ion-text-color-secondary)]">Manage your menu items, options, and availability</p>
+            <h2 className="m-0 text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--ion-text-color)] truncate">Products</h2>
+            <p className="m-0 mt-1 sm:mt-2 text-sm xs:text-base sm:text-lg text-[var(--ion-text-color-secondary)]">Manage your menu items, options, and availability</p>
           </div>
           <IonButton
             color="primary"

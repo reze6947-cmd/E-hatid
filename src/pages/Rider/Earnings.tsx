@@ -30,13 +30,11 @@ const RiderEarnings: React.FC = () => {
   const maxEarning = Math.max(...earnings.weeklyBreakdown.map(d => d.amount), 1);
 
   return (
-    <>
-      <div className="pb-2">
-        <RiderPageHeader title="Earnings" subtitle="Track your delivery income" />
-      </div>
+    <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+      <RiderPageHeader title="Earnings" subtitle="Track your delivery income" />
 
       {/* Period Selection */}
-      <div className="pb-3">
+      <div>
         <IonSegment
           value={selectedPeriod}
           onIonChange={e => setSelectedPeriod(e.detail.value as string)}
@@ -55,7 +53,7 @@ const RiderEarnings: React.FC = () => {
       </div>
 
       {/* Total Earnings Hero */}
-      <div className="pb-3">
+      <div>
         <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #6D28D9, #8B5CF6)' }}>
           <p className="m-0 mb-2 text-sm text-white/90">Total Earnings</p>
           <h2 className="m-0 text-4xl font-bold text-white">₱{periodTotal.toFixed(2)}</h2>
@@ -66,7 +64,7 @@ const RiderEarnings: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="pb-3">
+      <div>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
             <div className="flex items-center gap-3">
@@ -96,7 +94,7 @@ const RiderEarnings: React.FC = () => {
 
       {/* Weekly Chart */}
       {selectedPeriod !== 'month' && (
-        <div className="pb-3">
+        <div>
           <h3 className="m-0 mb-3 text-xs font-bold uppercase tracking-wide text-[var(--ion-text-color-secondary)]">
             Weekly Breakdown
           </h3>
@@ -130,7 +128,7 @@ const RiderEarnings: React.FC = () => {
       )}
 
       {/* Download Statement */}
-      <div className="pb-4">
+      <div>
         <IonButton
           expand="block"
           fill="outline"
@@ -143,7 +141,7 @@ const RiderEarnings: React.FC = () => {
         </IonButton>
         <p className="m-0 mt-1 text-center text-[10px] text-[var(--ion-text-color-secondary)]">Coming soon</p>
       </div>
-    </>
+    </div>
   );
 };
 

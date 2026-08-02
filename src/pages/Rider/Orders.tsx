@@ -134,14 +134,12 @@ const RiderOrders: React.FC = () => {
 
   return (
     <>
-      <div className="pb-2">
+      <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
         <RiderPageHeader title="Orders" subtitle="Manage your deliveries" />
-      </div>
-
-      <SegmentTabs tabs={tabs} selected={selectedTab} onChange={setSelectedTab} />
+        <SegmentTabs tabs={tabs} selected={selectedTab} onChange={setSelectedTab} />
 
       {selectedTab === 'available' && (
-        <div className="pb-4 space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredAvailable.length === 0 ? (
             <EmptyState
               icon="cube-outline"
@@ -172,7 +170,7 @@ const RiderOrders: React.FC = () => {
       )}
 
       {selectedTab === 'active' && (
-        <div className="pb-4 space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {activeOrders.length === 0 ? (
             <EmptyState
               icon="bicycle-outline"
@@ -203,7 +201,7 @@ const RiderOrders: React.FC = () => {
       )}
 
       {selectedTab === 'completed' && (
-        <div className="pb-4 space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {completedOrders.length === 0 ? (
             <EmptyState
               icon="flag-outline"
@@ -232,6 +230,8 @@ const RiderOrders: React.FC = () => {
           )}
         </div>
       )}
+
+      </div>
 
       <IonModal isOpen={!!detailsOrder} onDidDismiss={() => setDetailsOrder(null)}>
         <IonHeader className="ion-no-border">

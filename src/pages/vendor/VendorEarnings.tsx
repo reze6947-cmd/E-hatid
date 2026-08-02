@@ -45,7 +45,7 @@ const VendorEarnings: React.FC = () => {
   return (
     <>
 
-        <div className="p-4">
+        <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
           <PageHeader title="Earnings" subtitle="Track your revenue and payouts" />
 
           {loading ? (

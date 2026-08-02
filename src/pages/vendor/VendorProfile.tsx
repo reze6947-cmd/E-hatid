@@ -184,9 +184,9 @@ const VendorProfile: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
       {/* Avatar */}
-      <div className="text-center mb-6 pt-4">
+      <div className="text-center">
         <div
           onClick={() => logoInputRef.current?.click()}
           className="w-[88px] h-[88px] rounded-full mx-auto mb-4 cursor-pointer relative overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center"
@@ -209,7 +209,7 @@ const VendorProfile: React.FC = () => {
       </div>
 
       {/* Contact Information */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">Contact Information</h3>
 
         <div className="mb-4">
@@ -244,7 +244,7 @@ const VendorProfile: React.FC = () => {
       </div>
 
       {/* Stall Information */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={storefrontOutline} className="mr-1.5 align-middle" />
           Stall Information
@@ -305,7 +305,7 @@ const VendorProfile: React.FC = () => {
       </div>
 
       {/* Stall Appearance */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={colorPaletteOutline} className="mr-1.5 align-middle" />
           Stall Appearance
@@ -349,7 +349,7 @@ const VendorProfile: React.FC = () => {
       </div>
 
       {/* Stall Location */}
-      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 mb-4 border border-[var(--ion-border-color)]">
+      <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
           <IonIcon icon={locationOutline} className="mr-1.5 align-middle" />
           Stall Location
@@ -429,7 +429,7 @@ const VendorProfile: React.FC = () => {
       <IonToast isOpen={showToast} message={toastMessage} duration={3000} onDidDismiss={() => setShowToast(false)} position="bottom"
         color={toastMessage.includes('Failed') ? 'danger' : 'success'}
       />
-    </>
+    </div>
   );
 };
 
