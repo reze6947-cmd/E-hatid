@@ -2,27 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { IonButton, IonIcon, IonSpinner, IonToast, IonInput, IonTextarea, IonToggle, IonItem } from '@ionic/react';
 import { storefrontOutline, timeOutline, notificationsOutline, cameraOutline, personOutline, callOutline, locationOutline, logOutOutline, swapHorizontalOutline, checkmarkCircle, closeCircle, time, colorPaletteOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { Marker } from 'react-leaflet';
+import LeafletMap from '../../components/Map/LeafletMap';
+import { profileMarkerIcon } from '../../components/Map/mapIcons';
 
 import { useAuth } from '../../context/AuthContext';
 import { getStallByVendorId, createStall, updateStall } from '../../services/stallService';
 import { getRoleProfile } from '../../services/userService';
 import { compressImage } from '../../utils/compressImage';
-
-function MapFixer() {
-  const map = useMap();
-  useEffect(() => { setTimeout(() => map.invalidateSize(), 100); }, [map]);
-  return null;
-}
-
-const profileMarkerIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:var(--ion-color-primary);width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-});
 
 const VendorProfile: React.FC = () => {
   const history = useHistory();
@@ -373,26 +360,20 @@ const VendorProfile: React.FC = () => {
             📍 {stallLatitude.toFixed(6)}, {stallLongitude.toFixed(6)}
           </p>
         )}
-        <div className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-[var(--ion-border-color)] mb-3" style={{ position: 'relative', isolation: 'isolate' }}>
-          <MapContainer
+        <div className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-[var(--ion-border-color)] mb-3">
+          <LeafletMap
             center={[stallLatitude || 14.5995, stallLongitude || 120.9842]}
             zoom={15}
-            style={{ width: '100%', height: '100%' }}
-            zoomControl={false}
+            className="w-full h-full"
             dragging={false}
             scrollWheelZoom={false}
             touchZoom={false}
             doubleClickZoom={false}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
             {stallLatitude != null && stallLongitude != null && (
               <Marker position={[stallLatitude, stallLongitude]} icon={profileMarkerIcon} />
             )}
-            <MapFixer />
-          </MapContainer>
+          </LeafletMap>
         </div>
         <IonButton expand="block" shape="round" className="h-12 text-base font-semibold" onClick={() => history.push('/vendor/location')}>
           Edit Location

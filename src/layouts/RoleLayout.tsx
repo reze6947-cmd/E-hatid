@@ -27,7 +27,7 @@ const RoleLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
 
       <IonContent>
         <div className="min-h-full flex flex-col">
-          <div className="w-full mx-auto px-4 md:px-6 lg:px-8 flex-1 pt-4 pb-24 md:pb-0 max-w-xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl">
+          <div className="w-full mx-auto px-4 md:px-6 lg:px-8 flex-1 pt-4 pb-24 md:pb-0 max-w-7xl">
             {children}
           </div>
           {showFooter && <AppFooter />}

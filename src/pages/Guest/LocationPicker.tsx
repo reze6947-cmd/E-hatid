@@ -9,9 +9,9 @@ import { locationOutline, cartOutline, documentTextOutline, personOutline } from
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { Marker, useMapEvents } from 'react-leaflet';
+import LeafletMap from '../../components/Map/LeafletMap';
+import { markerIcon } from '../../components/Map/mapIcons';
 
 interface Suggestion {
   display: string;
@@ -22,13 +22,6 @@ interface Suggestion {
 const geocodeCache = new Map<string, Suggestion[]>();
 const reverseCache = new Map<string, Suggestion>();
 let lastGeocodeCall = 0;
-
-const markerIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:var(--ion-color-primary);width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-});
 
 const reverseGeocode = async (lat: number, lng: number): Promise<Suggestion | null> => {
   const key = `${lat},${lng}`;
@@ -81,22 +74,6 @@ const LocationMarker: React.FC<{
     },
   });
   return position ? <Marker position={position} icon={markerIcon} /> : null;
-};
-
-const MapController = ({ position }: { position: [number, number] | null }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    setTimeout(() => map.invalidateSize(), 150);
-  }, []);
-
-  useEffect(() => {
-    if (position) {
-      map.setView(position, map.getZoom(), { animate: true });
-    }
-  }, [position]);
-
-  return null;
 };
 
 const GuestLocationPicker: React.FC = () => {
@@ -207,21 +184,16 @@ const GuestLocationPicker: React.FC = () => {
         <div className="flex-1 max-w-2xl mx-auto w-full px-3 sm:px-4 md:px-6 pt-4 sm:pt-6 pb-6 sm:pb-8">
           {/* Map */}
           <div className="w-full h-[35vh] sm:h-[40vh] md:h-[45vh] rounded-2xl overflow-hidden mb-4 border border-[var(--ion-border-color)]">
-            <MapContainer
+            <LeafletMap
               center={[selectedLocation?.lat || 14.5995, selectedLocation?.lng || 120.9842]}
               zoom={15}
-              style={{ width: '100%', height: '100%' }}
+              className="w-full h-full"
             >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
-              <MapController position={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : null} />
               <LocationMarker
                 position={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : null}
                 onLocationChange={handleMapClick}
               />
-            </MapContainer>
+            </LeafletMap>
           </div>
 
           {/* Address Search with Autocomplete */}

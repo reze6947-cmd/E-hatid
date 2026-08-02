@@ -5,11 +5,9 @@ import {
   IonSpinner,
   IonToast,
 } from '@ionic/react';
-import { arrowBackOutline, bicycleOutline, callOutline, checkmarkCircleOutline, expandOutline, closeOutline, locationOutline, navigateOutline, personOutline, storefrontOutline, timeOutline } from 'ionicons/icons';
+import { arrowBackOutline, callOutline, checkmarkCircleOutline, expandOutline, closeOutline, locationOutline, navigateOutline, personOutline, storefrontOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { Marker, Polyline } from 'react-leaflet';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useAuth } from '../../context/AuthContext';
@@ -18,38 +16,8 @@ import { getUserDocument } from '../../services/userService';
 import { fetchStallById } from '../../services/stallService';
 import { updateOrderStatus } from '../../services/orderService';
 import type { Order, User, Stall, RiderLocation } from '../../types';
-
-const markerIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:var(--ion-color-primary);width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-});
-
-const stallMarkerIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:#8B5CF6;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;">🏪</div>',
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-});
-
-const riderMarkerIcon = L.divIcon({
-  className: '',
-  html: '<div style="background:#6D28D9;width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>',
-  iconSize: [30, 30],
-  iconAnchor: [15, 15],
-});
-
-function MapBoundsUpdater({ coords }: { coords: [number, number][] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (coords.length > 1) {
-      const bounds = L.latLngBounds(coords.map(c => L.latLng(c[0], c[1])));
-      map.fitBounds(bounds, { padding: [40, 40] });
-    }
-  }, [coords, map]);
-  return null;
-}
+import LeafletMap, { type LeafletMapHandle } from '../../components/Map/LeafletMap';
+import { markerIcon, stallMarkerIcon, riderMarkerIcon } from '../../components/Map/mapIcons';
 
 const RiderDelivery: React.FC = () => {
   const history = useHistory<{ order?: Order }>();
@@ -66,6 +34,12 @@ const RiderDelivery: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const mountedRef = useRef(true);
+  const mapRef = useRef<LeafletMapHandle | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => mapRef.current?.invalidateSize(), 200);
+    return () => clearTimeout(t);
+  }, [fullscreen]);
 
   const handleBack = () => {
     if (fullscreen) {
@@ -282,32 +256,30 @@ const RiderDelivery: React.FC = () => {
 
         {/* Map */}
         {allMapPoints.length >= 2 && (
-          <div className={`mb-4 bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] overflow-hidden ${fullscreen ? 'hidden' : ''}`}>
-            <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <div className={`flex flex-col bg-[var(--ion-card-background)] overflow-hidden ${fullscreen ? 'fixed inset-0 z-[9999]' : 'mb-4 rounded-2xl border border-[var(--ion-border-color)]'}`}>
+            <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
               <div className="flex items-center gap-2">
                 <IonIcon icon={navigateOutline} className="text-[var(--ion-color-primary)] text-base" />
                 <span className="text-xs font-bold text-[var(--ion-text-color-secondary)] uppercase tracking-[0.3px]">
                   {riderLocation ? 'Live Route' : 'Delivery Route'}
                 </span>
               </div>
-              <IonButton fill="clear" size="small" onClick={() => setFullscreen(true)} style={{ '--color': 'var(--ion-color-primary)', margin: 0, minHeight: 32 }}>
-                <IonIcon icon={expandOutline} className="text-lg" />
+              <IonButton fill="clear" size="small" onClick={() => setFullscreen(!fullscreen)} style={{ '--color': 'var(--ion-color-primary)', margin: 0, minHeight: 32 }}>
+                <IonIcon icon={fullscreen ? closeOutline : expandOutline} className="text-lg" />
               </IonButton>
             </div>
-            <div className="h-[240px] sm:h-[280px] md:h-[320px] transition-all duration-300" style={{ position: 'relative', isolation: 'isolate' }}>
-              <MapContainer
+            <div className={fullscreen ? 'flex-1 min-h-0' : 'h-[240px] sm:h-[280px] md:h-[320px]'} style={{ position: 'relative', isolation: 'isolate' }}>
+              <LeafletMap
+                ref={mapRef}
                 center={allMapPoints.length > 1
                   ? [(allMapPoints[0][0] + allMapPoints[allMapPoints.length - 1][0]) / 2,
                      (allMapPoints[0][1] + allMapPoints[allMapPoints.length - 1][1]) / 2]
                   : [14.5, 121]}
                 zoom={13}
-                style={{ width: '100%', height: '100%' }}
+                className="w-full h-full"
                 zoomControl={true}
+                fitBounds={routeCoords || undefined}
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
                 {stall?.latitude && stall?.longitude && (
                   <Marker position={[stall.latitude, stall.longitude]} icon={stallMarkerIcon} />
                 )}
@@ -320,63 +292,8 @@ const RiderDelivery: React.FC = () => {
                 {routeCoords && routeCoords.length > 1 && (
                   <Polyline positions={routeCoords} color="var(--ion-color-primary)" weight={4} opacity={0.7} />
                 )}
-                {routeCoords && <MapBoundsUpdater coords={routeCoords} />}
-              </MapContainer>
+              </LeafletMap>
             </div>
-          </div>
-        )}
-
-        {/* Fullscreen Map Overlay */}
-        {fullscreen && (
-          <div className="fixed inset-0 z-[9999]" onClick={() => setFullscreen(false)}>
-            <MapContainer
-              center={allMapPoints.length > 1
-                ? [(allMapPoints[0][0] + allMapPoints[allMapPoints.length - 1][0]) / 2,
-                   (allMapPoints[0][1] + allMapPoints[allMapPoints.length - 1][1]) / 2]
-                : [14.5, 121]}
-              zoom={13}
-              style={{ width: '100vw', height: '100dvh' }}
-              zoomControl={true}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {stall?.latitude && stall?.longitude && (
-                <Marker position={[stall.latitude, stall.longitude]} icon={stallMarkerIcon} />
-              )}
-              {order?.customerLatitude && order?.customerLongitude && (
-                <Marker position={[order.customerLatitude, order.customerLongitude]} icon={markerIcon} />
-              )}
-              {riderLocation && (
-                <Marker position={[riderLocation.lat, riderLocation.lng]} icon={riderMarkerIcon} />
-              )}
-              {routeCoords && routeCoords.length > 1 && (
-                <Polyline positions={routeCoords} color="var(--ion-color-primary)" weight={4} opacity={0.7} />
-              )}
-              {routeCoords && <MapBoundsUpdater coords={routeCoords} />}
-            </MapContainer>
-            {/* Close button */}
-            <IonButton
-              fill="clear"
-              onClick={(e) => { e.stopPropagation(); setFullscreen(false); }}
-              style={{
-                position: 'absolute',
-                top: `calc(12px + env(safe-area-inset-top, 0px))`,
-                right: `calc(12px + env(safe-area-inset-right, 0px))`,
-                '--color': '#1F2937',
-                '--background': 'rgba(255,255,255,0.95)',
-                '--box-shadow': '0 2px 8px rgba(0,0,0,0.15)',
-                '--backdrop-filter': 'blur(6px)',
-                '--border-radius': '50%',
-                width: 40,
-                height: 40,
-                margin: 0,
-                zIndex: 1000,
-              }}
-            >
-              <IonIcon icon={closeOutline} className="text-xl" />
-            </IonButton>
           </div>
         )}
 

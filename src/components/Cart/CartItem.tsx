@@ -16,8 +16,8 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
     item.specialInstructions;
 
   return (
-    <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm">
-      <div className="relative w-full xs:w-24 sm:w-28 aspect-square shrink-0 mx-auto xs:mx-0">
+    <div className="flex flex-col xs:flex-row gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm">
+      <div className="relative w-full xs:w-20 sm:w-24 aspect-square shrink-0 mx-auto xs:mx-0">
         <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-lg" />
       </div>
 
@@ -56,23 +56,23 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
       <div className="flex xs:flex-col justify-between xs:justify-center items-center xs:items-stretch gap-2 xs:gap-3 pt-2 xs:pt-0 border-t xs:border-t-0 border-[var(--ion-border-color)]">
         <div className="flex items-center gap-2">
           <IonButton
-            className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-lg"
+            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-lg"
             onClick={() => onUpdateQuantity(item.quantity - 1)}
             title="Decrease quantity"
             style={{ '--background': item.quantity === 1 ? 'var(--ion-color-danger)' : 'var(--ion-color-primary)', '--color': '#fff', '--padding': '0' }}
           >
-            <IonIcon icon={item.quantity === 1 ? trash : remove} className="text-xl" />
+            <IonIcon icon={item.quantity === 1 ? trash : remove} className="text-2xl" />
           </IonButton>
 
-          <span className="font-medium text-xl w-10 text-center text-[var(--ion-text-color)]">{item.quantity}</span>
+          <span className="font-medium text-xl w-11 text-center text-[var(--ion-text-color)]">{item.quantity}</span>
 
           <IonButton
-            className="min-w-[40px] min-h-[40px] w-10 h-10 rounded-lg"
+            className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-lg"
             onClick={() => onUpdateQuantity(item.quantity + 1)}
             title="Increase quantity"
             style={{ '--background': 'var(--ion-color-primary)', '--color': '#fff', '--padding': '0' }}
           >
-            <IonIcon icon={add} className="text-xl" />
+            <IonIcon icon={add} className="text-2xl" />
           </IonButton>
         </div>
 
@@ -82,7 +82,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
           title="Remove item"
           style={{ '--background': 'var(--ion-color-danger)/10', '--color': 'var(--ion-color-danger)' }}
         >
-          <IonIcon icon={trash} className="mr-1" /> Remove
+          <IonIcon icon={trash} className="mr-1 text-xl" /> Remove
         </IonButton>
       </div>
     </div>

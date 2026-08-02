@@ -133,9 +133,9 @@ const UserCart: React.FC = () => {
     <>
 
 
-        <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 sm:px-6 pb-10 sm:pb-16 pt-4 sm:pt-6 md:pt-8">
-          <div className="pb-4 sm:pb-5">
-            <h2 className="m-0 text-2xl xs:text-3xl sm:text-4xl font-bold text-[var(--ion-text-color)]">
+        <div className="w-full flex-1 flex flex-col pb-10 md:pt-8 space-y-3 sm:space-y-4">
+          <div>
+            <h2 className="m-0 text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--ion-text-color)]">
               Your Cart
             </h2>
           </div>
@@ -152,8 +152,9 @@ const UserCart: React.FC = () => {
               </IonButton>
             </div>
           ) : (
-            <>
-              <div className="flex items-center gap-4 bg-[var(--ion-card-background)] mb-4 p-4 md:p-6 rounded-2xl border border-[var(--ion-border-color)]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] lg:gap-6 items-start">
+              <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center gap-3 bg-[var(--ion-card-background)] p-3 sm:p-4 rounded-2xl border border-[var(--ion-border-color)]">
                 <div className="w-10 h-10 rounded-full bg-[var(--ion-background-color)] border border-[var(--ion-border-color)] flex items-center justify-center shrink-0">
                   <IonIcon icon={locationOutline} className="text-[var(--ion-color-primary)] text-xl" />
                 </div>
@@ -165,7 +166,7 @@ const UserCart: React.FC = () => {
               </div>
 
               {stall && (
-                <div className="bg-[var(--ion-card-background)] mb-4 p-4 md:p-6 rounded-2xl border border-[var(--ion-border-color)]">
+                <div className="bg-[var(--ion-card-background)] p-3 sm:p-4 rounded-2xl border border-[var(--ion-border-color)]">
                   <div className="flex items-center gap-3">
                     {stall.logo && (
                       <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-gray-100">
@@ -189,7 +190,7 @@ const UserCart: React.FC = () => {
                 </div>
               )}
 
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-3">
                 {items.map(item => (
                   <div key={item.id}>
                     {unavailableItems.includes(item.id) && (
@@ -206,21 +207,23 @@ const UserCart: React.FC = () => {
                   </div>
                 ))}
               </div>
+              </div>
 
-              <div className="bg-[var(--ion-card-background)] mt-4 p-4 md:p-6 rounded-2xl border border-[var(--ion-border-color)]">
+              <div className="lg:sticky lg:top-24 space-y-3 sm:space-y-4">
+              <div className="bg-[var(--ion-card-background)] p-3 sm:p-4 rounded-2xl border border-[var(--ion-border-color)]">
                 <h3 className="m-0 mb-4 font-bold text-sm sm:text-base text-[var(--ion-text-color)]">Bill Details</h3>
-                <div className="flex justify-between items-center py-2 text-xs sm:text-sm text-[var(--ion-text-color)]">
+                <div className="flex justify-between items-center py-1.5 text-xs sm:text-sm text-[var(--ion-text-color)]">
                   <span>Subtotal</span>
                   <span>₱{total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 text-xs sm:text-sm text-[var(--ion-text-color)]">
+                <div className="flex justify-between items-center py-1.5 text-xs sm:text-sm text-[var(--ion-text-color)]">
                   <span className="flex flex-col">
                     <span>Delivery Fee</span>
                     {rawDistance != null && <span className="text-[10px] text-[var(--ion-text-color-secondary)]">{rawDistance} km → {chargedDistance} km charged</span>}
                   </span>
                   <span>{feeLoading ? <IonSpinner className="inline-block" style={{ width: 14, height: 14 }} /> : `₱${deliveryFee.toFixed(2)}`}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 text-xs sm:text-sm text-[var(--ion-text-color)]">
+                <div className="flex justify-between items-center py-1.5 text-xs sm:text-sm text-[var(--ion-text-color)]">
                   <span>Service Fee</span>
                   <span>₱{serviceFee.toFixed(2)}</span>
                 </div>
@@ -231,7 +234,7 @@ const UserCart: React.FC = () => {
               </div>
 
               {/* Cash on Delivery */}
-              <div className="bg-[var(--ion-card-background)] mt-4 p-4 md:p-6 rounded-2xl border border-[var(--ion-border-color)] text-center">
+              <div className="bg-[var(--ion-card-background)] p-3 sm:p-4 rounded-2xl border border-[var(--ion-border-color)] text-center">
                 <IonIcon icon={cashOutline} className="text-3xl sm:text-4xl text-[#10B981] mb-3" />
                 <p className="m-0 mb-1 text-sm sm:text-base font-semibold text-[var(--ion-text-color)]">
                   Pay with cash on delivery
@@ -247,7 +250,7 @@ const UserCart: React.FC = () => {
                 </div>
               )}
               {items.length > 0 && (
-                <div className="mt-6 space-y-3">
+                <div className="space-y-3">
                   {user?.emailVerified !== true && (
                     <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-3 text-center">
                       <p className="m-0 text-xs sm:text-sm text-amber-700 dark:text-amber-300 font-medium">
@@ -275,7 +278,8 @@ const UserCart: React.FC = () => {
                   </IonButton>
                 </div>
               )}
-            </>
+              </div>
+              </div>
           )}
         </div>
     </>

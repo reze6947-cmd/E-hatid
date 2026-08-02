@@ -152,48 +152,50 @@ const StallDetail: React.FC = () => {
         </div>
 
         {/* Logo + Info section */}
-        <div className="relative px-4 md:px-6 lg:px-8">
-          {stall.logo && (
-            <div className="absolute -top-12 md:-top-16 left-4 md:left-6 lg:left-8 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-[var(--ion-card-background)] z-10">
-              <img
-                src={stall.logo}
-                alt={`${stall.name} logo`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            </div>
-          )}
-
-          <div className={`pt-4 md:pt-5 ${stall.logo ? 'ml-28 md:ml-32' : ''}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[var(--ion-text-color)] m-0 line-clamp-2">{stall.name}</h1>
-                <p className="text-sm text-[var(--ion-color-primary)] font-medium mt-0.5">{stall.category}</p>
+        <div className="px-4 md:px-6 lg:px-8">
+          <div className="flex items-start gap-4 pt-4 md:pt-5">
+            {stall.logo && (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] shrink-0">
+                <img
+                  src={stall.logo}
+                  alt={`${stall.name} logo`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
               </div>
-              <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full text-sm font-semibold shrink-0 mt-1">
-                <IonIcon icon={star} className="text-amber-500 text-sm" />
-                <span>{stall.rating}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-sm text-[var(--ion-text-color-secondary)]">
-              <span className="flex items-center gap-1">
-                <IonIcon icon={timeOutline} className="text-sm shrink-0" />
-                {stall.deliveryTime}
-              </span>
-              <span className="flex items-center gap-1">
-                <IonIcon icon={carOutline} className="text-sm shrink-0" />
-                Delivery varies based on distance
-              </span>
-              <span className="flex items-center gap-1">
-                <IonIcon icon={locationOutline} className="text-sm shrink-0" />
-                Near you
-              </span>
-            </div>
-
-            {stall.description && (
-              <p className="text-sm text-[var(--ion-text-color-secondary)] mt-3 leading-relaxed">{stall.description}</p>
             )}
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-[var(--ion-text-color)] m-0 line-clamp-2">{stall.name}</h1>
+                  <p className="text-sm text-[var(--ion-color-primary)] font-medium mt-0.5">{stall.category}</p>
+                </div>
+                <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full text-sm font-semibold shrink-0 mt-1">
+                  <IonIcon icon={star} className="text-amber-500 text-sm" />
+                  <span>{stall.rating}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-sm text-[var(--ion-text-color-secondary)]">
+                <span className="flex items-center gap-1">
+                  <IonIcon icon={timeOutline} className="text-sm shrink-0" />
+                  {stall.deliveryTime}
+                </span>
+                <span className="flex items-center gap-1">
+                  <IonIcon icon={carOutline} className="text-sm shrink-0" />
+                  Delivery varies based on distance
+                </span>
+                <span className="flex items-center gap-1">
+                  <IonIcon icon={locationOutline} className="text-sm shrink-0" />
+                  Near you
+                </span>
+              </div>
+
+              {stall.description && (
+                <p className="text-sm text-[var(--ion-text-color-secondary)] mt-3 leading-relaxed">{stall.description}</p>
+              )}
+            </div>
           </div>
         </div>
 

@@ -169,44 +169,46 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
       {/* Mobile bottom tab bar */}
       {!hideMobileTabBar && links.length > 0 && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] pb-[env(safe-area-inset-bottom,0px)] shadow-lg">
-          <div className="flex items-center justify-center h-16 px-2 gap-1">
+          <div className="flex items-stretch w-full h-16 px-1 gap-0.5">
             {links.map(link => {
               const active = isActive(link.path);
+              const badgeCount = link.badge === 'cart'
+                ? cartCount
+                : link.path === '/rider/orders' && activeRole === 'rider'
+                  ? riderOrderCount
+                  : link.path === '/customer/orders' && activeRole === 'customer'
+                    ? customerOrderCount
+                    : 0;
               return (
                 <IonButton
                   key={link.path}
                   fill="clear"
+                  className="flex-1 min-w-0"
                   onClick={() => history.push(link.path)}
-                  style={{ '--padding-start': '0', '--padding-end': '0', '--background': 'transparent', '--box-shadow': 'none', height: 'auto', minHeight: '44px', '--border-radius': '9999px' }}
+                  style={{ '--padding-start': '0', '--padding-end': '0', '--background': 'transparent', '--box-shadow': 'none', height: 'auto', minHeight: '44px' }}
                 >
-                  <div className={`flex flex-col items-center justify-center gap-0.5 flex-1 max-w-[72px] sm:max-w-[80px] min-h-[44px] rounded-full transition-all duration-200 ${
-                    active ? 'bg-[var(--ion-color-primary)] px-4 py-2' : 'bg-[var(--ion-border-color)]/30 px-3 py-1.5'
+                  <div className={`relative flex flex-col items-center justify-center gap-0.5 w-full min-h-[40px] px-1 rounded-full transition-all duration-200 ${
+                    active ? 'bg-[var(--ion-color-primary)] py-2' : 'bg-[var(--ion-border-color)]/30 py-1.5'
                   }`}>
-                    <div className={`transition-transform duration-200 ${active ? 'scale-110' : ''}`}>
+                    <div className="relative shrink-0">
                       <IonIcon
                         icon={active ? link.activeIcon : link.icon}
                         className={`text-xl ${active ? 'text-white' : 'text-[var(--ion-text-color-secondary)]'}`}
                       />
+                      {badgeCount > 0 && (
+                        <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center border ${
+                          active
+                            ? 'bg-white text-[var(--ion-color-primary)] border-[var(--ion-color-primary)]'
+                            : 'bg-[var(--ion-color-primary)] text-white border-white'
+                        }`}>
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </span>
+                      )}
                     </div>
-                    <span className={`text-xs font-medium leading-tight ${
+                    <span className={`text-[10px] xs:text-xs font-medium leading-tight truncate max-w-full ${
                       active ? 'text-white font-semibold' : 'text-[var(--ion-text-color-secondary)]'
                     }`}>
                       {link.label}
-                      {link.badge === 'cart' && cartCount > 0 && (
-                        <span style={badgeStyle(active)}>
-                          {cartCount > 99 ? '99+' : cartCount}
-                        </span>
-                      )}
-                      {activeRole === 'rider' && link.path === '/rider/orders' && riderOrderCount > 0 && (
-                        <span style={badgeStyle(active)}>
-                          {riderOrderCount > 99 ? '99+' : riderOrderCount}
-                        </span>
-                      )}
-                      {activeRole === 'customer' && link.path === '/customer/orders' && customerOrderCount > 0 && (
-                        <span style={badgeStyle(active)}>
-                          {customerOrderCount > 99 ? '99+' : customerOrderCount}
-                        </span>
-                      )}
                     </span>
                   </div>
                 </IonButton>

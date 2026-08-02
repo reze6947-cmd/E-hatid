@@ -13,6 +13,7 @@ import { useOrders } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebaseConfig';
 import { Order } from '../../types';
+import ReviewModal from '../../components/Reviews/ReviewModal';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -34,6 +35,7 @@ const UserOrders: React.FC = () => {
   const { orders: localOrders } = useOrders();
   const [firestoreOrders, setFirestoreOrders] = useState<Order[]>([]);
   const [loadingFirestore, setLoadingFirestore] = useState(true);
+  const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (!user) { setLoadingFirestore(false); return; }
@@ -69,10 +71,10 @@ const UserOrders: React.FC = () => {
   }, [firestoreOrders, localOrders]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 flex-1 md:pt-8">
-      <div className="page-container flex-1 flex flex-col pb-10">
-        <div className="pt-5 pb-4">
-          <h2 className="m-0 text-[28px] font-bold text-[var(--ion-text-color)]">
+    <div className="w-full flex-1 md:pt-8">
+      <div className="page-container flex-1 flex flex-col pb-10 space-y-3 sm:space-y-4">
+        <div>
+          <h2 className="m-0 text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--ion-text-color)]">
             My Orders
           </h2>
         </div>
@@ -93,13 +95,13 @@ const UserOrders: React.FC = () => {
             </IonButton>
           </div>
         ) : (
-          <div>
+          <div className="space-y-3 sm:space-y-4">
             {mergedOrders.map(order => {
               return (
                 <div
                   key={order.id}
                   onClick={() => history.push('/customer/order-tracking', { order })}
-                  className="bg-[var(--ion-card-background)] p-4 rounded-xl border border-[var(--ion-border-color)] mb-4 cursor-pointer transition-transform duration-200"
+                  className="bg-[var(--ion-card-background)] p-4 rounded-xl border border-[var(--ion-border-color)] cursor-pointer transition-transform duration-200"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-bold text-sm text-[var(--ion-text-color)]">
@@ -119,7 +121,7 @@ const UserOrders: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {order.status === 'delivered' && (
-                        <IonButton size="small" fill="clear" color="secondary" onClick={e => { e.stopPropagation(); history.push(`/customer/review/${order.id}`, { order }); }}>
+                        <IonButton size="small" fill="clear" color="secondary" onClick={e => { e.stopPropagation(); setReviewOrder(order); }}>
                           Review
                         </IonButton>
                       )}
@@ -134,6 +136,7 @@ const UserOrders: React.FC = () => {
           </div>
         )}
       </div>
+      <ReviewModal order={reviewOrder} isOpen={!!reviewOrder} onClose={() => setReviewOrder(null)} />
     </div>
   );
 };

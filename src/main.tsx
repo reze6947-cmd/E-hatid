@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
 import { NotificationProvider } from './context/NotificationContext';
+import 'leaflet/dist/leaflet.css';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

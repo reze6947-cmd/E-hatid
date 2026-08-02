@@ -34,7 +34,7 @@ const AppFooter: React.FC = () => {
             <img
               src={isDarkMode ? '/Logo/Logo-dark-mode.png' : '/Logo/Logo-light-mode.png'}
               alt="E-Hatid"
-              className="h-8 sm:h-9 object-contain"
+              className="h-10 sm:h-14 object-contain"
             />
             <p className="text-xs sm:text-sm text-[var(--ion-text-color-secondary)] leading-relaxed max-w-xs">
               Your favorite food, delivered fast. Order from the best local restaurants and stalls near you.

@@ -22,7 +22,6 @@ const CustomerCart = lazy(() => import('./pages/customer/Cart'));
 const CustomerLocationPicker = lazy(() => import('./pages/customer/LocationPicker'));
 const CustomerOrders = lazy(() => import('./pages/customer/Orders'));
 const CustomerOrderTracking = lazy(() => import('./pages/customer/OrderTracking'));
-const CustomerReview = lazy(() => import('./pages/customer/Review'));
 const RiderDashboard = lazy(() => import('./pages/Rider/Dashboard'));
 const RiderOrders = lazy(() => import('./pages/Rider/Orders'));
 const RiderEarnings = lazy(() => import('./pages/Rider/Earnings'));
@@ -113,9 +112,6 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute exact path="/customer/order-tracking" requiredRole="customer">
             <L><CustomerOrderTracking /></L>
-          </ProtectedRoute>
-          <ProtectedRoute exact path="/customer/review/:id" requiredRole="customer">
-            <L><CustomerReview /></L>
           </ProtectedRoute>
 
           {/* Auth Routes */}
