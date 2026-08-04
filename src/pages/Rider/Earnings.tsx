@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRiderEarnings } from '../../hooks/useRiderEarnings';
 import RiderPageHeader from '../../components/Rider/RiderPageHeader';
 import EmptyState from '../../components/Rider/EmptyState';
+import Skeleton from '../../components/ui/Skeleton';
 
 const RiderEarnings: React.FC = () => {
   const { user } = useAuth();
@@ -53,43 +54,69 @@ const RiderEarnings: React.FC = () => {
       </div>
 
       {/* Total Earnings Hero */}
-      <div>
-        <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #6D28D9, #8B5CF6)' }}>
-          <p className="m-0 mb-2 text-sm text-white/90">Total Earnings</p>
-          <h2 className="m-0 text-4xl font-bold text-white">₱{periodTotal.toFixed(2)}</h2>
-          <p className="m-0 mt-3 text-xs text-white/80">
-            {periodTrips} trips · Avg: ₱{avgPerTrip.toFixed(2)}
-          </p>
+      {earnings.loading ? (
+        <div>
+          <div className="rounded-2xl p-6 text-center bg-[var(--ion-card-background)] border border-[var(--ion-border-color)]">
+            <Skeleton width={110} height={14} className="mx-auto mb-3" />
+            <Skeleton width={160} height={36} className="mx-auto mb-3" />
+            <Skeleton width={140} height={12} className="mx-auto" />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div>
+          <div className="rounded-2xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #6D28D9, #8B5CF6)' }}>
+            <p className="m-0 mb-2 text-sm text-white/90">Total Earnings</p>
+            <h2 className="m-0 text-4xl font-bold text-white">₱{periodTotal.toFixed(2)}</h2>
+            <p className="m-0 mt-3 text-xs text-white/80">
+              {periodTrips} trips · Avg: ₱{avgPerTrip.toFixed(2)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(99, 102, 241, 0.1)' }}>
-                <IonIcon icon={cashOutline} className="text-xl" style={{ color: 'var(--ion-color-primary)' }} />
+        {earnings.loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[0, 1].map(i => (
+              <div key={i} className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton width="55%" height={12} />
+                    <Skeleton width="40%" height={16} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">Trips</p>
-                <h4 className="m-0 mt-1 font-bold text-[var(--ion-text-color)]">{periodTrips}</h4>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(99, 102, 241, 0.1)' }}>
+                  <IonIcon icon={cashOutline} className="text-xl" style={{ color: 'var(--ion-color-primary)' }} />
+                </div>
+                <div>
+                  <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">Trips</p>
+                  <h4 className="m-0 mt-1 font-bold text-[var(--ion-text-color)]">{periodTrips}</h4>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
-                <IonIcon icon={trendingUpOutline} className="text-xl" style={{ color: '#10B981' }} />
-              </div>
-              <div>
-                <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">Average</p>
-                <h4 className="m-0 mt-1 font-bold text-[var(--ion-text-color)]">₱{avgPerTrip.toFixed(2)}</h4>
+            <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                  <IonIcon icon={trendingUpOutline} className="text-xl" style={{ color: '#10B981' }} />
+                </div>
+                <div>
+                  <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">Average</p>
+                  <h4 className="m-0 mt-1 font-bold text-[var(--ion-text-color)]">₱{avgPerTrip.toFixed(2)}</h4>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Weekly Chart */}

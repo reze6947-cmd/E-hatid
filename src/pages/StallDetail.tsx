@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useHistory } from 'react-router-dom';
 import { IonIcon, IonButton } from '@ionic/react';
-import { locationOutline, star, timeOutline, carOutline, cartOutline, documentTextOutline } from 'ionicons/icons';
+import { locationOutline, star, timeOutline, carOutline, cartOutline, documentTextOutline, cloudOfflineOutline } from 'ionicons/icons';
 import { fetchStallById } from '../services/stallService';
 import { Stall, MenuItem, SelectedOption, SelectedAddOn } from '../types';
 import { useCart } from '../context/CartContext';
@@ -10,11 +10,14 @@ import { useAuth } from '../context/AuthContext';
 import MenuItemModal from '../components/Stall/MenuItemModal';
 import ProductCard from '../components/Stall/ProductCard';
 import { StallCardSkeleton } from '../components/ui/Skeleton';
+import { registerRefreshHandler } from '../utils/refreshBus';
+import { haversineKm, minutesFromKm, getStoredCoords } from '../utils/geocode';
 
 const StallDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [stall, setStall] = useState<Stall | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const history = useHistory();
@@ -41,22 +44,30 @@ const StallDetail: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const loadStall = async () => {
-      setLoading(true);
-      try {
-        if (id) {
-          const data = await fetchStallById(id);
-          setStall(data || null);
-        }
-      } catch (error) {
-        console.error('Error loading stall:', error);
-      } finally {
-        setLoading(false);
+  const loadStall = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      if (id) {
+        const data = await fetchStallById(id);
+        setStall(data || null);
       }
-    };
-    loadStall();
+    } catch (error) {
+      console.error('Error loading stall:', error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    loadStall();
+  }, [loadStall]);
+
+  useEffect(() => {
+    registerRefreshHandler(loadStall);
+    return () => registerRefreshHandler(null);
+  }, [loadStall]);
 
   const availableItems = stall?.menu?.filter(item => item.available) || [];
   const popularItems = availableItems.filter(item => item.popular);
@@ -118,6 +129,19 @@ const StallDetail: React.FC = () => {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4">
+        <div className="w-20 h-20 rounded-full bg-[var(--ion-card-background)] border-2 border-[var(--ion-border-color)] flex items-center justify-center">
+          <IonIcon icon={cloudOfflineOutline} className="text-3xl text-[var(--ion-color-primary)]" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--ion-text-color)]">Couldn't load this stall</h2>
+        <p className="text-sm text-[var(--ion-text-color-secondary)]">Check your connection and try again</p>
+        <IonButton shape="round" onClick={loadStall}>Retry</IonButton>
+      </div>
+    );
+  }
+
   if (!stall) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4">
@@ -135,6 +159,12 @@ const StallDetail: React.FC = () => {
 
   const menuItemsByCategory = (category: string) =>
     availableItems.filter(item => item.category === category && !item.popular);
+
+  const userCoords = getStoredCoords()
+    ?? (user?.latitude != null && user?.longitude != null ? { lat: user.latitude, lng: user.longitude } : null);
+  const etaMinutes = userCoords && stall.latitude != null && stall.longitude != null
+    ? minutesFromKm(haversineKm(userCoords.lat, userCoords.lng, stall.latitude, stall.longitude))
+    : null;
 
   return (
     <>
@@ -188,7 +218,7 @@ const StallDetail: React.FC = () => {
                 </span>
                 <span className="flex items-center gap-1">
                   <IonIcon icon={locationOutline} className="text-sm shrink-0" />
-                  Near you
+                  {etaMinutes != null ? `${etaMinutes} min away` : 'Near you'}
                 </span>
               </div>
 
@@ -198,6 +228,14 @@ const StallDetail: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {stall.active === false && (
+          <div className="px-4 md:px-6 lg:px-8">
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 text-center">
+              This stall is temporarily closed and not accepting orders right now.
+            </div>
+          </div>
+        )}
 
         {/* Sticky Category Navigation */}
         {navItems.length > 1 && (

@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { IonButton, IonIcon, IonSpinner, IonToast, IonInput, IonTextarea, IonToggle, IonItem } from '@ionic/react';
 import { storefrontOutline, timeOutline, notificationsOutline, cameraOutline, personOutline, callOutline, locationOutline, logOutOutline, swapHorizontalOutline, checkmarkCircle, closeCircle, time, colorPaletteOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { Marker } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
 import { profileMarkerIcon } from '../../components/Map/mapIcons';
+import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 
 import { useAuth } from '../../context/AuthContext';
 import { getStallByVendorId, createStall, updateStall } from '../../services/stallService';
 import { getRoleProfile } from '../../services/userService';
 import { compressImage } from '../../utils/compressImage';
+import { registerRefreshHandler } from '../../utils/refreshBus';
 
 const VendorProfile: React.FC = () => {
   const history = useHistory();
@@ -25,7 +27,6 @@ const VendorProfile: React.FC = () => {
   const [openTime, setOpenTime] = useState('08:00');
   const [closeTime, setCloseTime] = useState('22:00');
   const [active, setActive] = useState(true);
-  const [notifications, setNotifications] = useState(true);
   const [coverPhoto, setCoverPhoto] = useState('');
   const [stallLogo, setStallLogo] = useState('');
   const [accentColor, setAccentColor] = useState('#6366F1');
@@ -38,53 +39,56 @@ const VendorProfile: React.FC = () => {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
     setVendorName(user.name || '');
     setVendorPhone(user.phone || '');
     setStallAddress(user.stallAddress || '');
-    const loadData = async () => {
-      try {
-        const stall = await getStallByVendorId(user.id);
-        if (stall) {
-          setStallId(stall.id);
-          setStallName(stall.name);
-          setDescription(stall.description || '');
-          setCoverPhoto(stall.image || '');
-          setStallLogo(stall.logo || '');
-          setAccentColor(stall.accentColor || '#6366F1');
-          setActive(stall.active ?? true);
-          if (stall.address) setStallAddress(stall.address);
-          if (stall.latitude != null) setStallLatitude(stall.latitude);
-          if (stall.longitude != null) setStallLongitude(stall.longitude);
-          if (stall.deliveryTime) {
-            const parts = stall.deliveryTime.split(' - ');
-            if (parts.length === 2) { setOpenTime(parts[0]); setCloseTime(parts[1]); }
-          }
-        } else {
-          const profile = await getRoleProfile(user.id, 'vendor');
-          if (profile) {
-            if (profile.businessName || profile.displayName) setStallName(profile.businessName || profile.displayName);
-            if (profile.description) setDescription(profile.description);
-            if (profile.address) setStallAddress(profile.address);
-            if (profile.displayName) setVendorName(profile.displayName);
-            if (profile.contactPhone) setVendorPhone(profile.contactPhone);
-          } else {
-            if (user.stallName) setStallName(user.stallName);
-            if (user.stallAddress) setStallAddress(user.stallAddress);
-          }
+    try {
+      const stall = await getStallByVendorId(user.id);
+      if (stall) {
+        setStallId(stall.id);
+        setStallName(stall.name);
+        setDescription(stall.description || '');
+        setCoverPhoto(stall.image || '');
+        setStallLogo(stall.logo || '');
+        setAccentColor(stall.accentColor || '#6366F1');
+        setActive(stall.active ?? true);
+        if (stall.address) setStallAddress(stall.address);
+        if (stall.latitude != null) setStallLatitude(stall.latitude);
+        if (stall.longitude != null) setStallLongitude(stall.longitude);
+        if (stall.deliveryTime) {
+          const parts = stall.deliveryTime.split(' - ');
+          if (parts.length === 2) { setOpenTime(parts[0]); setCloseTime(parts[1]); }
         }
-      } catch (err) {
-        console.error('Error loading stall or profile:', err);
-      } finally {
-        setLoading(false);
+      } else {
+        const profile = await getRoleProfile(user.id, 'vendor');
+        if (profile) {
+          if (profile.businessName || profile.displayName) setStallName(profile.businessName || profile.displayName);
+          if (profile.description) setDescription(profile.description);
+          if (profile.address) setStallAddress(profile.address);
+          if (profile.displayName) setVendorName(profile.displayName);
+          if (profile.contactPhone) setVendorPhone(profile.contactPhone);
+        } else {
+          if (user.stallName) setStallName(user.stallName);
+          if (user.stallAddress) setStallAddress(user.stallAddress);
+        }
       }
-    };
-    loadData();
+    } catch (err) {
+      console.error('Error loading stall or profile:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    registerRefreshHandler(loadProfile);
+    return () => registerRefreshHandler(null);
+  }, [loadProfile]);
 
   useEffect(() => {
     const storedLocation = sessionStorage.getItem('vendorSelectedLocation');
@@ -295,12 +299,12 @@ const VendorProfile: React.FC = () => {
           <IonToggle checked={active} onIonChange={e => setActive(e.detail.checked)} style={{ '--background-checked': 'var(--ion-color-primary)' }} />
         </div>
 
-        <div className="flex items-center justify-between py-2 border-t border-[var(--ion-border-color)] mt-2 pt-3">
+        <div className="flex items-center justify-between py-2 border-t border-[var(--ion-border-color)] mt-2 pt-3 opacity-60">
           <div className="flex items-center gap-2">
             <IonIcon icon={notificationsOutline} className="text-base text-[var(--ion-color-primary)]" />
             <span className="text-sm font-medium text-[var(--ion-text-color)]">Push Notifications</span>
           </div>
-          <IonToggle checked={notifications} onIonChange={e => setNotifications(e.detail.checked)} style={{ '--background-checked': 'var(--ion-color-primary)' }} />
+          <span className="text-[10px] font-semibold uppercase tracking-wide bg-[var(--ion-border-color)]/40 text-[var(--ion-text-color-secondary)] px-2.5 py-1 rounded-full">Coming soon</span>
         </div>
       </div>
 
@@ -375,6 +379,13 @@ const VendorProfile: React.FC = () => {
             )}
           </LeafletMap>
         </div>
+        <OpenInGoogleMapsButton
+          lat={stallLatitude ?? undefined}
+          lng={stallLongitude ?? undefined}
+          label={stallAddress}
+          caption="Tap to open this address in Google Maps."
+          className="mb-3"
+        />
         <IonButton expand="block" shape="round" className="h-12 text-base font-semibold" onClick={() => history.push('/vendor/location')}>
           Edit Location
         </IonButton>
@@ -387,7 +398,7 @@ const VendorProfile: React.FC = () => {
 
       {/* Switch Role */}
       {roles.length > 1 && (
-        <div className="md:hidden bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)] mb-4">
+        <div className="xl:hidden bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)] mb-4">
           <div className="flex items-center gap-2 mb-2">
             <IonIcon icon={swapHorizontalOutline} className="text-[var(--ion-color-primary)] text-base" />
             <h3 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 uppercase opacity-70">Switch Role</h3>
@@ -419,7 +430,7 @@ const VendorProfile: React.FC = () => {
       )}
 
       {/* Sign Out */}
-      <IonButton expand="block" color="danger" shape="round" className="md:hidden h-12 text-base font-semibold mb-6"
+      <IonButton expand="block" color="danger" shape="round" className="xl:hidden h-12 text-base font-semibold mb-6"
         onClick={() => { logout(); history.push('/guest/home'); }}
       >
         <IonIcon icon={logOutOutline} slot="start" />

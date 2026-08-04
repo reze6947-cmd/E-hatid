@@ -11,7 +11,7 @@ import {
   IonTitle,
   IonContent,
 } from '@ionic/react';
-import { checkmarkCircleOutline, closeOutline, storefrontOutline, personOutline, callOutline, locationOutline, cashOutline } from 'ionicons/icons';
+import { checkmarkCircleOutline, closeOutline, storefrontOutline, personOutline, callOutline, locationOutline, cashOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { subscribeAvailableOrders, subscribeRiderOrders, updateOrderStatus } from '../../services/orderService';
@@ -37,6 +37,8 @@ const RiderOrders: React.FC = () => {
   const [riderOrders, setRiderOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const [riderCoords, setRiderCoords] = useState<{lat: number; lng: number} | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [deliveringId, setDeliveringId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState('');
@@ -44,6 +46,23 @@ const RiderOrders: React.FC = () => {
   const [detailsOrder, setDetailsOrder] = useState<Order | null>(null);
 
   const { declineOrder, filterDeclined } = useDeclinedOrders(user?.id);
+
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => setRiderCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
 
   useEffect(() => {
     const unsubAvailable = subscribeAvailableOrders(orders => {
@@ -56,12 +75,20 @@ const RiderOrders: React.FC = () => {
       setLoading(false);
     });
     return () => unsubAvailable();
-  }, []);
+  }, [retryKey]);
+
+  const retryLoad = () => {
+    setLoading(true);
+    setError(null);
+    setRetryKey(k => k + 1);
+  };
 
   useEffect(() => {
     if (!user) return;
     const unsubRider = subscribeRiderOrders(user.id, orders => {
       setRiderOrders(orders);
+    }, (err) => {
+      console.error('Failed to fetch rider orders:', err);
     });
     return () => unsubRider();
   }, [user]);
@@ -118,11 +145,15 @@ const RiderOrders: React.FC = () => {
 
   if (error) {
     return (
-      <EmptyState
-        icon="warning-outline"
-        title={error}
-        subtitle="Check the console for details"
-      />
+      <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+        <RiderPageHeader title="Orders" subtitle="Manage your deliveries" />
+        <div className="text-center py-10">
+          <IonIcon icon={alertCircleOutline} className="text-4xl text-[var(--ion-color-danger)] mb-3" />
+          <p className="text-sm font-semibold text-[var(--ion-text-color)] m-0 mb-1">{error}</p>
+          <p className="text-sm text-[var(--ion-text-color-secondary)] m-0 mb-4">Check your connection and try again</p>
+          <IonButton fill="outline" shape="round" onClick={retryLoad}>Retry</IonButton>
+        </div>
+      </div>
     );
   }
 
@@ -147,24 +178,30 @@ const RiderOrders: React.FC = () => {
               subtitle="Waiting for vendors to mark orders as ready"
             />
           ) : (
-            filteredAvailable.map(order => (
-              <div key={order.id} onClick={() => setDetailsOrder(order)} className="cursor-pointer">
-                <OrderCard
-                  order={order}
-                  badge={{ label: STATUS_CONFIG[order.status]?.label || order.status, color: STATUS_CONFIG[order.status]?.color || '#9CA3AF' }}
-                  actions={
-                    <div className="flex gap-2">
-                      <RiderActionButton variant="decline" className="flex-1" onClick={(e) => handleDecline(e, order.id)}>
-                        Decline
-                      </RiderActionButton>
-                      <RiderActionButton variant="accept" className="flex-[2]" loading={claimingId === order.id} onClick={() => handleAccept(order)}>
-                        Accept
-                      </RiderActionButton>
-                    </div>
-                  }
-                />
-              </div>
-            ))
+            filteredAvailable.map(order => {
+              const dist = riderCoords && order.stallLatitude && order.stallLongitude
+                ? haversineKm(riderCoords.lat, riderCoords.lng, order.stallLatitude, order.stallLongitude)
+                : null;
+              return (
+                <div key={order.id} onClick={() => setDetailsOrder(order)} className="cursor-pointer">
+                  <OrderCard
+                    order={order}
+                    distanceKm={dist}
+                    badge={{ label: STATUS_CONFIG[order.status]?.label || order.status, color: STATUS_CONFIG[order.status]?.color || '#9CA3AF' }}
+                    actions={
+                      <div className="flex gap-2">
+                        <RiderActionButton variant="decline" className="flex-1" onClick={(e) => handleDecline(e, order.id)}>
+                          Decline
+                        </RiderActionButton>
+                        <RiderActionButton variant="accept" className="flex-[2]" loading={claimingId === order.id} onClick={(e) => { e.stopPropagation(); handleAccept(order); }}>
+                          Accept
+                        </RiderActionButton>
+                      </div>
+                    }
+                  />
+                </div>
+              );
+            })
           )}
         </div>
       )}

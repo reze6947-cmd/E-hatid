@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSpinner, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonTextarea, IonToast } from '@ionic/react';
-import { trendingUpOutline, cartOutline, starOutline, peopleOutline, personOutline, checkmarkOutline, closeOutline, locationOutline, callOutline } from 'ionicons/icons';
+import { trendingUpOutline, cartOutline, starOutline, peopleOutline, personOutline, checkmarkOutline, closeOutline, locationOutline, callOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
@@ -41,6 +41,8 @@ const VendorDashboard: React.FC = () => {
   const { logout, user } = useAuth();
   const { updateOrderStatus: localUpdateStatus } = useOrders();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
   const [stats, setStats] = useState([
     { icon: trendingUpOutline, label: 'Total Sales', value: '₱0', color: 'var(--ion-color-primary)' },
     { icon: cartOutline, label: 'Orders Today', value: '0', color: '#10B981' },
@@ -82,6 +84,7 @@ const VendorDashboard: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     const unsub = subscribeVendorOrders(user.id, (orders) => {
+      setError(null);
       setRecentOrders(orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').slice(0, 3));
 
       const today = new Date();
@@ -98,9 +101,19 @@ const VendorDashboard: React.FC = () => {
       });
 
       setLoading(false);
+    }, (err) => {
+      console.error('Failed to subscribe to vendor orders:', err);
+      setError('Could not load your orders');
+      setLoading(false);
     });
     return () => unsub();
-  }, [user]);
+  }, [user, retryKey]);
+
+  const retryLoad = () => {
+    setLoading(true);
+    setError(null);
+    setRetryKey(k => k + 1);
+  };
 
   const handleAccept = async (order: Order) => {
     setProcessingOrders(prev => new Set(prev).add(order.id));
@@ -175,6 +188,17 @@ const VendorDashboard: React.FC = () => {
             </div>
             {loading ? (
               <div className="text-center p-8"><IonSpinner /></div>
+            ) : error ? (
+              <IonCard className="rounded-xl shadow">
+                <IonCardContent>
+                  <div className="text-center py-4">
+                    <IonIcon icon={alertCircleOutline} className="text-4xl text-[var(--ion-color-danger)] mb-3" />
+                    <p className="text-sm font-semibold text-[var(--ion-text-color)] m-0 mb-1">Couldn't load your orders</p>
+                    <p className="text-sm text-[var(--ion-text-color-secondary)] m-0 mb-4">Check your connection and try again</p>
+                    <IonButton fill="outline" shape="round" onClick={retryLoad}>Retry</IonButton>
+                  </div>
+                </IonCardContent>
+              </IonCard>
             ) : recentOrders.length === 0 ? (
               <IonCard className="rounded-xl shadow"><IonCardContent><p className="text-center text-[var(--ion-text-color-secondary)] m-0">You don't have any orders yet</p></IonCardContent></IonCard>
             ) : (

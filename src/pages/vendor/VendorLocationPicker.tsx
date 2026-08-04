@@ -6,8 +6,10 @@ import {
   IonInput,
   IonItem,
   IonLabel,
+  IonSpinner,
+  IonToast,
 } from '@ionic/react';
-import { locationOutline } from 'ionicons/icons';
+import { locationOutline, navigateOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { Marker, useMapEvents } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
@@ -83,6 +85,9 @@ const VendorLocationPicker: React.FC = () => {
   const [selectedAddress, setSelectedAddress] = useState<Suggestion | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [fetching, setFetching] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const geocodeRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -166,11 +171,47 @@ const VendorLocationPicker: React.FC = () => {
     setSuggestions([]);
   };
 
+  const handleUseCurrentLocation = async () => {
+    if (!('geolocation' in navigator)) {
+      setToastMessage('Location is not supported on this device');
+      setShowToast(true);
+      return;
+    }
+    setLocating(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        });
+      });
+      const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      setSelectedLocation(loc);
+      setSuggestions([]);
+      const result = await reverseGeocode(loc.lat, loc.lng);
+      if (result) {
+        setSelectedAddress(result);
+        setQuery(result.display);
+      } else {
+        setToastMessage("Couldn't find your address");
+        setShowToast(true);
+      }
+    } catch {
+      setToastMessage("Couldn't get your location");
+      setShowToast(true);
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const handleConfirm = () => {
     if (!selectedAddress || !selectedLocation) return;
     sessionStorage.setItem('vendorSelectedLocation', JSON.stringify(selectedLocation));
     sessionStorage.setItem('vendorLocationName', selectedAddress.display);
-    history.push('/vendor/profile');
+    setToastMessage('Location saved');
+    setShowToast(true);
+    setTimeout(() => history.push('/vendor/profile'), 600);
   };
 
   return (
@@ -191,9 +232,15 @@ const VendorLocationPicker: React.FC = () => {
           </div>
 
           <div className="relative">
-            <label className="block mb-2 text-xs sm:text-sm font-semibold text-[var(--ion-text-color)] uppercase opacity-70">
-              Stall Address
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs sm:text-sm font-semibold text-[var(--ion-text-color)] uppercase opacity-70">
+                Stall Address
+              </label>
+              <IonButton size="small" fill="outline" shape="round" onClick={handleUseCurrentLocation} disabled={locating}>
+                {locating ? <IonSpinner name="crescent" slot="start" /> : <IonIcon icon={navigateOutline} slot="start" />}
+                Use my location
+              </IonButton>
+            </div>
             <div className="relative">
               <IonIcon icon={locationOutline} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ion-color-primary)] text-lg z-[1]" />
               <IonInput
@@ -256,6 +303,15 @@ const VendorLocationPicker: React.FC = () => {
           </div>
         </IonFooter>
       )}
+
+      <IonToast
+        isOpen={showToast}
+        message={toastMessage}
+        duration={2000}
+        position="bottom"
+        color="dark"
+        onDidDismiss={() => setShowToast(false)}
+      />
     </>
   );
 };

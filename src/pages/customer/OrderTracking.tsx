@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   IonContent,
   IonButton,
@@ -11,7 +11,7 @@ import {
   IonButtons,
   IonTitle,
 } from '@ionic/react';
-import { checkmarkCircle, bicycleOutline, homeOutline, restaurantOutline, storefrontOutline, documentTextOutline, callOutline, locationOutline, closeCircleOutline, closeOutline, star, timeOutline, personOutline } from 'ionicons/icons';
+import { checkmarkCircle, bicycleOutline, homeOutline, restaurantOutline, storefrontOutline, documentTextOutline, callOutline, locationOutline, closeCircleOutline, closeOutline, star, timeOutline, personOutline, navigateOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
@@ -21,6 +21,8 @@ import { getUserDocument } from '../../services/userService';
 import { fetchStallById } from '../../services/stallService';
 import { updateOrderStatus } from '../../services/orderService';
 import { subscribeRiderLocation } from '../../services/riderLocationService';
+import { hasReviewedOrder } from '../../services/reviewService';
+import { openGoogleMapsDirections } from '../../utils/geocode';
 import ReviewModal from '../../components/Reviews/ReviewModal';
 import type { Order, User, Stall, RiderLocation } from '../../types';
 
@@ -44,6 +46,8 @@ const OrderTracking: React.FC = () => {
   const [cancelling, setCancelling] = useState(false);
   const [detailsOrder, setDetailsOrder] = useState<Order | null>(null);
   const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [reviewed, setReviewed] = useState(false);
+  const [reviewChecking, setReviewChecking] = useState(true);
   const [riderLocation, setRiderLocation] = useState<RiderLocation | null>(null);
   const [totalDistance, setTotalDistance] = useState<number | null>(null);
   const [remainingDistance, setRemainingDistance] = useState<number | null>(null);
@@ -71,6 +75,15 @@ const OrderTracking: React.FC = () => {
   const cancelled = order?.status === 'cancelled';
   const isDelivering = order?.status === 'delivering';
   const isDelivered = order?.status === 'delivered';
+
+  const statusLabel = cancelled
+    ? 'Cancelled'
+    : order?.status === 'pending' ? 'Pending'
+    : order?.status === 'accepted' || order?.status === 'preparing' ? 'Preparing'
+    : order?.status === 'ready' ? 'Ready'
+    : order?.status === 'delivering' ? 'On the Way'
+    : order?.status === 'delivered' ? 'Delivered'
+    : 'Active';
 
   // Progress computation — distance-based when rider is delivering, otherwise status-based
   const progress = (() => {
@@ -166,6 +179,22 @@ const OrderTracking: React.FC = () => {
     return () => { cancelled = true; };
   }, [riderLocation, order?.customerLatitude, order?.customerLongitude]);
 
+  const checkReviewed = useCallback(async () => {
+    if (!order?.id) {
+      setReviewChecking(false);
+      return;
+    }
+    setReviewChecking(true);
+    const already = await hasReviewedOrder(order.id);
+    if (!mountedRef.current) return;
+    setReviewed(already);
+    setReviewChecking(false);
+  }, [order?.id]);
+
+  useEffect(() => {
+    checkReviewed();
+  }, [checkReviewed]);
+
   const handleCancelOrder = async () => {
     if (!order) return;
     setCancelling(true);
@@ -182,9 +211,13 @@ const OrderTracking: React.FC = () => {
 
   if (!order) {
     return (
-      <div className="text-center p-12">
-        <p className="text-[var(--ion-text-color-secondary)]">Order not found</p>
-        <IonButton style={{ '--background': 'var(--ion-color-primary)' }} onClick={() => history.push('/customer/home')}>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4">
+        <div className="w-20 h-20 rounded-full bg-[var(--ion-card-background)] border-2 border-[var(--ion-border-color)] flex items-center justify-center">
+          <IonIcon icon={documentTextOutline} className="text-3xl text-[var(--ion-color-primary)]" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--ion-text-color)]">Order not found</h2>
+        <p className="text-sm text-[var(--ion-text-color-secondary)]">This order may have been removed</p>
+        <IonButton shape="round" onClick={() => history.push('/customer/home')}>
           Back to Home
         </IonButton>
       </div>
@@ -193,9 +226,13 @@ const OrderTracking: React.FC = () => {
 
   if (order.userId && user && order.userId !== user.id) {
     return (
-      <div className="text-center p-12">
-        <p className="text-[var(--ion-text-color-secondary)]">Access denied</p>
-        <IonButton style={{ '--background': 'var(--ion-color-primary)' }} onClick={() => history.push('/customer/home')}>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-4">
+        <div className="w-20 h-20 rounded-full bg-[var(--ion-card-background)] border-2 border-[var(--ion-border-color)] flex items-center justify-center">
+          <IonIcon icon={closeCircleOutline} className="text-3xl text-[var(--ion-color-primary)]" />
+        </div>
+        <h2 className="text-xl font-bold text-[var(--ion-text-color)]">Access denied</h2>
+        <p className="text-sm text-[var(--ion-text-color-secondary)]">You don't have access to this order</p>
+        <IonButton shape="round" onClick={() => history.push('/customer/home')}>
           Back to Home
         </IonButton>
       </div>
@@ -245,7 +282,7 @@ const OrderTracking: React.FC = () => {
                   <div className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${
                     cancelled ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'
                   }`}>
-                    {cancelled ? 'Cancelled' : (order.estimatedDeliveryTime || 'Active')}
+                    {cancelled ? 'Cancelled' : (order.estimatedDeliveryTime || statusLabel)}
                   </div>
                 </div>
 
@@ -535,15 +572,47 @@ const OrderTracking: React.FC = () => {
             )}
 
             {order.status === 'delivered' && (
-              <IonButton
-                expand="block"
-                style={{ '--background': '#8B5CF6', '--border-radius': '12px' }}
-                className="h-12 text-sm font-semibold"
-                onClick={() => setReviewOrder(order)}
-              >
-                <IonIcon icon={star} slot="start" />
-                Leave a Review
-              </IonButton>
+              reviewed ? (
+                <div className="p-4 rounded-2xl text-center border" style={{ background: 'color-mix(in srgb, #10B981 12%, transparent)', borderColor: 'color-mix(in srgb, #10B981 30%, transparent)' }}>
+                  <IonIcon icon={checkmarkCircle} className="text-2xl mb-1" style={{ color: '#10B981' }} />
+                  <p className="m-0 text-sm font-semibold" style={{ color: '#10B981' }}>Review submitted</p>
+                </div>
+              ) : (
+                <IonButton
+                  expand="block"
+                  style={{ '--background': '#8B5CF6', '--border-radius': '12px' }}
+                  className="h-12 text-sm font-semibold"
+                  onClick={() => setReviewOrder(order)}
+                  disabled={reviewChecking}
+                >
+                  {reviewChecking ? <IonSpinner /> : <IonIcon icon={star} slot="start" />}
+                  {reviewChecking ? 'Checking...' : 'Leave a Review'}
+                </IonButton>
+              )
+            )}
+
+            {order.stallLatitude != null && order.stallLongitude != null && order.customerLatitude != null && order.customerLongitude != null && !cancelled && (
+              <div>
+                <IonButton
+                  expand="block"
+                  fill="outline"
+                  style={{ '--border-color': 'var(--ion-color-primary)', '--color': 'var(--ion-color-primary)', '--border-radius': '12px' }}
+                  className="h-12 text-sm font-semibold"
+                  onClick={() => openGoogleMapsDirections(
+                    order.customerLatitude!,
+                    order.customerLongitude!,
+                    order.deliveryAddress,
+                    order.stallLatitude!,
+                    order.stallLongitude!
+                  )}
+                >
+                  <IonIcon icon={navigateOutline} slot="start" />
+                  Open Route in Google Maps
+                </IonButton>
+                <p className="m-0 mt-2 text-xs text-[var(--ion-text-color-secondary)] text-center leading-relaxed">
+                  This will open Google Maps to show the delivery route from the store to your address.
+                </p>
+              </div>
             )}
 
             <IonButton
@@ -651,7 +720,7 @@ const OrderTracking: React.FC = () => {
         </IonContent>
       </IonModal>
 
-      <ReviewModal order={reviewOrder} isOpen={!!reviewOrder} onClose={() => setReviewOrder(null)} />
+      <ReviewModal order={reviewOrder} isOpen={!!reviewOrder} onClose={() => { setReviewOrder(null); checkReviewed(); }} />
     </>
   );
 };

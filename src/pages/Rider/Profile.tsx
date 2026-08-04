@@ -6,7 +6,6 @@ import {
   IonToast,
   IonInput,
   IonItem,
-  IonToggle,
 } from '@ionic/react';
 import {
   personOutline,
@@ -29,6 +28,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getRoleProfile, updateRoleProfile, updateUserDocument } from '../../services/userService';
 import { subscribeRiderOrders } from '../../services/orderService';
 import { SUFFIXES, PH_REGIONS, formatNationalPH, fromStoredPhone, toStoredPhone, splitFullName, joinName, joinAddress } from '../../utils/profile';
+import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 import type { Order } from '../../types';
 
 const initialProfile = {
@@ -59,7 +59,6 @@ const RiderProfile: React.FC = () => {
   const { user, logout, roles, activeRole, setActiveRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
@@ -217,6 +216,15 @@ const RiderProfile: React.FC = () => {
   const totalRating = profile.rating || 0;
   const totalDeliveries = profile.totalDeliveries || 0;
 
+  const profileAddress = joinAddress({
+    addressStreet: profile.addressStreet,
+    addressBarangay: profile.addressBarangay,
+    addressCity: profile.addressCity,
+    addressProvince: profile.addressProvince,
+    addressRegion: profile.addressRegion,
+    addressZip: profile.addressZip,
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -291,9 +299,10 @@ const RiderProfile: React.FC = () => {
             <IonIcon icon={mailOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Email</span>
           </div>
-          <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput type="email" value={profile.email} onIonInput={e => handleInputChange('email', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
-          </IonItem>
+          <p className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0">
+            {profile.email || '—'}
+          </p>
+          <p className="m-0 mt-1 text-[11px] text-[var(--ion-text-color-secondary)]">Email can't be changed</p>
         </div>
 
         <div>
@@ -361,6 +370,13 @@ const RiderProfile: React.FC = () => {
             </IonItem>
           </div>
         </div>
+        <OpenInGoogleMapsButton
+          lat={user?.latitude}
+          lng={user?.longitude}
+          label={profileAddress}
+          caption="Tap to open this address in Google Maps."
+          className="mt-3"
+        />
       </div>
 
       {/* Vehicle Information */}
@@ -481,9 +497,9 @@ const RiderProfile: React.FC = () => {
       {/* Preferences */}
       <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
         <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">Preferences</h3>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between py-1 opacity-60">
           <span className="text-sm font-medium text-[var(--ion-text-color)]">Enable Notifications</span>
-          <IonToggle checked={notificationsEnabled} onIonChange={e => setNotificationsEnabled(e.detail.checked)} style={{ '--background-checked': 'var(--ion-color-primary)' }} />
+          <span className="text-[10px] font-semibold uppercase tracking-wide bg-[var(--ion-border-color)]/40 text-[var(--ion-text-color-secondary)] px-2.5 py-1 rounded-full">Coming soon</span>
         </div>
       </div>
 
@@ -494,7 +510,7 @@ const RiderProfile: React.FC = () => {
 
       {/* Switch Role */}
       {roles.length > 1 && (
-        <div className="md:hidden bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
+        <div className="xl:hidden bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
           <div className="flex items-center gap-2 mb-2">
             <IonIcon icon={swapHorizontalOutline} className="text-[var(--ion-color-primary)] text-base" />
             <h3 className="text-sm font-semibold text-[var(--ion-text-color)] m-0 uppercase opacity-70">Switch Role</h3>
@@ -526,7 +542,7 @@ const RiderProfile: React.FC = () => {
       )}
 
       {/* Sign Out */}
-      <IonButton expand="block" color="danger" shape="round" className="md:hidden h-12 text-base font-semibold mb-6"
+      <IonButton expand="block" color="danger" shape="round" className="xl:hidden h-12 text-base font-semibold mb-6"
         onClick={handleLogout}
       >
         <IonIcon icon={logOutOutline} slot="start" />

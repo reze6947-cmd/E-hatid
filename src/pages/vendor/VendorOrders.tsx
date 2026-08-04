@@ -3,13 +3,14 @@ import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSpinner,
   IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonTextarea, IonToast,
 } from '@ionic/react';
-import { checkmarkOutline, closeOutline, personOutline, callOutline, timeOutline, locationOutline, listOutline, carOutline, checkmarkCircle, closeCircle } from 'ionicons/icons';
+import { checkmarkOutline, closeOutline, personOutline, callOutline, timeOutline, locationOutline, listOutline, carOutline, checkmarkCircle, closeCircle, alertCircleOutline, navigateOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { useAuth } from '../../context/AuthContext';
 import { updateOrderStatus, subscribeVendorOrders } from '../../services/orderService';
 import { useOrders } from '../../context/OrderContext';
+import { openGoogleMapsDirections } from '../../utils/geocode';
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
 
@@ -47,6 +48,8 @@ const VendorOrders: React.FC = () => {
   const { logout, user } = useAuth();
   const { updateOrderStatus: localUpdateStatus } = useOrders();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<FilterTab>('all');
   const [declineModalOpen, setDeclineModalOpen] = useState(false);
@@ -69,10 +72,21 @@ const VendorOrders: React.FC = () => {
         return o;
       });
       setOrders(updated);
+      setError(null);
+      setLoading(false);
+    }, (err) => {
+      console.error('Failed to subscribe to vendor orders:', err);
+      setError('Could not load your orders');
       setLoading(false);
     });
     return () => unsub();
-  }, [user]);
+  }, [user, retryKey]);
+
+  const retryLoad = () => {
+    setLoading(true);
+    setError(null);
+    setRetryKey(k => k + 1);
+  };
 
   const handleAccept = async (order: Order) => {
     setProcessingOrders(prev => new Set(prev).add(order.id));
@@ -181,6 +195,17 @@ const VendorOrders: React.FC = () => {
 
           {loading ? (
             <div className="text-center p-12"><IonSpinner /></div>
+          ) : error ? (
+            <IonCard className="rounded-xl shadow">
+              <IonCardContent>
+                <div className="text-center py-8">
+                  <IonIcon icon={alertCircleOutline} className="text-4xl text-[var(--ion-color-danger)] mb-3" />
+                  <p className="text-sm font-semibold text-[var(--ion-text-color)] m-0 mb-1">Couldn't load your orders</p>
+                  <p className="text-sm text-[var(--ion-text-color-secondary)] m-0 mb-4">Check your connection and try again</p>
+                  <IonButton fill="outline" shape="round" onClick={retryLoad}>Retry</IonButton>
+                </div>
+              </IonCardContent>
+            </IonCard>
           ) : filteredOrders.length === 0 ? (
             <IonCard className="rounded-xl shadow"><IonCardContent><p className="text-center text-[var(--ion-text-color-secondary)] m-0">You don't have any orders yet</p></IonCardContent></IonCard>
           ) : (
@@ -351,6 +376,29 @@ const VendorOrders: React.FC = () => {
                       <IonIcon icon={locationOutline} style={{ verticalAlign: 'middle', marginRight: '4px', fontSize: '13px' }} />
                       {detailsOrder.deliveryAddress}
                     </p>
+                  )}
+                  {detailsOrder.stallLatitude != null && detailsOrder.stallLongitude != null && detailsOrder.customerLatitude != null && detailsOrder.customerLongitude != null && (
+                    <div style={{ marginTop: '12px' }}>
+                      <IonButton
+                        expand="block"
+                        fill="outline"
+                        style={{ '--border-color': 'var(--ion-color-primary)', '--color': 'var(--ion-color-primary)', '--border-radius': '12px' }}
+                        className="h-11 text-sm font-semibold"
+                        onClick={() => openGoogleMapsDirections(
+                          detailsOrder.customerLatitude!,
+                          detailsOrder.customerLongitude!,
+                          detailsOrder.deliveryAddress,
+                          detailsOrder.stallLatitude!,
+                          detailsOrder.stallLongitude!
+                        )}
+                      >
+                        <IonIcon icon={navigateOutline} slot="start" />
+                        View Delivery Route
+                      </IonButton>
+                      <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--ion-text-color-secondary)', textAlign: 'center', lineHeight: '1.5' }}>
+                        This opens Google Maps so you can view the delivery route to your customer.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}

@@ -1,10 +1,11 @@
 import { db } from '../firebaseConfig';
-import { collection, getDocs, query, where, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, limit } from 'firebase/firestore';
 import { Review } from '../types';
 
 export const createReview = async (data: {
   stallId: string;
   userId: string;
+  orderId?: string;
   userName: string;
   rating: number;
   comment: string;
@@ -25,6 +26,7 @@ export const createReview = async (data: {
 export const createRiderReview = async (data: {
   riderId: string;
   userId: string;
+  orderId?: string;
   userName: string;
   rating: number;
   comment: string;
@@ -49,6 +51,18 @@ export const fetchReviewsByStall = async (stallId: string): Promise<Review[]> =>
   } catch (err) {
     console.error('Error fetching reviews:', err);
     return [];
+  }
+};
+
+export const hasReviewedOrder = async (orderId: string): Promise<boolean> => {
+  if (!orderId) return false;
+  try {
+    const q = query(collection(db, 'reviews'), where('orderId', '==', orderId), limit(1));
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (err) {
+    console.error('Error checking review:', err);
+    return false;
   }
 };
 

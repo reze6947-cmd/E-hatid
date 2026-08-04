@@ -11,6 +11,7 @@ import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { submitApplicationDoc } from '../../services/userService';
 import { SUFFIXES, PH_REGIONS, formatNationalPH, fromStoredPhone, toStoredPhone, splitFullName, joinName, joinAddress } from '../../utils/profile';
+import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 import { storage } from '../../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -458,6 +459,18 @@ const ApplyRider: React.FC = () => {
                 <div>{renderSelect('addressRegion', 'Region', PH_REGIONS, 'Select region')}</div>
                 <div className="md:col-span-2">{renderField('addressZip', 'ZIP Code', 'e.g. 1100', locationOutline)}</div>
               </div>
+              <OpenInGoogleMapsButton
+                label={joinAddress({
+                  addressStreet: formData.addressStreet,
+                  addressBarangay: formData.addressBarangay,
+                  addressCity: formData.addressCity,
+                  addressProvince: formData.addressProvince,
+                  addressRegion: formData.addressRegion,
+                  addressZip: formData.addressZip,
+                })}
+                caption="Opens this address in Google Maps so you can check it before submitting."
+                className="mt-4"
+              />
             </div>
           </div>
         </div>

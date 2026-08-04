@@ -85,7 +85,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
   return (
     <>
       {/*  Top Header Bar  */}
-      <header className="hidden md:block sticky top-0 z-50 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)]">
+      <header className="hidden xl:block sticky top-0 z-50 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)]">
         <div className="flex items-center w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 h-16">
           <div className="flex items-center gap-2 shrink-0">
             {showBack && (
@@ -168,7 +168,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
 
       {/* Mobile bottom tab bar */}
       {!hideMobileTabBar && links.length > 0 && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] pb-[env(safe-area-inset-bottom,0px)] shadow-lg">
+        <nav className="xl:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--ion-card-background)] border-t border-[var(--ion-border-color)] pb-[env(safe-area-inset-bottom,0px)] shadow-lg">
           <div className="flex items-stretch w-full h-16 px-1 gap-0.5">
             {links.map(link => {
               const active = isActive(link.path);

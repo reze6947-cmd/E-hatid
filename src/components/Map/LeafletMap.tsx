@@ -21,6 +21,7 @@ interface LeafletMapProps {
   attribution?: string;
   children?: ReactNode;
   fitBounds?: [number, number][];
+  focusZoom?: number;
 }
 
 class MapErrorBoundary extends React.Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
@@ -58,7 +59,7 @@ function FitBounds({ bounds }: { bounds: [number, number][] }) {
   return null;
 }
 
-function SetViewOnCenterChange({ center }: { center: [number, number] }) {
+function SetViewOnCenterChange({ center, focusZoom }: { center: [number, number]; focusZoom?: number }) {
   const map = useMap();
   const lastRef = useRef(center);
   useEffect(() => {
@@ -66,9 +67,9 @@ function SetViewOnCenterChange({ center }: { center: [number, number] }) {
     const [prevLat, prevLng] = lastRef.current;
     lastRef.current = center;
     if (lat !== prevLat || lng !== prevLng) {
-      map.setView(center, map.getZoom(), { animate: true });
+      map.setView(center, focusZoom ?? map.getZoom(), { animate: true });
     }
-  }, [map, center]);
+  }, [map, center, focusZoom]);
   return null;
 }
 
@@ -87,6 +88,7 @@ function LeafletMapInner({ ref, ...props }: LeafletMapProps & { ref?: React.Ref<
     attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     children,
     fitBounds,
+    focusZoom,
   } = props;
 
   const [map, setMap] = useState<LeafletMapInstance | null>(null);
@@ -130,7 +132,7 @@ function LeafletMapInner({ ref, ...props }: LeafletMapProps & { ref?: React.Ref<
       >
         <TileLayer attribution={attribution} url={tileUrl} />
         <InvalidateOnMount onReady={handleMapReady} />
-        <SetViewOnCenterChange center={center} />
+        <SetViewOnCenterChange center={center} focusZoom={focusZoom} />
         {fitBounds && <FitBounds bounds={fitBounds} />}
         {children}
       </MapContainer>

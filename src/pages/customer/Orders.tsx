@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   IonButton,
   IonIcon,
-  IonSpinner,
   IonBadge,
 } from '@ionic/react';
 import { receiptOutline } from 'ionicons/icons';
@@ -80,8 +79,17 @@ const UserOrders: React.FC = () => {
         </div>
 
         {loadingFirestore ? (
-          <div className="flex items-center justify-center flex-1">
-            <IonSpinner />
+          <div className="space-y-3 sm:space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="h-4 w-28 skeleton-loader rounded-lg" />
+                  <div className="h-5 w-20 skeleton-loader rounded-full" />
+                </div>
+                <div className="h-3 w-3/4 skeleton-loader rounded-lg" />
+                <div className="h-3 w-1/2 skeleton-loader rounded-lg" />
+              </div>
+            ))}
           </div>
         ) : mergedOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
@@ -104,16 +112,20 @@ const UserOrders: React.FC = () => {
                   className="bg-[var(--ion-card-background)] p-4 rounded-xl border border-[var(--ion-border-color)] cursor-pointer transition-transform duration-200"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <span className="font-bold text-sm text-[var(--ion-text-color)]">
-                      {order.id}
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style={{ backgroundColor: getBadgeColor(order.status) + '1A', color: getBadgeColor(order.status), border: '1px solid ' + getBadgeColor(order.status) + '30' }}>{STATUS_BADGE[order.status]?.label || order.status}</span>
+                    <div className="min-w-0 mr-2">
+                      <span className="font-bold text-sm text-[var(--ion-text-color)] block truncate">
+                        {order.stallName || 'Order'}
+                      </span>
+                      <span className="text-xs text-[var(--ion-text-color-secondary)] block mt-0.5">
+                        Order #{order.id.slice(-6).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold shrink-0" style={{ backgroundColor: getBadgeColor(order.status) + '1A', color: getBadgeColor(order.status), border: '1px solid ' + getBadgeColor(order.status) + '30' }}>{STATUS_BADGE[order.status]?.label || order.status}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="m-0 mb-0.5 text-sm text-[var(--ion-text-color-secondary)]">
                         {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-                        {order.stallName ? ` from ${order.stallName}` : ''}
                       </p>
                       <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">
                         {new Date(order.createdAt).toLocaleDateString()} {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

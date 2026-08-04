@@ -8,6 +8,7 @@ export interface User {
   email: string;
   phone?: string;
   age?: number;
+  birthDate?: string;
   avatar?: string;
   address?: string;
   addressStreet?: string;
@@ -307,6 +308,7 @@ export interface Review {
   id: string;
   userId: string;
   stallId: string;
+  orderId?: string;
   userName: string;
   rating: number;
   comment: string;

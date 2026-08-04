@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   IonIcon,
+  IonToast,
 } from '@ionic/react';
 import { cashOutline, checkmarkCircleOutline, navigateOutline, bicycleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -16,15 +17,19 @@ import StatCard from '../../components/Rider/StatCard';
 import RiderActionButton from '../../components/Rider/RiderActionButton';
 import RiderPageHeader from '../../components/Rider/RiderPageHeader';
 import EmptyState from '../../components/Rider/EmptyState';
+import Skeleton from '../../components/ui/Skeleton';
 import { useDeclinedOrders } from '../../hooks/useDeclinedOrders';
 
 const RiderDashboard: React.FC = () => {
   const history = useHistory();
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [isAvailable, setIsAvailable] = useState(false);
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [riderOrders, setRiderOrders] = useState<Order[]>([]);
   const [riderCoords, setRiderCoords] = useState<{lat: number; lng: number} | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const { declineOrder, filterDeclined } = useDeclinedOrders(user?.id);
 
@@ -32,7 +37,7 @@ const RiderDashboard: React.FC = () => {
     if (!('geolocation' in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       pos => setRiderCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
+      () => { setToastMessage("Couldn't get your location — distances may be unavailable"); setShowToast(true); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
@@ -92,6 +97,8 @@ const RiderDashboard: React.FC = () => {
     if (!user) return;
     try {
       await updateDoc(doc(db, 'users', user.id), { riderAvailable: checked });
+      setToastMessage(checked ? "You're online — accepting deliveries" : "You're offline");
+      setShowToast(true);
     } catch (err) {
       console.error('Failed to save availability:', err);
       setIsAvailable(!checked);
@@ -111,8 +118,10 @@ const RiderDashboard: React.FC = () => {
     if (!user) return;
     const unsub = subscribeRiderOrders(user.id, orders => {
       setRiderOrders(orders);
+      setLoading(false);
     }, (err) => {
       console.error('Failed to fetch rider orders:', err);
+      setLoading(false);
     });
     return () => unsub();
   }, [user]);
@@ -143,20 +152,38 @@ const RiderDashboard: React.FC = () => {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            icon={cashOutline}
-            label="Today's Earnings"
-            value={`₱${todayEarnings.toFixed(2)}`}
-            gradientFrom="#6D28D9"
-            gradientTo="#8B5CF6"
-          />
-          <StatCard
-            icon={checkmarkCircleOutline}
-            label="Completed Today"
-            value={String(todayDelivered.length)}
-            gradientFrom="#10B981"
-            gradientTo="#34D399"
-          />
+          {loading ? (
+            <>
+              {[0, 1].map(i => (
+                <div key={i} className="rounded-2xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton variant="rectangular" width={40} height={40} className="rounded-xl" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton width="70%" height={12} />
+                      <Skeleton width="55%" height={16} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <StatCard
+                icon={cashOutline}
+                label="Today's Earnings"
+                value={`₱${todayEarnings.toFixed(2)}`}
+                gradientFrom="#6D28D9"
+                gradientTo="#8B5CF6"
+              />
+              <StatCard
+                icon={checkmarkCircleOutline}
+                label="Completed Today"
+                value={String(todayDelivered.length)}
+                gradientFrom="#10B981"
+                gradientTo="#34D399"
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -233,6 +260,15 @@ const RiderDashboard: React.FC = () => {
           subtitle="Toggle above to go online and start accepting orders"
         />
       )}
+
+      <IonToast
+        isOpen={showToast}
+        message={toastMessage}
+        duration={2500}
+        position="bottom"
+        color="dark"
+        onDidDismiss={() => setShowToast(false)}
+      />
     </div>
   );
 };

@@ -34,6 +34,7 @@ const isSameMonth = (a: Date, b: Date): boolean =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 
 export const useRiderEarnings = (userId: string | undefined) => {
+  const [loading, setLoading] = useState(true);
   const [earnings, setEarnings] = useState<EarningsData>({
     todayTotal: 0,
     weekTotal: 0,
@@ -49,6 +50,7 @@ export const useRiderEarnings = (userId: string | undefined) => {
     if (!userId) return;
 
     const unsub = subscribeRiderOrders(userId, (orders: Order[]) => {
+      setLoading(false);
       const now = new Date();
       const delivered = orders.filter(o => o.status === 'delivered');
 
@@ -81,10 +83,12 @@ export const useRiderEarnings = (userId: string | undefined) => {
       }
 
       setEarnings({ todayTotal, weekTotal, monthTotal, todayTrips, weekTrips, monthTrips, averagePerTrip, weeklyBreakdown });
+    }, () => {
+      setLoading(false);
     });
 
     return () => unsub();
   }, [userId]);
 
-  return earnings;
+  return { ...earnings, loading };
 };

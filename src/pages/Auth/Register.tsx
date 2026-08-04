@@ -14,6 +14,7 @@ import { personOutline, mailOutline, lockClosedOutline, callOutline, eyeOutline,
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAuthErrorMessage } from '../../services/authService';
+import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 
 const COUNTRY_CODES = [
   { code: '+63', label: 'PH +63' },
@@ -160,6 +161,11 @@ const Register: React.FC = () => {
           <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
             <IonInput placeholder="Enter your delivery address" value={formData.address} onIonChange={e => setFormData({...formData, address: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
           </IonItem>
+          <OpenInGoogleMapsButton
+            label={formData.address}
+            caption="Opens this address in Google Maps so you can check it."
+            className="mt-2"
+          />
         </div>
 
         <div className="mb-4">

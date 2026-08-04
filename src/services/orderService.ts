@@ -50,7 +50,7 @@ export const fetchOrdersByVendor = async (vendorId: string): Promise<Order[]> =>
   }
 };
 
-export const subscribeVendorOrders = (vendorId: string, callback: (orders: Order[]) => void): Unsubscribe => {
+export const subscribeVendorOrders = (vendorId: string, callback: (orders: Order[]) => void, onError?: (err: Error) => void): Unsubscribe => {
   const q = query(collection(db, 'orders'), where('vendorId', '==', vendorId));
   return onSnapshot(q, (snapshot) => {
     const orders = snapshot.docs.map(d => {
@@ -63,6 +63,10 @@ export const subscribeVendorOrders = (vendorId: string, callback: (orders: Order
       return bTime - aTime;
     });
     callback(orders);
+  }, (err) => {
+    console.error('subscribeVendorOrders error:', err);
+    if (onError) onError(err);
+    else callback([]);
   });
 };
 

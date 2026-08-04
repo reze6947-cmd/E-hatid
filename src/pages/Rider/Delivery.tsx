@@ -5,6 +5,7 @@ import {
   IonSpinner,
   IonToast,
 } from '@ionic/react';
+import { App } from '@capacitor/app';
 import { arrowBackOutline, callOutline, checkmarkCircleOutline, expandOutline, closeOutline, locationOutline, navigateOutline, personOutline, storefrontOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { Marker, Polyline } from 'react-leaflet';
@@ -15,6 +16,7 @@ import { subscribeRiderLocation } from '../../services/riderLocationService';
 import { getUserDocument } from '../../services/userService';
 import { fetchStallById } from '../../services/stallService';
 import { updateOrderStatus } from '../../services/orderService';
+import { openGoogleMapsDirections } from '../../utils/geocode';
 import type { Order, User, Stall, RiderLocation } from '../../types';
 import LeafletMap, { type LeafletMapHandle } from '../../components/Map/LeafletMap';
 import { markerIcon, stallMarkerIcon, riderMarkerIcon } from '../../components/Map/mapIcons';
@@ -30,6 +32,7 @@ const RiderDelivery: React.FC = () => {
   const [riderLocation, setRiderLocation] = useState<RiderLocation | null>(null);
   const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null);
   const [deliveringId, setDeliveringId] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -39,6 +42,19 @@ const RiderDelivery: React.FC = () => {
   useEffect(() => {
     const t = setTimeout(() => mapRef.current?.invalidateSize(), 200);
     return () => clearTimeout(t);
+  }, [fullscreen]);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullscreen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const sub = App.addListener('backButton', () => setFullscreen(false));
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      sub.then(s => s.remove());
+    };
   }, [fullscreen]);
 
   const handleBack = () => {
@@ -123,6 +139,37 @@ const RiderDelivery: React.FC = () => {
     return () => { cancelled = true; };
   }, [stall?.latitude, stall?.longitude, riderLocation, order?.customerLatitude, order?.customerLongitude]);
 
+  const handleStartNavigation = () => {
+    if (!order?.customerLatitude || !order?.customerLongitude) return;
+    setNavigating(true);
+    const open = (fromLat?: number, fromLng?: number) => {
+      openGoogleMapsDirections(
+        order.customerLatitude!,
+        order.customerLongitude!,
+        order.deliveryAddress,
+        fromLat,
+        fromLng,
+        'two-wheeler'
+      );
+      setNavigating(false);
+    };
+    navigator.geolocation.getCurrentPosition(
+      (pos) => open(pos.coords.latitude, pos.coords.longitude),
+      () => {
+        if (order.stallLatitude != null && order.stallLongitude != null) {
+          setToastMessage("Couldn't get your GPS — using pickup location instead.");
+          setShowToast(true);
+          open(order.stallLatitude, order.stallLongitude);
+        } else {
+          setToastMessage('Unable to get your location. Please enable GPS.');
+          setShowToast(true);
+          setNavigating(false);
+        }
+      },
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  };
+
   const handleDelivered = async () => {
     if (!order) return;
     setDeliveringId(true);
@@ -141,11 +188,19 @@ const RiderDelivery: React.FC = () => {
 
   if (!order) {
     return (
-      <div className="text-center p-12">
-        <p className="text-[var(--ion-text-color-secondary)]">Order not found</p>
-        <IonButton color="primary" onClick={() => history.push('/rider/orders')}>
-          Back to Orders
-        </IonButton>
+      <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
+        <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-10 text-center">
+          <div className="w-16 h-16 rounded-full bg-[var(--ion-color-danger)]/10 flex items-center justify-center mx-auto mb-4">
+            <IonIcon icon={locationOutline} className="text-3xl text-[var(--ion-color-danger)]" />
+          </div>
+          <h2 className="m-0 mb-1 text-lg font-bold text-[var(--ion-text-color)]">Order not found</h2>
+          <p className="m-0 mb-5 text-sm text-[var(--ion-text-color-secondary)]">
+            This delivery may have been cancelled or is no longer available.
+          </p>
+          <IonButton shape="round" onClick={() => history.push('/rider/orders')}>
+            Back to Orders
+          </IonButton>
+        </div>
       </div>
     );
   }
@@ -257,16 +312,28 @@ const RiderDelivery: React.FC = () => {
         {/* Map */}
         {allMapPoints.length >= 2 && (
           <div className={`flex flex-col bg-[var(--ion-card-background)] overflow-hidden ${fullscreen ? 'fixed inset-0 z-[9999]' : 'rounded-2xl border border-[var(--ion-border-color)]'}`}>
-            <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
+            <div className={`flex items-center justify-between px-4 pb-2 shrink-0 ${fullscreen ? 'pt-[calc(env(safe-area-inset-top,0px)+12px)]' : 'pt-3'}`}>
               <div className="flex items-center gap-2">
                 <IonIcon icon={navigateOutline} className="text-[var(--ion-color-primary)] text-base" />
                 <span className="text-xs font-bold text-[var(--ion-text-color-secondary)] uppercase tracking-[0.3px]">
                   {riderLocation ? 'Live Route' : 'Delivery Route'}
                 </span>
               </div>
-              <IonButton fill="clear" size="small" onClick={() => setFullscreen(!fullscreen)} style={{ '--color': 'var(--ion-color-primary)', margin: 0, minHeight: 32 }}>
-                <IonIcon icon={fullscreen ? closeOutline : expandOutline} className="text-lg" />
-              </IonButton>
+              {fullscreen ? (
+                <button
+                  type="button"
+                  onClick={() => setFullscreen(false)}
+                  aria-label="Exit fullscreen"
+                  className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full"
+                  style={{ background: 'var(--ion-color-primary)', color: '#FFFFFF', border: 'none', cursor: 'pointer' }}
+                >
+                  <IonIcon icon={closeOutline} className="text-xl" />
+                </button>
+              ) : (
+                <IonButton fill="clear" size="small" onClick={() => setFullscreen(true)} style={{ '--color': 'var(--ion-color-primary)', margin: 0, minHeight: 32 }}>
+                  <IonIcon icon={expandOutline} className="text-lg" />
+                </IonButton>
+              )}
             </div>
             <div className={fullscreen ? 'flex-1 min-h-0' : 'h-[240px] sm:h-[280px] md:h-[320px]'} style={{ position: 'relative', isolation: 'isolate' }}>
               <LeafletMap
@@ -324,6 +391,18 @@ const RiderDelivery: React.FC = () => {
                 )}
               </div>
             </div>
+            {order.customerLatitude != null && order.customerLongitude != null && (
+              <div className="mt-3">
+                <IonButton expand="block" shape="round" className="h-12 text-sm font-semibold" onClick={handleStartNavigation} disabled={navigating}>
+                  {navigating ? <IonSpinner /> : <IonIcon icon={navigateOutline} slot="start" />}
+                  {navigating ? 'Opening Google Maps...' : 'Start Navigation'}
+                </IonButton>
+                <p className="m-0 mt-2 text-xs text-[var(--ion-text-color-secondary)] text-center leading-relaxed">
+                  This will open Google Maps navigation. Just tap 'Start' in Google Maps to begin driving.
+                  Make sure your GPS/location is turned on.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

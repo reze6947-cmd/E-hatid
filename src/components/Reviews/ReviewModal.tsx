@@ -8,7 +8,7 @@ import {
 } from '@ionic/react';
 import { closeOutline, storefrontOutline, personOutline, checkmarkCircle } from 'ionicons/icons';
 import { useAuth } from '../../context/AuthContext';
-import { createReview, createRiderReview } from '../../services/reviewService';
+import { createReview, createRiderReview, hasReviewedOrder } from '../../services/reviewService';
 import type { Order } from '../../types';
 import StarRating from './StarRating';
 
@@ -45,9 +45,14 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ order, isOpen, onClose }) => 
     if (!user || !order) return;
     setSubmitting(true);
     try {
+      if (await hasReviewedOrder(order.id)) {
+        setToastMessage("You've already reviewed this order");
+        return;
+      }
       await createReview({
         stallId: order.stallId,
         userId: user.id,
+        orderId: order.id,
         userName: user.name || 'Anonymous',
         rating: vendorRating,
         comment: vendorComment,
@@ -56,6 +61,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ order, isOpen, onClose }) => 
         await createRiderReview({
           riderId: order.riderId,
           userId: user.id,
+          orderId: order.id,
           userName: user.name || 'Anonymous',
           rating: riderRating,
           comment: riderComment,

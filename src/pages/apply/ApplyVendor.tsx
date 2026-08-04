@@ -11,6 +11,7 @@ import { arrowBackOutline, personOutline, mailOutline, callOutline, businessOutl
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { submitApplicationDoc } from '../../services/userService';
+import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 import { storage } from '../../firebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -373,7 +374,14 @@ const ApplyVendor: React.FC = () => {
             {renderField('displayName', 'Store / Display Name *', 'Your store or business name', businessOutline)}
             {renderField('contactEmail', 'Contact Email *', 'your@email.com', mailOutline, 'email')}
             {renderField('contactPhone', 'Contact Phone *', '(02) 8-634-1111', callOutline, 'tel')}
-            <div className="md:col-span-2">{renderField('address', 'Address *', 'Your business address', locationOutline)}</div>
+            <div className="md:col-span-2">
+              {renderField('address', 'Address *', 'Your business address', locationOutline)}
+              <OpenInGoogleMapsButton
+                label={formData.address}
+                caption="Opens this address in Google Maps so you can check it before submitting."
+                className="mb-4"
+              />
+            </div>
             {renderField('description', 'Description *', 'Short description of your business', informationCircleOutline)}
             <div>{renderSelect('category', 'Category *', CATEGORIES, 'Select a category')}</div>
           </div>

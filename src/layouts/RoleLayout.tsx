@@ -1,10 +1,12 @@
 import React from 'react';
-import { IonContent } from '@ionic/react';
+import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/react';
 import { useLocation } from 'react-router-dom';
+import { chevronDownOutline } from 'ionicons/icons';
 import Navbar from '../components/Navbar';
 import AppFooter from '../components/AppFooter';
 import { useAuth } from '../context/AuthContext';
 import RiderTrackingIndicator from '../components/RiderTrackingIndicator';
+import { runRefreshHandler } from '../utils/refreshBus';
 
 const noMobileTabPaths = ['/verify-otp'];
 const noNavbarPaths = ['/login', '/register', '/role-selection', '/select-role', '/apply/vendor', '/apply/rider', '/admin/register'];
@@ -26,8 +28,11 @@ const RoleLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       {showNavbar && <Navbar hideMobileTabBar={hideMobileTab} />}
 
       <IonContent>
+        <IonRefresher slot="fixed" onIonRefresh={async (e) => { await runRefreshHandler(); e.detail.complete(); }}>
+          <IonRefresherContent pullingIcon={chevronDownOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
         <div className="min-h-full flex flex-col">
-          <div className="w-full mx-auto px-4 md:px-6 lg:px-8 flex-1 pt-4 pb-24 md:pb-0 max-w-7xl">
+          <div className="w-full mx-auto px-4 md:px-6 lg:px-8 flex-1 pt-4 pb-24 xl:pb-0 max-w-7xl">
             {children}
           </div>
           {showFooter && <AppFooter />}

@@ -7,12 +7,15 @@ import {
   IonSelect,
   IonSelectOption,
   IonLabel,
+  IonSpinner,
+  IonToast,
 } from '@ionic/react';
 import { personOutline, mailOutline, callOutline, locationOutline, logOutOutline, cameraOutline, checkmarkCircleOutline, closeCircleOutline, swapHorizontalOutline, checkmarkCircle, time, closeCircle } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { Marker } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
 import { profileMarkerIcon } from '../../components/Map/mapIcons';
+import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -75,12 +78,65 @@ const UserProfile: React.FC = () => {
     currentNumber && currentNumber.length < 7 ? 'Phone must be at least 7 digits' : currentNumber === '' ? 'Phone is required' : ''
   );
   const [address] = useState(user?.address || '');
-  const [age, setAge] = useState(user?.age?.toString() || '');
+  const [birthDate, setBirthDate] = useState(user?.birthDate || '');
+  const [saving, setSaving] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const phoneInputRef = useRef<HTMLIonInputElement>(null);
+
+  const ageFromBirthDate = (d: string) => {
+    if (!d) return undefined;
+    const b = new Date(d);
+    if (isNaN(b.getTime())) return undefined;
+    const now = new Date();
+    let years = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) years--;
+    return years;
+  };
+
+  const handlePhoneChange = async (e: CustomEvent) => {
+    const raw = e.detail.value || '';
+    const inputEl = await phoneInputRef.current?.getInputElement();
+    const caret = inputEl?.selectionStart ?? raw.length;
+    const digits = raw.replace(/\D/g, '');
+    const formatted = formatPhone(digits, countryCode);
+    setPhoneNumber(formatted);
+    setPhoneError(digits.length >= 7 ? '' : digits.length === 0 ? 'Phone is required' : 'Phone must be at least 7 digits');
+    const digitsBeforeCaret = raw.slice(0, caret).replace(/\D/g, '').length;
+    requestAnimationFrame(() => {
+      if (!inputEl) return;
+      let newCaret = 0;
+      let seen = 0;
+      while (newCaret < formatted.length && seen < digitsBeforeCaret) {
+        if (formatted[newCaret] !== ' ') seen++;
+        newCaret++;
+      }
+      inputEl.setSelectionRange(newCaret, newCaret);
+    });
+  };
+
+  const handleCountryCodeChange = (e: CustomEvent) => {
+    const code = e.detail.value;
+    setCountryCode(code);
+    setPhoneNumber(formatPhone(phoneNumber.replace(/\D/g, ''), code));
+  };
+
+  const memberSince = (() => {
+    const c = user?.created_at;
+    if (!c) return '2024';
+    try {
+      const d = typeof (c as any)?.toDate === 'function' ? (c as any).toDate() : new Date(c as any);
+      return isNaN(d.getTime()) ? '2024' : d.getFullYear().toString();
+    } catch {
+      return '2024';
+    }
+  })();
 
   useEffect(() => {
     setName(user?.name || '');
     setEmail(user?.email || '');
-    setAge(user?.age?.toString() || '');
+    setBirthDate(user?.birthDate || '');
     setEmailError(user?.email && !isValidEmail(user.email) ? 'Invalid email address' : '');
     const phone = user?.phone || '+63';
     const code = COUNTRY_CODES.find(c => phone.startsWith(c.code))?.code || '+63';
@@ -106,14 +162,24 @@ const UserProfile: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    updateUserProfile({
-      name,
-      email,
-      phone: `${countryCode}${phoneNumber.replace(/\s/g, '')}`,
-      age: age ? Number(age) : undefined,
-    });
-    history.push('/customer/home');
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateUserProfile({
+        name,
+        email,
+        phone: `${countryCode}${phoneNumber.replace(/\s/g, '')}`,
+        birthDate: birthDate || undefined,
+        age: ageFromBirthDate(birthDate),
+      });
+      setToastMessage('Profile saved');
+      setShowToast(true);
+      setTimeout(() => history.push('/customer/home'), 800);
+    } catch {
+      setToastMessage('Failed to save changes');
+      setShowToast(true);
+      setSaving(false);
+    }
   };
 
   return (
@@ -140,7 +206,7 @@ const UserProfile: React.FC = () => {
           onChange={handleImageUpload}
         />
         <h1 className="text-2xl font-bold text-[var(--ion-text-color)] m-0 mb-1">{name}</h1>
-        <p className="text-sm text-[var(--ion-text-color-secondary)] m-0">Member since 2024</p>
+        <p className="text-sm text-[var(--ion-text-color-secondary)] m-0">Member since {memberSince}</p>
       </div>
 
       <div className="bg-[var(--ion-card-background)] rounded-2xl p-4 sm:p-6 border border-[var(--ion-border-color)]">
@@ -165,52 +231,18 @@ const UserProfile: React.FC = () => {
               {user?.emailVerified ? 'Verified' : 'Unverified'}
             </span>
           </div>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
-            <IonInput type="email" value={email} onIonChange={e => { setEmail(e.detail.value!); setEmailError(isValidEmail(e.detail.value!) ? '' : 'Invalid email address'); }} className="[--color:var(--ion-text-color)] text-sm" />
+          <IonItem className="rounded-xl overflow-hidden opacity-70" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+            <IonInput type="email" value={email} readonly className="[--color:var(--ion-text-color)] text-sm" />
           </IonItem>
           {emailError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{emailError}</span>}
         </div>
 
-        {/* Delivery Location */}
-        <div className="bg-[var(--ion-card-background)] rounded-xl p-4 border border-[var(--ion-border-color)]">
-          <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
-            <IonIcon icon={locationOutline} className="mr-1.5 align-middle" />
-            Delivery Location
-          </h3>
-
-          <p className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0 mb-3">
-            {user?.address || 'No address set'}
-          </p>
-
-          {user?.latitude != null && user?.longitude != null && (
-            <p className="text-xs text-[var(--ion-color-primary)] mb-2">
-              📍 {user.latitude.toFixed(6)}, {user.longitude.toFixed(6)}
-            </p>
-          )}
-          <div className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-[var(--ion-border-color)] mb-3">
-            <LeafletMap
-              center={[user?.latitude || 14.5995, user?.longitude || 120.9842]}
-              zoom={15}
-              className="w-full h-full"
-              dragging={false}
-              scrollWheelZoom={false}
-              touchZoom={false}
-              doubleClickZoom={false}
-            >
-              {user?.latitude != null && user?.longitude != null && <Marker position={[user.latitude, user.longitude]} icon={profileMarkerIcon} />}
-            </LeafletMap>
-          </div>
-          <IonButton expand="block" shape="round" className="h-12 text-base font-semibold" onClick={() => history.push('/customer/location')}>
-            Edit Address
-          </IonButton>
-        </div>
-
         <div className="mb-4">
           <div className="flex items-center mb-2">
-            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Age</IonLabel>
+            <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Birth Date</IonLabel>
           </div>
           <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
-            <IonInput type="number" placeholder="Your age" value={age} onIonChange={e => setAge(e.detail.value!)} className="[--color:var(--ion-text-color)] text-sm" />
+            <IonInput type="date" value={birthDate} onIonChange={e => setBirthDate(e.detail.value || '')} className="[--color:var(--ion-text-color)] text-sm" />
           </IonItem>
         </div>
 
@@ -221,25 +253,82 @@ const UserProfile: React.FC = () => {
           </div>
           <div className="flex gap-2">
             <IonItem className="rounded-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)', width: '130px' } as any}>
-              <IonSelect value={countryCode} onIonChange={e => setCountryCode(e.detail.value)} interface="popover" className="[--color:var(--ion-text-color)] text-sm">
+              <IonSelect value={countryCode} onIonChange={handleCountryCodeChange} interface="popover" className="[--color:var(--ion-text-color)] text-sm">
                 {COUNTRY_CODES.map(c => (
                   <IonSelectOption key={c.code} value={c.code}>{c.label}</IonSelectOption>
                 ))}
               </IonSelect>
             </IonItem>
             <IonItem className="rounded-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
-              <IonInput type="tel" placeholder="9123456789" value={phoneNumber} onIonChange={e => { const digits = e.detail.value!.replace(/\D/g, ''); setPhoneNumber(formatPhone(digits, countryCode)); setPhoneError(digits.length >= 7 ? '' : digits.length === 0 ? 'Phone is required' : 'Phone must be at least 7 digits'); }} className="[--color:var(--ion-text-color)] text-sm" />
+              <IonInput
+                ref={phoneInputRef}
+                type="tel"
+                inputmode="tel"
+                placeholder="9123456789"
+                value={phoneNumber}
+                onIonChange={handlePhoneChange}
+                className="[--color:var(--ion-text-color)] text-sm"
+              />
             </IonItem>
           </div>
           {phoneError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{phoneError}</span>}
         </div>
       </div>
 
-      <IonButton expand="block" shape="round" className="min-h-[48px] font-semibold" onClick={handleSave} disabled={!!emailError || !!phoneError || !name.trim() || !email.trim()}>
-        Save Changes
+      {/* Delivery Location */}
+      <div className="bg-[var(--ion-card-background)] rounded-2xl p-4 sm:p-6 border border-[var(--ion-border-color)]">
+        <h3 className="text-sm font-semibold text-[var(--ion-text-color)] mb-4 uppercase opacity-70">
+          <IonIcon icon={locationOutline} className="mr-1.5 align-middle" />
+          Delivery Location
+        </h3>
+
+        <p className="w-full p-[10px] rounded-lg border border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-[var(--ion-text-color)] text-sm m-0 mb-3">
+          {user?.address || 'No address set'}
+        </p>
+
+        {user?.latitude != null && user?.longitude != null && (
+          <p className="text-xs text-[var(--ion-color-primary)] mb-2">
+            📍 {user.latitude.toFixed(6)}, {user.longitude.toFixed(6)}
+          </p>
+        )}
+        <div className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-[var(--ion-border-color)] mb-3">
+          <LeafletMap
+            center={[user?.latitude || 14.5995, user?.longitude || 120.9842]}
+            zoom={15}
+            className="w-full h-full"
+            dragging={false}
+            scrollWheelZoom={false}
+            touchZoom={false}
+            doubleClickZoom={false}
+          >
+            {user?.latitude != null && user?.longitude != null && <Marker position={[user.latitude, user.longitude]} icon={profileMarkerIcon} />}
+          </LeafletMap>
+        </div>
+        <OpenInGoogleMapsButton
+          lat={user?.latitude}
+          lng={user?.longitude}
+          label={user?.address}
+          caption="Tap to open this address in Google Maps."
+          className="mb-3"
+        />
+        <IonButton expand="block" shape="round" className="h-12 text-base font-semibold" onClick={() => history.push('/customer/location')}>
+          Edit Address
+        </IonButton>
+      </div>
+
+      <IonButton expand="block" shape="round" className="min-h-[48px] font-semibold" onClick={handleSave} disabled={saving || !!emailError || !!phoneError || !name.trim() || !email.trim()}>
+        {saving ? <IonSpinner name="crescent" style={{ width: 20, height: 20 }} /> : 'Save Changes'}
       </IonButton>
 
-      <div className="md:hidden w-full">
+      <IonToast
+        isOpen={showToast}
+        message={toastMessage}
+        duration={2000}
+        position="bottom"
+        onDidDismiss={() => setShowToast(false)}
+      />
+
+      <div className="xl:hidden w-full">
         {roles.length > 1 && (
           <div className="bg-[var(--ion-card-background)] rounded-2xl p-4 border border-[var(--ion-border-color)]">
             <div className="flex items-center gap-2 mb-2">
@@ -276,7 +365,7 @@ const UserProfile: React.FC = () => {
         )}
       </div>
 
-      <IonButton expand="block" shape="round" color="danger" className="md:hidden min-h-[48px] font-semibold" onClick={() => { logout(); history.push('/guest/home'); }}>
+      <IonButton expand="block" shape="round" color="danger" className="xl:hidden min-h-[48px] font-semibold" onClick={() => { logout(); history.push('/guest/home'); }}>
         <IonIcon icon={logOutOutline} slot="start" />
         Sign Out
       </IonButton>
