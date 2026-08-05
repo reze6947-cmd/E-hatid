@@ -4,6 +4,7 @@ import { peopleOutline, bicycleOutline, cartOutline, trendingUpOutline, warningO
 import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
 import AdminStatCard from '../../components/admin/AdminStatCard';
+import PageLoader from '../../components/PageLoader';
 import { fetchAllUsers, fetchPendingApprovals, setRoleStatus } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 
@@ -51,7 +52,10 @@ const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <AdminPageShell title="Admin Dashboard" subtitle="Welcome back, Administrator">
+    <AdminPageShell title="Admin Dashboard" subtitle="Welcome back, Administrator"
+      loading={loading}
+      skeleton={<PageLoader message="Loading admin dashboard..." />}
+    >
         <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           {statCards.map((card, i) => (

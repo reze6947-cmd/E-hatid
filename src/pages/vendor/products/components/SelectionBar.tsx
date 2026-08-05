@@ -27,7 +27,7 @@ const SelectionBar: React.FC<SelectionBarProps> = ({
   onDelete,
   onCancel,
 }) => (
-  <div className="sticky top-0 md:top-16 z-30 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pt-3 pb-3 mb-5 bg-[var(--ion-background-color)]/90 backdrop-blur-md border-b border-[var(--ion-color-primary)]/30 shadow-sm">
+  <div className="sticky top-0 z-30 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pt-3 pb-3 mb-5 bg-[var(--ion-background-color)]/90 backdrop-blur-md border-b border-[var(--ion-color-primary)]/30 shadow-sm">
     <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
       <span className="text-sm font-bold text-[var(--ion-text-color)] tabular-nums">
         {selectedCount} selected

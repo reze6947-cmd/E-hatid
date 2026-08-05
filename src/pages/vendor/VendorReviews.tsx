@@ -8,7 +8,7 @@ import { fetchReviewsByStall, getReviewStats } from '../../services/reviewServic
 import { getStallByVendorId } from '../../services/stallService';
 import { Review } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
-import Skeleton from '../../components/ui/Skeleton';
+import PageLoader from '../../components/PageLoader';
 
 const formatDate = (d: string | Date | any) => {
   if (!d) return '';
@@ -61,47 +61,17 @@ const VendorReviews: React.FC = () => {
     setRetryKey(k => k + 1);
   };
 
+  if (loading) {
+    return <PageLoader message="Loading your reviews..." />;
+  }
+
   return (
     <>
 
         <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
           <PageHeader title="Reviews" subtitle="See what your customers are saying" />
 
-          {loading ? (
-            <>
-              <IonCard className="rounded-xl shadow mb-4">
-                <IonCardContent>
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex flex-col items-center gap-2">
-                      <Skeleton variant="rectangular" width={64} height={48} className="rounded-lg" />
-                      <Skeleton width={90} height={16} />
-                    </div>
-                    <div className="flex-1 space-y-3 pt-2">
-                      {[0, 1, 2, 3, 4].map(i => (
-                        <div key={i} className="flex items-center gap-3">
-                          <Skeleton width={40} height={12} />
-                          <Skeleton variant="rectangular" className="flex-1 rounded-full" height={8} />
-                          <Skeleton width={30} height={12} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </IonCardContent>
-              </IonCard>
-              <div className="grid gap-4">
-                {[0, 1, 2].map(i => (
-                  <IonCard key={i} className="rounded-xl shadow" style={{ margin: 0 }}>
-                    <IonCardContent>
-                      <Skeleton width="35%" height={14} className="mb-2" />
-                      <Skeleton width="50%" height={12} className="mb-3" />
-                      <Skeleton width="100%" height={12} className="mb-1" />
-                      <Skeleton width="70%" height={12} />
-                    </IonCardContent>
-                  </IonCard>
-                ))}
-              </div>
-            </>
-          ) : error ? (
+          {error ? (
             <IonCard className="rounded-xl shadow">
               <IonCardContent>
                 <div className="text-center py-8">

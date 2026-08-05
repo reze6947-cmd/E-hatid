@@ -5,16 +5,12 @@ import {
   IonIcon,
   IonFooter,
   IonInput,
-  IonItem,
-  IonList,
-  IonLabel,
   IonToast,
   IonSpinner,
 } from '@ionic/react';
-import { locationOutline, cartOutline, documentTextOutline, personOutline, locateOutline } from 'ionicons/icons';
+import { locationOutline, documentTextOutline, personOutline, locateOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
 import { Marker, useMapEvents } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
 import { markerIcon } from '../../components/Map/mapIcons';
@@ -26,7 +22,6 @@ interface Suggestion {
   lon: string;
 }
 
-const geocodeCache = new Map<string, Suggestion[]>();
 const reverseCache = new Map<string, Suggestion>();
 let lastGeocodeCall = 0;
 
@@ -99,117 +94,39 @@ const LocationMarker: React.FC<{
 const LocationPicker: React.FC = () => {
   const history = useHistory();
   const { user, updateUserProfile } = useAuth();
-  const { itemCount } = useCart();
   const [query, setQuery] = useState(user?.address || '');
   const [houseDetail, setHouseDetail] = useState('');
   const [streetDetail, setStreetDetail] = useState('');
   const [landmarkDetail, setLandmarkDetail] = useState('');
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Suggestion | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(
     user?.latitude != null && user?.longitude != null
       ? { lat: user.latitude, lng: user.longitude }
       : null
   );
-  const [fetching, setFetching] = useState(false);
   const [locating, setLocating] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [focusZoom, setFocusZoom] = useState<number | undefined>(undefined);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const geocodeRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const suppressSuggestionsRef = useRef(false);
-
-  // Forward geocoding: debounced search on query change
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (suppressSuggestionsRef.current) {
-      suppressSuggestionsRef.current = false;
-      setSuggestions([]);
-      return;
-    }
-    if (!query.trim()) { setSuggestions([]); return; }
-
-    const trimmed = query.trim();
-    const cached = geocodeCache.get(trimmed.toLowerCase());
-    if (cached) {
-      setSuggestions(cached);
-      return;
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setFetching(true);
-      try {
-        const now = Date.now();
-        const elapsed = now - lastGeocodeCall;
-        if (elapsed < 1000) {
-          await new Promise(r => setTimeout(r, 1000 - elapsed));
-        }
-        lastGeocodeCall = Date.now();
-
-        const res = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en&countrycode=PH`,
-          { headers: { 'User-Agent': 'E-Hatid/1.0' } }
-        );
-        const data = await res.json();
-        const results = (data.features || []).map((f: any) => {
-            const parts = [
-              f.properties.name && f.properties.street
-                ? `${f.properties.name} ${f.properties.street}`
-                : f.properties.street || '',
-              f.properties.district || '',
-              f.properties.city || '',
-              f.properties.state || '',
-            ].filter(Boolean);
-            return {
-              display: parts.join(', '),
-              lat: f.geometry.coordinates[1],
-              lon: f.geometry.coordinates[0],
-            };
-          });
-        geocodeCache.set(query.trim().toLowerCase(), results);
-        setSuggestions(results);
-      } catch (err) {
-        console.error('Geocode search error:', err);
-        setSuggestions([]);
-      } finally {
-        setFetching(false);
-      }
-    }, 300);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [query]);
 
   // Reverse geocode when map is clicked
   useEffect(() => {
     if (!selectedLocation) return;
     if (geocodeRef.current) clearTimeout(geocodeRef.current);
     geocodeRef.current = setTimeout(async () => {
-      setFetching(true);
       const result = await reverseGeocode(selectedLocation.lat, selectedLocation.lng);
       if (result) {
         setSelectedAddress(result);
-        suppressSuggestionsRef.current = true;
         setQuery(result.display);
       }
-      setFetching(false);
     }, 200);
     return () => { if (geocodeRef.current) clearTimeout(geocodeRef.current); };
   }, [selectedLocation]);
 
-  const selectSuggestion = (s: Suggestion) => {
-    setSelectedAddress(s);
-    suppressSuggestionsRef.current = true;
-    setQuery(s.display);
-    setSuggestions([]);
-    setSelectedLocation({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
-    setFocusZoom(16);
-  };
-
   const handleLocationChange = (loc: { lat: number; lng: number }) => {
     setSelectedLocation(loc);
-    setSuggestions([]);
     setFocusZoom(undefined);
-    suppressSuggestionsRef.current = true;
   };
 
   const handleUseCurrentLocation = async () => {
@@ -229,12 +146,10 @@ const LocationPicker: React.FC = () => {
       });
       const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setSelectedLocation(loc);
-      setSuggestions([]);
       setFocusZoom(undefined);
       const result = await reverseGeocode(loc.lat, loc.lng);
       if (result) {
         setSelectedAddress(result);
-        suppressSuggestionsRef.current = true;
         setQuery(result.display);
       } else {
         setToastMessage("Couldn't find your address");
@@ -329,30 +244,13 @@ const LocationPicker: React.FC = () => {
               <IonIcon icon={locationOutline} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ion-color-primary)] text-lg z-[1]" />
               <IonInput
                 type="text"
-                placeholder="Search your address..."
+                placeholder="Your delivery address"
                 value={query}
-                onIonInput={e => { suppressSuggestionsRef.current = false; setQuery(e.detail.value || ''); setSelectedAddress(null); }}
+                onIonInput={e => setQuery(e.detail.value || '')}
                 className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
                 style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
               />
-              {fetching && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--ion-text-color-secondary)]">
-                  Searching...
-                </span>
-              )}
             </div>
-
-            {/* Suggestions dropdown */}
-            {suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-[100] bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] rounded-b-xl shadow-lg max-h-[200px] overflow-y-auto">
-                {suggestions.map((s, i) => (
-                  <IonItem key={i} button onClick={() => selectSuggestion(s)} className={`min-h-[44px] text-xs sm:text-sm ${i >= 3 ? 'md:hidden' : ''}`} style={{ '--background': 'transparent', '--border-color': 'var(--ion-border-color)' } as any}>
-                    <IonIcon icon={locationOutline} slot="start" className="text-[var(--ion-color-primary)]" />
-                    <IonLabel className="truncate text-[var(--ion-text-color)]">{s.display}</IonLabel>
-                  </IonItem>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* House number / Street / Landmark details */}

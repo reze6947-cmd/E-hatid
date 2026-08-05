@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { IonCard, IonCardContent, IonIcon, IonBadge, IonButton, IonSegment, IonSegmentButton, IonLabel } from '@ionic/react';
 import { bicycleOutline, trashOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import AdminPageShell from '../../components/admin/AdminPageShell';
-import AdminSkeleton from '../../components/admin/AdminSkeleton';
 
 const AdminRiders: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');

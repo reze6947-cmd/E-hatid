@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   IonButton,
   IonIcon,
-  IonSpinner,
   IonToast,
   IonInput,
   IonItem,
@@ -23,6 +22,7 @@ import {
   cashOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import PageLoader from '../../components/PageLoader';
 
 import { useAuth } from '../../context/AuthContext';
 import { getRoleProfile, updateRoleProfile, updateUserDocument } from '../../services/userService';
@@ -226,11 +226,7 @@ const RiderProfile: React.FC = () => {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <IonSpinner />
-      </div>
-    );
+    return <PageLoader message="Loading your profile..." />;
   }
 
   return (

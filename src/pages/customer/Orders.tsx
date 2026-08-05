@@ -4,15 +4,18 @@ import {
   IonIcon,
   IonBadge,
 } from '@ionic/react';
-import { receiptOutline } from 'ionicons/icons';
+import { receiptOutline, bicycleOutline, checkmarkCircle } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import { useOrders } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebaseConfig';
-import { Order } from '../../types';
+import { Order, User } from '../../types';
+import { getUserDocument } from '../../services/userService';
+import { hasReviewedOrder } from '../../services/reviewService';
 import ReviewModal from '../../components/Reviews/ReviewModal';
+import PageLoader from '../../components/PageLoader';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -35,6 +38,8 @@ const UserOrders: React.FC = () => {
   const [firestoreOrders, setFirestoreOrders] = useState<Order[]>([]);
   const [loadingFirestore, setLoadingFirestore] = useState(true);
   const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [riderUsers, setRiderUsers] = useState<Record<string, User>>({});
+  const [reviewedOrders, setReviewedOrders] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!user) { setLoadingFirestore(false); return; }
@@ -69,6 +74,49 @@ const UserOrders: React.FC = () => {
     return result;
   }, [firestoreOrders, localOrders]);
 
+  // Fetch rider user docs (name, license plate) for orders with an assigned rider
+  useEffect(() => {
+    const riderIds = new Set<string>();
+    mergedOrders.forEach(o => { if (o.riderId) riderIds.add(o.riderId); });
+    if (riderIds.size === 0) return;
+    let cancelled = false;
+    (async () => {
+      const result: Record<string, User> = {};
+      for (const id of Array.from(riderIds)) {
+        try {
+          const u = await getUserDocument(id);
+          if (u) result[id] = u;
+        } catch {}
+      }
+      if (!cancelled) setRiderUsers(prev => ({ ...prev, ...result }));
+    })();
+    return () => { cancelled = true; };
+  }, [mergedOrders]);
+
+  // Track which delivered orders already have a review (only-review-once)
+  const refreshReviewed = async (orderId: string) => {
+    const already = await hasReviewedOrder(orderId);
+    setReviewedOrders(prev => ({ ...prev, [orderId]: already }));
+  };
+
+  useEffect(() => {
+    const delivered = mergedOrders.filter(o => o.status === 'delivered');
+    if (delivered.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const result: Record<string, boolean> = {};
+      for (const o of delivered) {
+        try { result[o.id] = await hasReviewedOrder(o.id); } catch { result[o.id] = false; }
+      }
+      if (!cancelled) setReviewedOrders(prev => ({ ...prev, ...result }));
+    })();
+    return () => { cancelled = true; };
+  }, [mergedOrders]);
+
+  if (loadingFirestore) {
+    return <PageLoader message="Loading your orders..." />;
+  }
+
   return (
     <div className="w-full flex-1 md:pt-8">
       <div className="page-container flex-1 flex flex-col pb-10 space-y-3 sm:space-y-4">
@@ -78,20 +126,7 @@ const UserOrders: React.FC = () => {
           </h2>
         </div>
 
-        {loadingFirestore ? (
-          <div className="space-y-3 sm:space-y-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="h-4 w-28 skeleton-loader rounded-lg" />
-                  <div className="h-5 w-20 skeleton-loader rounded-full" />
-                </div>
-                <div className="h-3 w-3/4 skeleton-loader rounded-lg" />
-                <div className="h-3 w-1/2 skeleton-loader rounded-lg" />
-              </div>
-            ))}
-          </div>
-        ) : mergedOrders.length === 0 ? (
+        {mergedOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 p-6 text-center">
             <div className="w-30 h-30 bg-[var(--ion-card-background)] border-2 border-[var(--ion-border-color)] rounded-full flex items-center justify-center mb-6">
               <IonIcon icon={receiptOutline} className="text-5xl text-[var(--ion-color-primary)]" />
@@ -133,22 +168,39 @@ const UserOrders: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       {order.status === 'delivered' && (
-                        <IonButton size="small" fill="clear" color="secondary" onClick={e => { e.stopPropagation(); setReviewOrder(order); }}>
-                          Review
-                        </IonButton>
+                        reviewedOrders[order.id] ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#10B981] shrink-0">
+                            <IonIcon icon={checkmarkCircle} />
+                            Reviewed
+                          </span>
+                        ) : (
+                          <IonButton size="small" fill="clear" color="secondary" onClick={e => { e.stopPropagation(); setReviewOrder(order); }}>
+                            Review
+                          </IonButton>
+                        )
                       )}
                       <span className="text-base font-bold text-[var(--ion-color-primary)]">
                         ₱{order.total.toFixed(2)}
                       </span>
                     </div>
                   </div>
+
+                  {order.riderId && riderUsers[order.riderId] && (
+                    <div className="mt-2 pt-2 border-t border-[var(--ion-border-color)] flex items-center gap-1.5 text-xs text-[var(--ion-text-color-secondary)]">
+                      <IonIcon icon={bicycleOutline} className="text-sm text-[var(--ion-color-primary)] shrink-0" />
+                      <span className="truncate">{riderUsers[order.riderId].name}</span>
+                      {riderUsers[order.riderId].licensePlate && (
+                        <span className="truncate font-medium">· {riderUsers[order.riderId].licensePlate}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
-      <ReviewModal order={reviewOrder} isOpen={!!reviewOrder} onClose={() => setReviewOrder(null)} />
+      <ReviewModal order={reviewOrder} isOpen={!!reviewOrder} onClose={() => { if (reviewOrder) refreshReviewed(reviewOrder.id); setReviewOrder(null); }} />
     </div>
   );
 };

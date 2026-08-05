@@ -14,7 +14,7 @@ import { fetchStalls, getCategories } from '../../services/stallService';
 import { registerRefreshHandler } from '../../utils/refreshBus';
 import { reverseGeocode, haversineKm, minutesFromKm, getStoredCoords } from '../../utils/geocode';
 
-import { StallCardSkeleton } from '../../components/ui/Skeleton';
+import PageLoader from '../../components/PageLoader';
 import { Stall } from '../../types/index';
 import {
   locationOutline,
@@ -202,6 +202,10 @@ const CustomerHome: React.FC = () => {
     }
   };
 
+  if (initialLoading) {
+    return <PageLoader message="Loading nearby stalls..." />;
+  }
+
   return (
     <>
 
@@ -219,9 +223,9 @@ const CustomerHome: React.FC = () => {
         {/* Location */}
         {isAuthenticated && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 min-w-0 flex-1" onClick={() => history.push('/customer/profile')}>
+            <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 min-w-0 flex-1" onClick={() => history.push('/customer/location')}>
               <IonIcon icon={locationOutline} className="text-[var(--ion-color-primary)] text-lg shrink-0" />
-              <span className="text-sm sm:text-base text-[var(--ion-text-color)] font-medium truncate">{user?.address || 'Set your delivery address'}</span>
+              <span className="text-sm sm:text-base text-[var(--ion-text-color)] font-medium truncate">{sessionStorage.getItem('locationName') || user?.address || 'Set your delivery address'}</span>
               <IonIcon icon={chevronForwardOutline} className="text-[var(--ion-text-color-secondary)] text-sm shrink-0 ml-auto" />
             </div>
             <IonButton
@@ -259,7 +263,7 @@ const CustomerHome: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className="relative min-w-[100px] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-colors rounded-full"
+                className="relative min-w-[100px] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95 rounded-full"
               >
                 {selectedCategory === cat && (
                   <motion.div
@@ -355,13 +359,7 @@ const CustomerHome: React.FC = () => {
             </div>
           )}
 
-          {initialLoading ? (
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <StallCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : loadError ? (
+          {loadError ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center">
               <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full bg-[var(--ion-card-background)] border-2 border-[var(--ion-border-color)] flex items-center justify-center mb-4 sm:mb-6">
                 <IonIcon icon={carOutline} className="text-4xl sm:text-5xl text-[var(--ion-color-primary)]" />

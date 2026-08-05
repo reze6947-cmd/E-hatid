@@ -3,6 +3,7 @@ import { IonButton, IonInput, IonItem, IonLabel, IonSpinner, IonToast } from '@i
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import AdminPageShell from '../../components/admin/AdminPageShell';
+import PageLoader from '../../components/PageLoader';
 import { fetchDeliveryConfig, clearDeliveryConfigCache, DeliveryConfig } from '../../services/deliveryService';
 
 const AdminDeliveryConfig: React.FC = () => {
@@ -40,7 +41,7 @@ const AdminDeliveryConfig: React.FC = () => {
   if (loading) {
     return (
       <AdminPageShell title="Delivery Config">
-        <div className="flex justify-center py-12"><IonSpinner /></div>
+        <PageLoader message="Loading delivery config..." />
       </AdminPageShell>
     );
   }

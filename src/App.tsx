@@ -27,6 +27,7 @@ const RiderOrders = lazy(() => import('./pages/Rider/Orders'));
 const RiderEarnings = lazy(() => import('./pages/Rider/Earnings'));
 const RiderProfile = lazy(() => import('./pages/Rider/Profile'));
 const RiderDelivery = lazy(() => import('./pages/Rider/Delivery'));
+const RiderReviews = lazy(() => import('./pages/Rider/Reviews'));
 const AdminDashboard = lazy(() => import('./pages/Admin/Dashboard'));
 const AdminUsers = lazy(() => import('./pages/Admin/Users'));
 const AdminOrders = lazy(() => import('./pages/Admin/Orders'));
@@ -149,6 +150,9 @@ const App: React.FC = () => {
           </ProtectedRoute>
           <ProtectedRoute exact path="/rider/earnings" requiredRole="rider">
             <L><RiderEarnings /></L>
+          </ProtectedRoute>
+          <ProtectedRoute exact path="/rider/reviews" requiredRole="rider">
+            <L><RiderReviews /></L>
           </ProtectedRoute>
           <ProtectedRoute exact path="/rider/profile" requiredRole="rider">
             <L><RiderProfile /></L>

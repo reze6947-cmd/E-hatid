@@ -10,6 +10,7 @@ import { getStallByVendorId } from '../../services/stallService';
 import { useOrders } from '../../context/OrderContext';
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
+import PageLoader from '../../components/PageLoader';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -154,6 +155,10 @@ const VendorDashboard: React.FC = () => {
 
   const isProcessing = (id: string) => processingOrders.has(id);
 
+  if (loading) {
+    return <PageLoader message="Loading your dashboard..." />;
+  }
+
   return (
     <>
 
@@ -170,7 +175,7 @@ const VendorDashboard: React.FC = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="m-0 mb-1 text-xs font-medium text-[var(--ion-text-color-secondary)]">{stat.label}</p>
-                        <h3 className="m-0 text-xl font-bold text-[var(--ion-text-color)] truncate">{loading ? '...' : stat.value}</h3>
+                        <h3 className="m-0 text-xl font-bold text-[var(--ion-text-color)] truncate">{stat.value}</h3>
                       </div>
                     </div>
                   </IonCardContent>
@@ -186,9 +191,7 @@ const VendorDashboard: React.FC = () => {
                 View All
               </IonButton>
             </div>
-            {loading ? (
-              <div className="text-center p-8"><IonSpinner /></div>
-            ) : error ? (
+            {error ? (
               <IonCard className="rounded-xl shadow">
                 <IonCardContent>
                   <div className="text-center py-4">

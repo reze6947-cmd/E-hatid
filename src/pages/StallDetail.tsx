@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useHistory } from 'react-router-dom';
-import { IonIcon, IonButton } from '@ionic/react';
-import { locationOutline, star, timeOutline, carOutline, cartOutline, documentTextOutline, cloudOfflineOutline } from 'ionicons/icons';
+import { IonIcon, IonButton, IonSearchbar } from '@ionic/react';
+import { locationOutline, star, timeOutline, carOutline, cartOutline, documentTextOutline, cloudOfflineOutline, starOutline, searchOutline } from 'ionicons/icons';
 import { fetchStallById } from '../services/stallService';
-import { Stall, MenuItem, SelectedOption, SelectedAddOn } from '../types';
+import { fetchReviewsByStall, getReviewStats } from '../services/reviewService';
+import { Stall, MenuItem, SelectedOption, SelectedAddOn, Review } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import MenuItemModal from '../components/Stall/MenuItemModal';
+import AuthRequiredModal from '../components/Auth/AuthRequiredModal';
+import PageLoader from '../components/PageLoader';
 import ProductCard from '../components/Stall/ProductCard';
-import { StallCardSkeleton } from '../components/ui/Skeleton';
 import { registerRefreshHandler } from '../utils/refreshBus';
 import { haversineKm, minutesFromKm, getStoredCoords } from '../utils/geocode';
 
@@ -20,10 +22,15 @@ const StallDetail: React.FC = () => {
   const [loadError, setLoadError] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState({ average: 0, total: 0, distribution: [0, 0, 0, 0, 0] as number[] });
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const history = useHistory();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, items } = useCart();
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<string>('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const sectionRefMap = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const setSectionRef = useCallback((id: string) => (el: HTMLDivElement | null) => {
@@ -65,6 +72,28 @@ const StallDetail: React.FC = () => {
   }, [loadStall]);
 
   useEffect(() => {
+    let cancelled = false;
+    if (!id) return;
+    setReviewsLoading(true);
+    (async () => {
+      try {
+        const [allReviews, stats] = await Promise.all([
+          fetchReviewsByStall(id),
+          getReviewStats(id),
+        ]);
+        if (cancelled) return;
+        setReviews(allReviews);
+        setReviewStats(stats);
+      } catch (err) {
+        console.error('Error loading reviews:', err);
+      } finally {
+        if (!cancelled) setReviewsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  useEffect(() => {
     registerRefreshHandler(loadStall);
     return () => registerRefreshHandler(null);
   }, [loadStall]);
@@ -72,6 +101,27 @@ const StallDetail: React.FC = () => {
   const availableItems = stall?.menu?.filter(item => item.available) || [];
   const popularItems = availableItems.filter(item => item.popular);
   const categories = [...new Set(availableItems.map(item => item.category))];
+
+  const cartItemsForStall = items.filter(i => i.stallId === id);
+  const cartCount = cartItemsForStall.reduce((s, i) => s + i.quantity, 0);
+  const cartTotal = cartItemsForStall.reduce((s, i) => s + i.price * i.quantity, 0);
+  const isSearching = searchQuery.trim().length > 0;
+  const searchResults = isSearching
+    ? availableItems.filter(item => {
+        const q = searchQuery.trim().toLowerCase();
+        return item.name.toLowerCase().includes(q) ||
+          (item.description || '').toLowerCase().includes(q) ||
+          (item.category || '').toLowerCase().includes(q);
+      })
+    : [];
+
+  const goToCart = useCallback(() => {
+    if (user) {
+      history.push('/customer/cart');
+    } else {
+      setShowAuthModal(true);
+    }
+  }, [history, user]);
   const navItems = [
     ...(popularItems.length > 0 ? [{ id: 'popular', label: '🔥 Popular' }] : []),
     ...categories.map(c => ({ id: c, label: c }))
@@ -119,14 +169,8 @@ const StallDetail: React.FC = () => {
     return () => observer.disconnect();
   }, [loading, stall, navItems.length]);
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <StallCardSkeleton key={i} />
-        ))}
-      </div>
-    );
+  if (loading || reviewsLoading) {
+    return <PageLoader message="Loading this stall's menu..." />;
   }
 
   if (loadError) {
@@ -239,7 +283,7 @@ const StallDetail: React.FC = () => {
 
         {/* Sticky Category Navigation */}
         {navItems.length > 1 && (
-          <div className="sticky top-0 md:top-16 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)] mt-4 overflow-x-auto no-scrollbar">
+          <div className="sticky top-0 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)] mt-4 overflow-x-auto no-scrollbar">
             <div className="flex gap-3 p-1 rounded-full w-max min-w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
               {navItems.map(nav => (
                 <button
@@ -249,7 +293,7 @@ const StallDetail: React.FC = () => {
                     const el = sectionRefMap.current.get(nav.id);
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="relative min-w-[88px] sm:min-w-[100px] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors rounded-full"
+                  className="relative min-w-[88px] sm:min-w-[100px] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95 rounded-full"
                 >
                   {activeSection === nav.id && (
                     <motion.div
@@ -263,12 +307,56 @@ const StallDetail: React.FC = () => {
                   </span>
                 </button>
               ))}
+              {cartCount > 0 && (
+                <button
+                  type="button"
+                  aria-label="Go to cart"
+                  onClick={goToCart}
+                  className="relative shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-[var(--ion-color-primary)]/10 text-[var(--ion-color-primary)] cursor-pointer"
+                >
+                  <IonIcon icon={cartOutline} className="text-lg" />
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--ion-color-primary)] text-white text-[10px] font-bold flex items-center justify-center">
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         )}
 
+        {/* Search within menu */}
+        <div className="px-4 md:px-6 lg:px-8 pt-4">
+          <IonSearchbar
+            className="[--box-shadow:none] [--border-radius:12px] [--background:var(--ion-card-background)]"
+            placeholder={`Search ${stall.name} menu...`}
+            value={searchQuery}
+            onIonInput={e => setSearchQuery(e.detail.value || '')}
+          />
+        </div>
+
         {/* Content */}
         <div className="px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+          {isSearching ? (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base sm:text-lg md:text-xl font-bold text-[var(--ion-text-color)] m-0">Search results</h2>
+                <span className="text-xs sm:text-sm text-[var(--ion-text-color-secondary)]">{searchResults.length} result{searchResults.length !== 1 ? 's' : ''}</span>
+              </div>
+              {searchResults.length === 0 ? (
+                <div className="text-center py-12">
+                  <IonIcon icon={searchOutline} className="text-4xl text-[var(--ion-text-color-secondary)] mb-2" />
+                  <p className="m-0 text-sm text-[var(--ion-text-color-secondary)]">No items match "{searchQuery.trim()}"</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
+                  {searchResults.map(item => (
+                    <ProductCard key={item.id} item={item} stallImage={stall.image} onItemClick={handleItemClick} showPopularBadge={!!item.popular} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+          <>
           {popularItems.length > 0 && (
             <div ref={setSectionRef('popular')} data-section="popular" className="mb-6 sm:mb-8">
               <div ref={setHeaderRef('popular')} data-header="popular" className="mb-3 sm:mb-4 mt-6">
@@ -304,8 +392,112 @@ const StallDetail: React.FC = () => {
               </div>
             );
           })}
+          </>
+          )}
+
+          {/* Reviews */}
+          <div className="mt-8 sm:mt-10 border-t border-[var(--ion-border-color)] pt-6 sm:pt-8" id="reviews">
+            <div className="flex items-center gap-2 mb-4">
+              <IonIcon icon={starOutline} className="text-[var(--ion-color-primary)] text-lg" />
+              <h2 className="text-base sm:text-lg md:text-xl font-bold text-[var(--ion-text-color)] m-0">Reviews</h2>
+            </div>
+
+            {reviewStats.total === 0 ? (
+              <div className="text-center py-10 rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)]">
+                <IonIcon icon={starOutline} className="text-3xl text-[var(--ion-text-color-secondary)] mb-2" />
+                <p className="m-0 text-sm text-[var(--ion-text-color-secondary)]">No reviews yet — be the first to review this stall</p>
+              </div>
+            ) : (
+              <>
+                {/* Rating Summary */}
+                <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4 mb-4">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                    <div className="flex flex-col items-center sm:items-start sm:min-w-[120px]">
+                      <div className="text-4xl font-extrabold text-[var(--ion-color-primary)]">
+                        {reviewStats.average > 0 ? reviewStats.average.toFixed(1) : '—'}
+                      </div>
+                      <div className="flex gap-0.5 my-1.5">
+                        {[1, 2, 3, 4, 5].map(s => {
+                          const filled = s <= Math.round(reviewStats.average);
+                          return <IonIcon key={s} icon={filled ? star : starOutline} className="text-base" style={{ color: '#F59E0B' }} />;
+                        })}
+                      </div>
+                      <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">{reviewStats.total} review{reviewStats.total !== 1 ? 's' : ''}</p>
+                    </div>
+                    <div className="flex-1">
+                      {[5, 4, 3, 2, 1].map((stars, i) => (
+                        <div key={i} className="flex items-center gap-3 mb-2">
+                          <span className="text-sm min-w-[40px] text-[var(--ion-text-color)]">{stars} ★</span>
+                          <div className="flex-1 h-2 bg-[var(--ion-border-color)] rounded-full overflow-hidden">
+                            <div style={{ width: `${(reviewStats.distribution[5 - stars] / reviewStats.total) * 100}%`, height: '100%', background: '#F59E0B', borderRadius: '4px' }} />
+                          </div>
+                          <span className="text-xs min-w-[30px] text-[var(--ion-text-color-secondary)]">{reviewStats.distribution[5 - stars]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Review List */}
+                <div className="space-y-3">
+                  {reviews.map((review, i) => (
+                    <div key={review.id || i} className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-[var(--ion-color-primary)]/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-[var(--ion-color-primary)]">{review.userName ? review.userName.charAt(0).toUpperCase() : '?'}</span>
+                          </div>
+                          <span className="text-sm font-semibold text-[var(--ion-text-color)] truncate">{review.userName}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <IonIcon key={s} icon={s <= review.rating ? star : starOutline} className="text-xs" style={{ color: '#F59E0B' }} />
+                            ))}
+                          </div>
+                          <span className="text-xs text-[var(--ion-text-color-secondary)]">
+                            {review.date ? new Date(review.date).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                          </span>
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="m-0 mt-1 text-sm text-[var(--ion-text-color)] leading-relaxed">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {cartCount > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed left-1/2 -translate-x-1/2 bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] xl:bottom-6 w-[calc(100%-2rem)] max-w-7xl z-30 px-4"
+          >
+            <div className="rounded-2xl bg-[var(--ion-color-primary)] shadow-lg shadow-[var(--ion-color-primary)]/25 text-white p-3 flex items-center gap-3">
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs opacity-90">{cartCount} item{cartCount !== 1 ? 's' : ''}</span>
+                <span className="font-bold text-lg leading-tight">₱{cartTotal.toFixed(2)}</span>
+              </div>
+              <IonButton
+                className="ml-auto shrink-0 h-12"
+                style={{ '--color': 'var(--ion-color-primary)', '--background': '#fff', '--border-radius': '14px' }}
+                onClick={goToCart}
+              >
+                <IonIcon icon={cartOutline} className="mr-2" />
+                View Cart
+              </IonButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {selectedItem && (
         <MenuItemModal
@@ -316,6 +508,11 @@ const StallDetail: React.FC = () => {
           onAddToCart={handleAddToCart}
         />
       )}
+
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </>
   );
 };

@@ -54,6 +54,32 @@ export const fetchReviewsByStall = async (stallId: string): Promise<Review[]> =>
   }
 };
 
+export const fetchRiderReviews = async (riderId: string): Promise<Review[]> => {
+  try {
+    const q = query(collection(db, 'riderReviews'), where('riderId', '==', riderId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Review));
+  } catch (err) {
+    console.error('Error fetching rider reviews:', err);
+    return [];
+  }
+};
+
+export const getRiderReviewStats = async (riderId: string) => {
+  try {
+    const reviews = await fetchRiderReviews(riderId);
+    const total = reviews.length;
+    if (total === 0) return { average: 0, total: 0, distribution: [0, 0, 0, 0, 0] };
+    const sum = reviews.reduce((s, r) => s + r.rating, 0);
+    const dist = [0, 0, 0, 0, 0];
+    reviews.forEach(r => { if (r.rating >= 1 && r.rating <= 5) dist[5 - r.rating]++; });
+    return { average: Math.round((sum / total) * 10) / 10, total, distribution: dist };
+  } catch (err) {
+    console.error('Error computing rider review stats:', err);
+    return { average: 0, total: 0, distribution: [0, 0, 0, 0, 0] };
+  }
+};
+
 export const hasReviewedOrder = async (orderId: string): Promise<boolean> => {
   if (!orderId) return false;
   try {

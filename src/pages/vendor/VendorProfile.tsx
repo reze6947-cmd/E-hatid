@@ -6,6 +6,7 @@ import { Marker } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
 import { profileMarkerIcon } from '../../components/Map/mapIcons';
 import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
+import PageLoader from '../../components/PageLoader';
 
 import { useAuth } from '../../context/AuthContext';
 import { getStallByVendorId, createStall, updateStall } from '../../services/stallService';
@@ -180,11 +181,7 @@ const VendorProfile: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <IonSpinner />
-      </div>
-    );
+    return <PageLoader message="Loading your stall..." />;
   }
 
   return (

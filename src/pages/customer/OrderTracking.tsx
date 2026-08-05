@@ -20,8 +20,9 @@ import { useAuth } from '../../context/AuthContext';
 import { getUserDocument } from '../../services/userService';
 import { fetchStallById } from '../../services/stallService';
 import { updateOrderStatus } from '../../services/orderService';
+import PageLoader from '../../components/PageLoader';
 import { subscribeRiderLocation } from '../../services/riderLocationService';
-import { hasReviewedOrder } from '../../services/reviewService';
+import { hasReviewedOrder, getRiderReviewStats } from '../../services/reviewService';
 import { openGoogleMapsDirections } from '../../utils/geocode';
 import ReviewModal from '../../components/Reviews/ReviewModal';
 import type { Order, User, Stall, RiderLocation } from '../../types';
@@ -40,6 +41,8 @@ const OrderTracking: React.FC = () => {
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [vendorUser, setVendorUser] = useState<User | null>(null);
   const [riderUser, setRiderUser] = useState<User | null>(null);
+  const [riderRating, setRiderRating] = useState(0);
+  const [riderReviewCount, setRiderReviewCount] = useState(0);
   const [stall, setStall] = useState<Stall | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
@@ -134,6 +137,24 @@ const OrderTracking: React.FC = () => {
     Promise.all(tasks).catch(() => {});
   }, [order?.vendorId, order?.riderId]);
 
+  // Rider review rating (shown once the rider picks up / delivers)
+  useEffect(() => {
+    if (!order?.riderId) {
+      setRiderRating(0);
+      setRiderReviewCount(0);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const stats = await getRiderReviewStats(order.riderId!);
+      if (!cancelled) {
+        setRiderRating(stats.average);
+        setRiderReviewCount(stats.total);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [order?.riderId]);
+
   // 1. Total OSRM distance stall→customer (for progress calc)
   useEffect(() => {
     if (!stall?.latitude || !stall?.longitude || !order?.customerLatitude || !order?.customerLongitude || totalDistance != null) return;
@@ -208,6 +229,10 @@ const OrderTracking: React.FC = () => {
       setShowCancelAlert(false);
     }
   };
+
+  if (loading) {
+    return <PageLoader message="Loading your order..." />;
+  }
 
   if (!order) {
     return (
@@ -363,12 +388,6 @@ const OrderTracking: React.FC = () => {
             </div>
           )}
 
-          {loading && (
-            <div className="text-center py-10">
-              <IonSpinner name="crescent" />
-            </div>
-          )}
-
           {/* Cancelled Reason */}
           {order.cancelledReason && (
             <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-600 dark:text-red-400 text-left border border-red-200 dark:border-red-800">
@@ -409,7 +428,7 @@ const OrderTracking: React.FC = () => {
               {riderUser
                 ? `Kuya ${riderUser.name.split(' ')[0]} is on the way!`
                 : 'Your rider is on the way!'}
-              {riderUser && (riderUser.phone || riderUser.licensePlate) && (
+              {riderUser && (riderUser.phone || riderUser.licensePlate || riderReviewCount > 0) && (
                 <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800 text-left space-y-1">
                   {riderUser.phone && (
                     <p className="m-0 text-xs">
@@ -421,6 +440,12 @@ const OrderTracking: React.FC = () => {
                     <p className="m-0 text-xs">
                       <IonIcon icon={bicycleOutline} className="align-middle mr-1" />
                       {riderUser.licensePlate}
+                    </p>
+                  )}
+                  {riderReviewCount > 0 && (
+                    <p className="m-0 text-xs">
+                      <IonIcon icon={star} className="align-middle mr-1" />
+                      {riderRating.toFixed(1)} rating · {riderReviewCount} review{riderReviewCount !== 1 ? 's' : ''}
                     </p>
                   )}
                 </div>
@@ -526,11 +551,17 @@ const OrderTracking: React.FC = () => {
           )}
 
           {/* Rider Info */}
-          {!loading && riderUser && isDelivered && (
+          {!loading && riderUser && (isDelivering || isDelivered) && (
             <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <IonIcon icon={bicycleOutline} className="text-[var(--ion-color-primary)] text-lg" />
                 <span className="text-xs font-bold text-[var(--ion-text-color-secondary)] uppercase tracking-[0.3px]">Your Rider</span>
+                {riderReviewCount > 0 && (
+                  <span className="ml-auto flex items-center gap-1 text-xs font-semibold text-[#F59E0B]">
+                    <IonIcon icon={star} className="text-sm" />
+                    {riderRating.toFixed(1)} ({riderReviewCount})
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-[var(--ion-color-primary)]/10 flex items-center justify-center shrink-0">

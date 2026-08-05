@@ -25,9 +25,11 @@ a:hover {
 }
 
 /* ==================== ANIMATIONS ==================== */
-@keyframes pulse-bike {
-  0%, 100% { transform: translateY(0); opacity: 0.8; }
-  50% { transform: translateY(-4px); opacity: 1; }
+.ion-content-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 @keyframes dot-bounce {
@@ -40,10 +42,6 @@ a:hover {
   0% { width: 0%; margin-left: 0; }
   50% { width: 60%; margin-left: 20%; }
   100% { width: 0%; margin-left: 100%; }
-}
-
-.delivery-bike-icon {
-  animation: pulse-bike 1.5s ease-in-out infinite;
 }
 
 .loading-dots {
@@ -169,4 +167,31 @@ ion-content ion-toolbar {
   position: sticky !important;
   top: 0 !important;
   z-index: 10 !important;
+}
+
+/* ==================== MOBILE POLISH ==================== */
+/* Safe-area bottom padding helper (above fixed bottom bars) */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+}
+
+/* Remove grey tap highlight on mobile taps */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS auto zoom on input focus */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* Press micro-interaction for interactive cards/pills */
+.pressable {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pressable:active {
+  transform: scale(0.97);
 }

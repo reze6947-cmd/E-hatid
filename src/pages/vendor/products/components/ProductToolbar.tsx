@@ -36,7 +36,7 @@ const ProductToolbar: React.FC<ProductToolbarProps> = ({
   onAdd,
   onSelectMode,
 }) => (
-  <div className="sticky top-0 md:top-16 z-30 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pt-3 pb-3 mb-5 bg-[var(--ion-background-color)]/85 backdrop-blur-md border-b border-[var(--ion-border-color)]">
+  <div className="sticky top-0 z-30 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 pt-3 pb-3 mb-5 bg-[var(--ion-background-color)]/85 backdrop-blur-md border-b border-[var(--ion-border-color)]">
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2 sm:gap-3">
         <div className="relative flex-1 min-w-0">

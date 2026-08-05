@@ -13,6 +13,7 @@ import { useOrders } from '../../context/OrderContext';
 import { openGoogleMapsDirections } from '../../utils/geocode';
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
+import PageLoader from '../../components/PageLoader';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -136,6 +137,10 @@ const VendorOrders: React.FC = () => {
 
   const isProcessing = (id: string) => processingOrders.has(id);
 
+  if (loading) {
+    return <PageLoader message="Loading your orders..." />;
+  }
+
   const FILTER_PILLS: {
     tab: FilterTab;
     label: string;
@@ -193,9 +198,7 @@ const VendorOrders: React.FC = () => {
             })}
           </div>
 
-          {loading ? (
-            <div className="text-center p-12"><IonSpinner /></div>
-          ) : error ? (
+          {error ? (
             <IonCard className="rounded-xl shadow">
               <IonCardContent>
                 <div className="text-center py-8">

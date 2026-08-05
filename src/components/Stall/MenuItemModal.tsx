@@ -6,9 +6,7 @@ import {
   IonIcon,
   IonTextarea,
 } from '@ionic/react';
-import { closeOutline, add, remove, cartOutline, logInOutline, checkmarkCircle } from 'ionicons/icons';
-import { useAuth } from '../../context/AuthContext';
-import { useHistory } from 'react-router-dom';
+import { closeOutline, add, remove, cartOutline, checkmarkCircle } from 'ionicons/icons';
 import { MenuItem, SelectedOption, SelectedAddOn } from '../../types';
 
 interface MenuItemModalProps {
@@ -31,9 +29,6 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
-  const { user } = useAuth();
-  const history = useHistory();
-  const isGuest = !user;
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [selectedAddOns, setSelectedAddOns] = useState<Record<string, boolean>>({});
@@ -89,11 +84,6 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
   }, [item.options, selectedOptions]);
 
   const handleAddToCart = () => {
-    if (isGuest) {
-      onClose();
-      history.push('/login');
-      return;
-    }
     onAddToCart({
       item,
       selectedOptions: selectedOptionsList,
@@ -256,14 +246,10 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
       </div>
       <button
         onClick={handleAddToCart}
-        disabled={isGuest ? false : !allRequiredFilled || !item.available}
+        disabled={!allRequiredFilled || !item.available}
         className={`flex-1 min-w-[140px] xs:min-w-[160px] max-w-[260px] md:max-w-[300px] min-h-[48px] sm:min-h-[52px] rounded-full text-white font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2 ${item.available ? 'bg-[var(--ion-color-primary)] hover:bg-[var(--ion-color-primary-shade)] disabled:opacity-50' : 'bg-[#9CA3AF]'}`}
       >
-        {isGuest ? (
-          <><IonIcon icon={logInOutline} className="text-base" />Sign in to Order</>
-        ) : (
-          <><IonIcon icon={cartOutline} className="text-base" />{item.available ? 'Add to Cart' : 'Currently Unavailable'}</>
-        )}
+        <><IonIcon icon={cartOutline} className="text-base" />{item.available ? 'Add to Cart' : 'Currently Unavailable'}</>
       </button>
     </div>
   );

@@ -11,7 +11,7 @@ import ProductCard from './components/ProductCard';
 import ProductStats from './components/ProductStats';
 import ProductToolbar from './components/ProductToolbar';
 import SelectionBar from './components/SelectionBar';
-import ProductSkeleton from './components/ProductSkeleton';
+import PageLoader from '../../../components/PageLoader';
 import EmptyState from './components/EmptyState';
 import NoMatchState from './components/NoMatchState';
 import ProductEditorModal from './components/ProductEditorModal';
@@ -140,6 +140,10 @@ const VendorProducts: React.FC = () => {
     />
   ), [bulkIds, selecting, toggleSelect, onEdit, onDeleteCard, toggleAvailable, togglePopular]);
 
+  if (loading) {
+    return <PageLoader message="Loading your products..." />;
+  }
+
   return (
     <>
       <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
@@ -186,9 +190,7 @@ const VendorProducts: React.FC = () => {
           />
         )}
 
-        {loading ? (
-          <ProductSkeleton />
-        ) : products.length === 0 ? (
+        {products.length === 0 ? (
           <EmptyState onAdd={handleAddProduct} />
         ) : visibleProducts.length === 0 ? (
           <NoMatchState onReset={resetFilters} />

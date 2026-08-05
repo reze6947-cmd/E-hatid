@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchOrdersByVendor, getEarningsStats } from '../../services/orderService';
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
-import Skeleton from '../../components/ui/Skeleton';
+import PageLoader from '../../components/PageLoader';
 
 const VendorEarnings: React.FC = () => {
   const history = useHistory();
@@ -52,45 +52,17 @@ const VendorEarnings: React.FC = () => {
     setRetryKey(k => k + 1);
   };
 
+  if (loading) {
+    return <PageLoader message="Loading your earnings..." />;
+  }
+
   return (
     <>
 
         <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
           <PageHeader title="Earnings" subtitle="Track your revenue and payouts" />
 
-          {loading ? (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                {[0, 1, 2, 3].map(i => (
-                  <IonCard key={i} className="m-0 rounded-xl shadow">
-                    <IonCardContent>
-                      <div className="flex items-center gap-4">
-                        <Skeleton variant="rectangular" width={48} height={48} className="rounded-xl" />
-                        <div className="flex-1 space-y-2">
-                          <Skeleton width="60%" height={12} />
-                          <Skeleton width="40%" height={18} />
-                        </div>
-                      </div>
-                    </IonCardContent>
-                  </IonCard>
-                ))}
-              </div>
-              <div className="mt-4 space-y-3">
-                {[0, 1, 2].map(i => (
-                  <IonCard key={i} className="m-0 rounded-xl shadow">
-                    <IonCardContent>
-                      <div className="flex items-center justify-between mb-3">
-                        <Skeleton width={80} height={14} />
-                        <Skeleton width={60} height={16} className="rounded-full" />
-                      </div>
-                      <Skeleton width="45%" height={12} className="mb-2" />
-                      <Skeleton width="35%" height={12} />
-                    </IonCardContent>
-                  </IonCard>
-                ))}
-              </div>
-            </>
-          ) : error ? (
+          {error ? (
             <IonCard className="rounded-xl shadow">
               <IonCardContent>
                 <div className="text-center py-8">

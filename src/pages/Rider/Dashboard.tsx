@@ -17,7 +17,7 @@ import StatCard from '../../components/Rider/StatCard';
 import RiderActionButton from '../../components/Rider/RiderActionButton';
 import RiderPageHeader from '../../components/Rider/RiderPageHeader';
 import EmptyState from '../../components/Rider/EmptyState';
-import Skeleton from '../../components/ui/Skeleton';
+import PageLoader from '../../components/PageLoader';
 import { useDeclinedOrders } from '../../hooks/useDeclinedOrders';
 
 const RiderDashboard: React.FC = () => {
@@ -141,6 +141,10 @@ const RiderDashboard: React.FC = () => {
     declineOrder(orderId);
   };
 
+  if (loading) {
+    return <PageLoader message="Loading your dashboard..." />;
+  }
+
   return (
     <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
       <RiderPageHeader title="Dashboard" subtitle="Manage your deliveries" />
@@ -152,38 +156,22 @@ const RiderDashboard: React.FC = () => {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          {loading ? (
-            <>
-              {[0, 1].map(i => (
-                <div key={i} className="rounded-2xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
-                  <div className="flex items-center gap-3">
-                    <Skeleton variant="rectangular" width={40} height={40} className="rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton width="70%" height={12} />
-                      <Skeleton width="55%" height={16} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            <>
-              <StatCard
-                icon={cashOutline}
-                label="Today's Earnings"
-                value={`₱${todayEarnings.toFixed(2)}`}
-                gradientFrom="#6D28D9"
-                gradientTo="#8B5CF6"
-              />
-              <StatCard
-                icon={checkmarkCircleOutline}
-                label="Completed Today"
-                value={String(todayDelivered.length)}
-                gradientFrom="#10B981"
-                gradientTo="#34D399"
-              />
-            </>
-          )}
+          <>
+            <StatCard
+              icon={cashOutline}
+              label="Today's Earnings"
+              value={`₱${todayEarnings.toFixed(2)}`}
+              gradientFrom="#6D28D9"
+              gradientTo="#8B5CF6"
+            />
+            <StatCard
+              icon={checkmarkCircleOutline}
+              label="Completed Today"
+              value={String(todayDelivered.length)}
+              gradientFrom="#10B981"
+              gradientTo="#34D399"
+            />
+          </>
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { IonCard, IonCardContent, IonIcon, IonModal, IonHeader, IonToolbar, IonT
 import { searchOutline, closeOutline, checkmarkCircle, closeCircle, personOutline, bicycleOutline, storefrontOutline, shieldCheckmarkOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
+import PageLoader from '../../components/PageLoader';
 import { fetchAllUsers, getRoleProfile, setRoleStatus, updateUserRole, updateUserDocument, getUserDocument } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { User } from '../../types';
@@ -82,7 +83,10 @@ const AdminUsers: React.FC = () => {
 
   return (
     <>
-      <AdminPageShell title="Users" subtitle="Manage all users, riders, vendors">
+      <AdminPageShell title="Users" subtitle="Manage all users, riders, vendors"
+        loading={loading}
+        skeleton={<PageLoader message="Loading users..." />}
+      >
         <div>
           <div style={{ position: 'relative', marginBottom: '16px' }}>
             <IonIcon icon={searchOutline} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ion-text-color-secondary)', fontSize: '16px', zIndex: 1 }} />

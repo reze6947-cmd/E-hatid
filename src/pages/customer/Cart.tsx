@@ -214,7 +214,7 @@ const UserCart: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="m-0 mb-0.5 text-xs text-[var(--ion-text-color-secondary)]">Deliver to</p>
-                  <p className="m-0 font-semibold text-sm sm:text-base text-[var(--ion-text-color)] truncate">{user?.address || 'Current Location'}</p>
+                  <p className="m-0 font-semibold text-sm sm:text-base text-[var(--ion-text-color)] truncate">{sessionStorage.getItem('locationName') || user?.address || 'Current Location'}</p>
                 </div>
                 <IonButton fill="clear" size="small" className="font-semibold" onClick={() => history.push('/customer/location')}>Change</IonButton>
               </div>

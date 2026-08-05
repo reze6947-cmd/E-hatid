@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { fetchStalls, getCategories } from '../../services/stallService';
 import { Stall } from '../../types/index';
-import { StallCardSkeleton } from '../../components/ui/Skeleton';
+import PageLoader from '../../components/PageLoader';
 
 const GuestHome: React.FC = () => {
   const history = useHistory();
@@ -16,11 +16,10 @@ const GuestHome: React.FC = () => {
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const categories = getCategories();
 
   const loadStalls = useCallback(async () => {
-    setLoading(true);
     try {
       const data = await fetchStalls({
         category: selectedCategory,
@@ -30,7 +29,7 @@ const GuestHome: React.FC = () => {
     } catch (error) {
       console.error('Error loading stalls:', error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   }, [selectedCategory, searchQuery]);
 
@@ -48,6 +47,10 @@ const GuestHome: React.FC = () => {
   const handleSearch = (e: any) => {
     setSearchQuery(e.detail.value || '');
   };
+
+  if (initialLoading) {
+    return <PageLoader message="Loading nearby stalls..." />;
+  }
 
   return (
     <>
@@ -113,13 +116,7 @@ const GuestHome: React.FC = () => {
           </div>
 
           {/* Stalls Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <StallCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : stalls.length === 0 ? (
+          {stalls.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full bg-(--ion-card-background) border-2 border-(--ion-border-color) flex items-center justify-center mb-4 sm:mb-6">
                 <IonIcon icon={carOutline} className="text-4xl sm:text-5xl text-(--ion-color-primary)" />

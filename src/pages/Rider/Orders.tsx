@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   IonButton,
   IonIcon,
-  IonSpinner,
   IonToast,
   IonModal,
   IonHeader,
@@ -13,6 +12,7 @@ import {
 } from '@ionic/react';
 import { checkmarkCircleOutline, closeOutline, storefrontOutline, personOutline, callOutline, locationOutline, cashOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import PageLoader from '../../components/PageLoader';
 import { useAuth } from '../../context/AuthContext';
 import { subscribeAvailableOrders, subscribeRiderOrders, updateOrderStatus } from '../../services/orderService';
 import type { Order } from '../../types';
@@ -136,11 +136,7 @@ const RiderOrders: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <IonSpinner />
-      </div>
-    );
+    return <PageLoader message="Loading orders..." />;
   }
 
   if (error) {

@@ -27,6 +27,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ order, isOpen, onClose }) => 
   const [riderComment, setRiderComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [checkingReviewed, setCheckingReviewed] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
@@ -38,6 +40,14 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ order, isOpen, onClose }) => 
       setSubmitting(false);
       setSubmitted(false);
       setToastMessage('');
+      setAlreadyReviewed(false);
+      if (order?.id) {
+        setCheckingReviewed(true);
+        hasReviewedOrder(order.id).then(already => {
+          setAlreadyReviewed(already);
+          setCheckingReviewed(false);
+        });
+      }
     }
   }, [isOpen, order?.id]);
 
@@ -46,6 +56,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ order, isOpen, onClose }) => 
     setSubmitting(true);
     try {
       if (await hasReviewedOrder(order.id)) {
+        setAlreadyReviewed(true);
         setToastMessage("You've already reviewed this order");
         return;
       }
@@ -97,6 +108,20 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ order, isOpen, onClose }) => 
               <IonIcon icon={checkmarkCircle} className="text-5xl text-[#10B981] mb-4" />
               <h2 className="m-0 mb-2 text-xl font-bold text-[var(--ion-text-color)]">Thank you for your review!</h2>
               <p className="m-0 mb-4 text-sm text-[var(--ion-text-color-secondary)]">Your feedback helps us improve</p>
+              <IonButton shape="round" onClick={onClose}>
+                Close
+              </IonButton>
+            </div>
+          ) : checkingReviewed ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <IonSpinner />
+              <p className="m-0 mt-3 text-sm text-[var(--ion-text-color-secondary)]">Checking your review status...</p>
+            </div>
+          ) : alreadyReviewed ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <IonIcon icon={checkmarkCircle} className="text-5xl text-[#10B981] mb-4" />
+              <h2 className="m-0 mb-2 text-xl font-bold text-[var(--ion-text-color)]">You've already reviewed this order</h2>
+              <p className="m-0 mb-4 text-sm text-[var(--ion-text-color-secondary)]">Thanks for your feedback!</p>
               <IonButton shape="round" onClick={onClose}>
                 Close
               </IonButton>

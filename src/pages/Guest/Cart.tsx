@@ -3,14 +3,12 @@ import React, { useState, useEffect } from 'react';
 import {
   IonButton,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonModal,
   IonSpinner,
 } from '@ionic/react';
-import { locationOutline, bicycleOutline, cardOutline, logInOutline, personAddOutline } from 'ionicons/icons';
+import { locationOutline, bicycleOutline, cardOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import CartItem from '../../components/Cart/CartItem';
+import AuthRequiredModal from '../../components/Auth/AuthRequiredModal';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { fetchStallById } from '../../services/stallService';
@@ -18,14 +16,18 @@ import { getDeliveryFeeInfo } from '../../services/deliveryService';
 
 const GuestCart: React.FC = () => {
   const history = useHistory();
-  const { items, updateQuantity, removeFromCart, total, itemCount } = useCart();
-  const { user, isGuest, logout } = useAuth();
+  const { items, updateQuantity, removeFromCart, total } = useCart();
+  const { user, isGuest } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [feeLoading, setFeeLoading] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(2.99);
   const [serviceFee] = useState(1.49);
   const [rawDistance, setRawDistance] = useState<number | null>(null);
   const [chargedDistance, setChargedDistance] = useState<number>(0);
+
+  useEffect(() => {
+    if (isGuest) setShowAuthModal(true);
+  }, [isGuest]);
 
   useEffect(() => {
     const calcFee = async () => {
@@ -96,7 +98,7 @@ const GuestCart: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="m-0 mb-0.5 text-xs text-[var(--ion-text-color-secondary)]">Deliver to</p>
-                  <p className="m-0 font-semibold text-sm sm:text-base text-[var(--ion-text-color)] truncate">Current Location</p>
+                  <p className="m-0 font-semibold text-sm sm:text-base text-[var(--ion-text-color)] truncate">{sessionStorage.getItem('locationName') || 'Current Location'}</p>
                 </div>
                 <IonButton fill="clear" className="shrink-0 min-h-[44px] text-sm" style={{ '--color': 'var(--ion-color-primary)' }} onClick={() => history.push('/guest/location')}>Change</IonButton>
               </div>
@@ -157,48 +159,10 @@ const GuestCart: React.FC = () => {
       </div>
 
 
-      <IonModal isOpen={showAuthModal} onDidDismiss={() => setShowAuthModal(false)}>
-        <div style={{
-          padding: '32px 24px', textAlign: 'center',
-          background: 'var(--ion-card-background)', minHeight: '300px',
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px',
-        }}>
-          <div style={{
-            width: '72px', height: '72px', borderRadius: '50%',
-            background: 'var(--ion-color-primary)', margin: '0 auto',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <IonIcon icon={personAddOutline} style={{ fontSize: '36px', color: '#fff' }} />
-          </div>
-          <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: 'var(--ion-text-color)' }}>
-            Sign in to continue
-          </h2>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--ion-text-color-secondary)', lineHeight: 1.5 }}>
-            Create an account or sign in to proceed with your order
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
-            <IonButton expand="block" size="large"
-              style={{ '--background': 'var(--ion-color-primary)', '--border-radius': '8px', height: '48px', fontSize: '15px', fontWeight: 600 }}
-              onClick={() => { setShowAuthModal(false); history.push('/login'); }}
-            >
-              <IonIcon slot="start" icon={logInOutline} />
-              Log In
-            </IonButton>
-            <IonButton expand="block" size="large" fill="outline"
-              style={{ '--border-color': 'var(--ion-color-primary)', '--color': 'var(--ion-color-primary)', '--border-radius': '8px', height: '48px', fontSize: '15px', fontWeight: 600 }}
-              onClick={() => { setShowAuthModal(false); history.push('/register'); }}
-            >
-              <IonIcon slot="start" icon={personAddOutline} />
-              Sign Up
-            </IonButton>
-          </div>
-          <IonButton fill="clear" style={{ marginTop: '8px', '--color': 'var(--ion-text-color-secondary)' }}
-            onClick={() => setShowAuthModal(false)}
-          >
-            Continue as Guest
-          </IonButton>
-        </div>
-      </IonModal>
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </>
   );
 };
