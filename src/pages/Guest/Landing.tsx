@@ -47,7 +47,7 @@ const Landing: React.FC = () => {
           <img
             src={isDarkMode ? '/Logo/Logo-dark-mode.png' : '/Logo/Logo-light-mode.png'}
             alt="E-Hatid"
-            className="h-16 sm:h-24 object-contain mb-6"
+            className="h-16 sm:h-24 object-contain mb-6 mx-auto block"
           />
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold mb-4 backdrop-blur-sm">
