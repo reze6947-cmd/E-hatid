@@ -82,7 +82,7 @@ const LocationMarker: React.FC<{
       draggable
       eventHandlers={{
         dragend: (e) => {
-          const marker = e.target as any;
+          const marker = e.target as { getLatLng: () => { lat: number; lng: number } };
           const ll = marker.getLatLng();
           onLocationChange({ lat: ll.lat, lng: ll.lng });
         },
@@ -248,7 +248,7 @@ const LocationPicker: React.FC = () => {
                 value={query}
                 onIonInput={e => setQuery(e.detail.value || '')}
                 className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
-                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
+                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as React.CSSProperties}
               />
             </div>
           </div>
@@ -266,7 +266,7 @@ const LocationPicker: React.FC = () => {
                 value={houseDetail}
                 onIonInput={e => setHouseDetail(e.detail.value || '')}
                 className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
-                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
+                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as React.CSSProperties}
               />
             </div>
             <div className="relative">
@@ -277,7 +277,7 @@ const LocationPicker: React.FC = () => {
                 value={streetDetail}
                 onIonInput={e => setStreetDetail(e.detail.value || '')}
                 className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
-                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
+                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as React.CSSProperties}
               />
             </div>
             <div className="relative">
@@ -288,7 +288,7 @@ const LocationPicker: React.FC = () => {
                 value={landmarkDetail}
                 onIonInput={e => setLandmarkDetail(e.detail.value || '')}
                 className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
-                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
+                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as React.CSSProperties}
               />
             </div>
             <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">
@@ -317,7 +317,7 @@ const LocationPicker: React.FC = () => {
 
       {/* Footer */}
       {selectedAddress && selectedLocation && (
-        <IonFooter style={{ '--background': 'var(--ion-card-background)' } as any}>
+        <IonFooter style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
           <div className="border-t border-[var(--ion-border-color)] px-3 sm:px-4 py-3 sm:py-4">
             <div className="max-w-2xl mx-auto">
               <IonButton expand="block" size="large" shape="round"

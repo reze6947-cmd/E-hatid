@@ -4,22 +4,26 @@ import { restaurantOutline, storefrontOutline, bicycleOutline, chevronForwardOut
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import OptimizedImage from '../../components/OptimizedImage';
+import Seo from '../../components/Seo';
+import { SITE_URL, SITE_NAME, SITE_KEYWORDS, SITE_DESCRIPTION } from '../../config/seo';
+import { faqs } from '../../config/faq';
 
 const features = [
   {
     icon: restaurantOutline,
     title: 'Eat',
-    copy: 'Discover the best food stalls near you and order in a few taps.',
+    copy: 'Discover the best food stalls near you and order food delivery online in a few taps.',
   },
   {
     icon: storefrontOutline,
     title: 'Sell',
-    copy: 'Open your own stall and reach hungry customers in your area.',
+    copy: 'Open your own food stall online and reach hungry customers in your area.',
   },
   {
     icon: bicycleOutline,
     title: 'Deliver',
-    copy: 'Earn as a rider delivering orders to doorsteps, faster.',
+    copy: 'Earn as a delivery rider bringing orders to doorsteps, faster.',
   },
 ];
 
@@ -35,6 +39,44 @@ const Landing: React.FC = () => {
 
   return (
     <div className="min-h-full flex flex-col">
+      <Seo
+        title="Food Delivery in the Philippines"
+        description={SITE_DESCRIPTION}
+        keywords={SITE_KEYWORDS}
+        canonicalPath="/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'WebSite',
+              '@id': `${SITE_URL}/#website`,
+              name: SITE_NAME,
+              url: SITE_URL,
+              description: SITE_DESCRIPTION,
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: `${SITE_URL}/guest/home?search={search_term_string}`,
+                'query-input': 'required name=search_term_string',
+              },
+            },
+            {
+              '@type': 'Organization',
+              '@id': `${SITE_URL}/#organization`,
+              name: SITE_NAME,
+              url: SITE_URL,
+              logo: `${SITE_URL}/favicon.png`,
+            },
+            {
+              '@type': 'FAQPage',
+              mainEntity: faqs.map((f) => ({
+                '@type': 'Question',
+                name: f.question,
+                acceptedAnswer: { '@type': 'Answer', text: f.answer },
+              })),
+            },
+          ],
+        }}
+      />
       {/* Hero */}
       <div
         className="relative overflow-hidden px-6 pt-12 sm:pt-16 pb-10 sm:pb-14 text-center"
@@ -44,10 +86,13 @@ const Landing: React.FC = () => {
         <div className="absolute -bottom-20 -right-10 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
 
         <div className="relative max-w-lg mx-auto">
-          <img
-            src={isDarkMode ? '/Logo/Logo-dark-mode.png' : '/Logo/Logo-light-mode.png'}
+          <OptimizedImage
+            src={isDarkMode ? '/Logo/Logo-dark-mode.svg' : '/Logo/Logo-light-mode.svg'}
             alt="E-Hatid"
-            className="h-16 sm:h-24 object-contain mb-6 mx-auto block"
+            width={200}
+            height={64}
+            priority
+            className="h-16 sm:h-24 w-auto object-contain mb-6 mx-auto block"
           />
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold mb-4 backdrop-blur-sm">
@@ -56,10 +101,10 @@ const Landing: React.FC = () => {
           </div>
 
           <h1 className="text-white font-extrabold text-3xl sm:text-4xl leading-tight m-0">
-            Your favorite food,<br className="hidden sm:block" /> delivered right to your door.
+            Food delivery from local stalls,<br className="hidden sm:block" /> right to your door.
           </h1>
           <p className="text-white/85 text-base sm:text-lg mt-3 mb-8 max-w-sm mx-auto">
-            Order from the best local stalls near you. Track every delivery live.
+            Order online food delivery near you from the best local stalls. Track every delivery live — from stall to your doorstep.
           </p>
 
           <div className="w-full space-y-3">
@@ -95,6 +140,9 @@ const Landing: React.FC = () => {
 
       {/* Features */}
       <div className="flex-1 px-6 py-10 sm:py-12 max-w-3xl mx-auto w-full">
+        <h2 className="text-center text-xl sm:text-2xl font-extrabold text-[var(--ion-text-color)] m-0 mb-6">
+          Eat, Sell &amp; Deliver with E-Hatid
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {features.map(f => (
             <div
@@ -109,6 +157,27 @@ const Landing: React.FC = () => {
               <p className="m-0 mt-1.5 text-sm text-[var(--ion-text-color-secondary)] leading-relaxed">{f.copy}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-10 max-w-2xl mx-auto w-full text-left">
+          <h2 className="text-center text-xl sm:text-2xl font-extrabold text-[var(--ion-text-color)] m-0 mb-6">
+            Food Delivery Questions, Answered
+          </h2>
+          <div className="space-y-3">
+            {faqs.map((f) => (
+              <details
+                key={f.question}
+                className="rounded-2xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4"
+              >
+                <summary className="font-semibold text-[var(--ion-text-color)] cursor-pointer">
+                  {f.question}
+                </summary>
+                <p className="m-0 mt-2 text-sm text-[var(--ion-text-color-secondary)] leading-relaxed">
+                  {f.answer}
+                </p>
+              </details>
+            ))}
+          </div>
         </div>
 
         <p className="text-center text-xs text-[var(--ion-text-color-secondary)] mt-10">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { cameraOutline, imageOutline, trashOutline } from 'ionicons/icons';
+import OptimizedImage from '../../../../components/OptimizedImage';
 
 interface ProductImageUploaderProps {
   image: string;
@@ -31,9 +32,11 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ image, name
       {image ? (
         <>
           <div className="relative md:hidden aspect-square w-full max-w-[260px] mx-auto overflow-hidden rounded-2xl shadow-xl">
-            <img
+            <OptimizedImage
               src={image}
               alt="Product"
+              width={260}
+              height={260}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -66,7 +69,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ image, name
 
           <div className="hidden md:flex items-center gap-4 rounded-2xl border border-[var(--ion-border-color)] bg-[var(--ion-background-color)]/40 p-3 shadow-sm">
             <div className="w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-[var(--ion-card-background)]">
-              <img src={image} alt="Product" className="w-full h-full object-cover" />
+              <OptimizedImage src={image} alt="Product" width={112} height={112} className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)] truncate">{name || 'Product photo'}</p>

@@ -256,7 +256,7 @@ const ApplyRider: React.FC = () => {
           uploadedUrls.assignedRiderLicenseImageUrl = await uploadFile(files.assignedRiderLicenseImage, user!.id, 'rider-assigned-license');
         }
       }
-    } catch (uploadErr: any) {
+    } catch (uploadErr) {
       console.error('Upload error:', uploadErr);
       setSubmitError('Failed to upload document. Check your connection or file size (max 5MB).');
       setLoading(false);
@@ -278,7 +278,7 @@ const ApplyRider: React.FC = () => {
       addressRegion: formData.addressRegion,
       addressZip: formData.addressZip,
     });
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
       ...formData,
       fullName: composedName,
       address: composedAddress,
@@ -291,10 +291,15 @@ const ApplyRider: React.FC = () => {
     try {
       setUploadProgress('Submitting application...');
       await applyForRole('rider', payload);
-    } catch (roleErr: any) {
+    } catch (roleErr) {
       console.error('Role application error:', roleErr);
-      if (roleErr?.message === 'ALREADY_EXISTS') setSubmitError('Already applied or already have this role');
-      else if (roleErr?.message === 'EMAIL_NOT_VERIFIED') setSubmitError('Please verify your email before applying');
+      const roleErrMessage = roleErr instanceof Error
+        ? roleErr.message
+        : typeof roleErr === 'object' && roleErr !== null && 'message' in roleErr
+          ? String((roleErr as { message: unknown }).message)
+          : undefined;
+      if (roleErrMessage === 'ALREADY_EXISTS') setSubmitError('Already applied or already have this role');
+      else if (roleErrMessage === 'EMAIL_NOT_VERIFIED') setSubmitError('Please verify your email before applying');
       else setSubmitError('Submission failed. Please check your inputs and try again.');
       setLoading(false);
       setUploadProgress('');
@@ -303,7 +308,7 @@ const ApplyRider: React.FC = () => {
 
     try {
       await submitApplicationDoc(user!.id, 'rider', payload);
-    } catch (docErr: any) {
+    } catch (docErr) {
       console.error('Application doc error:', docErr);
     }
 
@@ -312,14 +317,14 @@ const ApplyRider: React.FC = () => {
     history.replace('/approval-pending?role=rider');
   };
 
-  const inputStyle = { '--color': 'var(--ion-text-color)' } as any;
-  const itemStyle = { marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any;
+  const inputStyle = { '--color': 'var(--ion-text-color)' } as React.CSSProperties;
+  const itemStyle = { marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as React.CSSProperties;
   const labelStyle: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 };
   const selectStyle: React.CSSProperties = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--ion-border-color)', background: 'var(--ion-card-background)', color: 'var(--ion-text-color)', fontFamily: 'inherit', fontSize: '14px' };
   const errorTextStyle: React.CSSProperties = { margin: '4px 0 0', fontSize: '12px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '4px' };
 
-  const renderField = (key: string, label: string, placeholder: string, icon: string, type: any = 'text') => (
-    <div data-error={!!errors[key] ? 'true' : undefined}>
+  const renderField = (key: string, label: string, placeholder: string, icon: string, type: 'text' | 'email' | 'tel' = 'text') => (
+    <div data-error={errors[key] ? 'true' : undefined}>
       <label style={labelStyle}>{label}</label>
       <IonItem style={itemStyle}>
         <IonIcon icon={icon} slot="start" color="primary" />
@@ -330,7 +335,7 @@ const ApplyRider: React.FC = () => {
   );
 
   const renderSelect = (key: string, label: string, options: string[], placeholder: string) => (
-    <div data-error={!!errors[key] ? 'true' : undefined}>
+    <div data-error={errors[key] ? 'true' : undefined}>
       <label style={labelStyle}>{label}</label>
       <select value={formData[key]} onChange={e => updateField(key, e.target.value)} style={selectStyle}>
         <option value="">{placeholder}</option>
@@ -341,7 +346,7 @@ const ApplyRider: React.FC = () => {
   );
 
   const renderFileInput = (key: string, label: string, hint?: string) => (
-    <div data-error={!!errors[key] ? 'true' : undefined}>
+    <div data-error={errors[key] ? 'true' : undefined}>
       <label style={labelStyle}>{label}</label>
       {hint && <p className="text-xs text-[var(--ion-text-color-secondary)] mb-2">{hint}</p>}
       {files[key] ? (
@@ -439,7 +444,7 @@ const ApplyRider: React.FC = () => {
               </select>
             </div>
             {renderField('contactEmail', 'Contact Email *', 'your@email.com', mailOutline, 'email')}
-            <div data-error={!!errors.contactPhone ? 'true' : undefined}>
+            <div data-error={errors.contactPhone ? 'true' : undefined}>
               <label style={labelStyle}>Contact Phone *</label>
               <div className="flex items-stretch">
                 <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', border: '1px solid var(--ion-border-color)', borderRight: 'none', borderRadius: '8px 0 0 8px', background: 'var(--ion-background-color)', fontSize: '14px', fontWeight: 600, color: 'var(--ion-text-color)' }}>+63</span>

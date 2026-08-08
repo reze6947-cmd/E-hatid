@@ -87,7 +87,7 @@ export interface Activity {
   type: 'order_placed' | 'order_accepted' | 'order_delivering' | 'order_delivered' | 'order_cancelled' | 'user_login' | 'rider_online' | 'rider_offline' | 'payment_made' | 'report_filed' | 'report_resolved';
   title: string;
   description: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
   severity?: 'info' | 'warning' | 'critical';
 }

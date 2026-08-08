@@ -5,7 +5,7 @@ import {
   IonIcon,
   IonFooter,
 } from '@ionic/react';
-import { locationOutline, cartOutline, documentTextOutline, personOutline } from 'ionicons/icons';
+import { locationOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -17,6 +17,19 @@ interface Suggestion {
   display: string;
   lat: string;
   lon: string;
+}
+
+interface PhotonFeature {
+  properties: {
+    name?: string;
+    street?: string;
+    district?: string;
+    city?: string;
+    state?: string;
+  };
+  geometry: {
+    coordinates: [number, number];
+  };
 }
 
 const geocodeCache = new Map<string, Suggestion[]>();
@@ -78,8 +91,8 @@ const LocationMarker: React.FC<{
 
 const GuestLocationPicker: React.FC = () => {
   const history = useHistory();
-  const { isAuthenticated } = useAuth();
-  const { itemCount } = useCart();
+  useAuth();
+  useCart();
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Suggestion | null>(null);
@@ -115,7 +128,7 @@ const GuestLocationPicker: React.FC = () => {
           { headers: { 'User-Agent': 'E-Hatid/1.0' } }
         );
         const data = await res.json();
-        const results = (data.features || []).map((f: any) => {
+        const results = (data.features || []).map((f: PhotonFeature) => {
             const parts = [
               f.properties.name && f.properties.street
                 ? `${f.properties.name} ${f.properties.street}`
@@ -126,8 +139,8 @@ const GuestLocationPicker: React.FC = () => {
             ].filter(Boolean);
             return {
               display: parts.join(', '),
-              lat: f.geometry.coordinates[1],
-              lon: f.geometry.coordinates[0],
+              lat: String(f.geometry.coordinates[1]),
+              lon: String(f.geometry.coordinates[0]),
             };
           });
         geocodeCache.set(query.trim().toLowerCase(), results);
@@ -255,7 +268,7 @@ const GuestLocationPicker: React.FC = () => {
 
       {/* Footer */}
       {selectedAddress && selectedLocation && (
-        <IonFooter style={{ '--background': 'var(--ion-card-background)' } as any}>
+        <IonFooter style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
           <div className="border-t border-[var(--ion-border-color)] px-3 sm:px-4 py-3 sm:py-4">
             <div className="max-w-2xl mx-auto">
               <IonButton expand="block" size="large"

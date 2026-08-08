@@ -6,10 +6,8 @@ import {
   IonButton,
   IonIcon,
   IonText,
-  IonHeader,
-  IonToolbar,
 } from '@ionic/react';
-import { personAddOutline, logInOutline, closeOutline } from 'ionicons/icons';
+import { personAddOutline, logInOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -19,9 +17,9 @@ interface GuestPromptModalProps {
   onContinue?: () => void;
 }
 
-const GuestPromptModal: React.FC<GuestPromptModalProps> = ({ isOpen, onClose, onContinue }) => {
+const GuestPromptModal: React.FC<GuestPromptModalProps> = ({ isOpen, onClose }) => {
   const history = useHistory();
-  const { isDarkMode } = useTheme();
+  useTheme();
 
   const handleRegister = () => {
     onClose();
@@ -43,7 +41,7 @@ const GuestPromptModal: React.FC<GuestPromptModalProps> = ({ isOpen, onClose, on
     >
       <IonContent 
         className="ion-padding"
-        style={{ '--background': 'var(--ion-card-background)' } as any}
+        style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}
       >
         <div style={{ textAlign: 'center', padding: '20px' }}>
           <div 

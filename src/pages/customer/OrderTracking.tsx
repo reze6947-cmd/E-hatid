@@ -11,13 +11,12 @@ import {
   IonButtons,
   IonTitle,
 } from '@ionic/react';
-import { checkmarkCircle, bicycleOutline, homeOutline, restaurantOutline, storefrontOutline, documentTextOutline, callOutline, locationOutline, closeCircleOutline, closeOutline, star, timeOutline, personOutline, navigateOutline } from 'ionicons/icons';
+import { checkmarkCircle, bicycleOutline, documentTextOutline, callOutline, locationOutline, closeCircleOutline, closeOutline, star, timeOutline, personOutline, navigateOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useOrders } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
-import { getUserDocument } from '../../services/userService';
 import { fetchStallById } from '../../services/stallService';
 import { updateOrderStatus } from '../../services/orderService';
 import PageLoader from '../../components/PageLoader';
@@ -25,7 +24,9 @@ import { subscribeRiderLocation } from '../../services/riderLocationService';
 import { hasReviewedOrder, getRiderReviewStats } from '../../services/reviewService';
 import { openGoogleMapsDirections } from '../../utils/geocode';
 import ReviewModal from '../../components/Reviews/ReviewModal';
-import type { Order, User, Stall, RiderLocation } from '../../types';
+import OptimizedImage from '../../components/OptimizedImage';
+import type { Order, Stall, RiderLocation } from '../../types';
+import { formatOrderCode, formatOrderDate } from '../../utils/orderFormat';
 
 const deliveryStages = [
   { label: 'Preparing' },
@@ -39,8 +40,6 @@ const OrderTracking: React.FC = () => {
   const history = useHistory<{ order?: Order }>();
   const initialOrder = history.location.state?.order;
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
-  const [vendorUser, setVendorUser] = useState<User | null>(null);
-  const [riderUser, setRiderUser] = useState<User | null>(null);
   const [riderRating, setRiderRating] = useState(0);
   const [riderReviewCount, setRiderReviewCount] = useState(0);
   const [stall, setStall] = useState<Stall | null>(null);
@@ -112,30 +111,12 @@ const OrderTracking: React.FC = () => {
 
   useEffect(() => {
     if (!order) return;
-    const tasks: Promise<void>[] = [];
-    if (order.vendorId) {
-      tasks.push(
-        getUserDocument(order.vendorId).then(v => {
-          if (mountedRef.current) setVendorUser(v);
-        })
-      );
-    }
-    if (order.riderId) {
-      tasks.push(
-        getUserDocument(order.riderId).then(r => {
-          if (mountedRef.current) setRiderUser(r);
-        })
-      );
-    }
     if (order.stallId) {
-      tasks.push(
-        fetchStallById(order.stallId).then(s => {
-          if (mountedRef.current) setStall(s);
-        })
-      );
+      fetchStallById(order.stallId).then(s => {
+        if (mountedRef.current) setStall(s);
+      }).catch(() => {});
     }
-    Promise.all(tasks).catch(() => {});
-  }, [order?.vendorId, order?.riderId]);
+  }, [order?.stallId]);
 
   // Rider review rating (shown once the rider picks up / delivers)
   useEffect(() => {
@@ -167,7 +148,7 @@ const OrderTracking: React.FC = () => {
         if (!cancelled && data.code === 'Ok' && data.routes?.length) {
           setTotalDistance(data.routes[0].distance / 1000);
         }
-      } catch {}
+      } catch { /* distance fetch is best-effort */ }
     })();
     return () => { cancelled = true; };
   }, [stall?.latitude, stall?.longitude, order?.customerLatitude, order?.customerLongitude, totalDistance]);
@@ -195,7 +176,7 @@ const OrderTracking: React.FC = () => {
         const data = await res.json();
         if (cancelled || data.code !== 'Ok' || !data.routes?.length) return;
         setRemainingDistance(data.routes[0].distance / 1000);
-      } catch {}
+      } catch { /* remaining-distance fetch is best-effort */ }
     })();
     return () => { cancelled = true; };
   }, [riderLocation, order?.customerLatitude, order?.customerLongitude]);
@@ -292,7 +273,7 @@ const OrderTracking: React.FC = () => {
                 <div className="flex items-center gap-3 mb-3">
                   {stall.logo && (
                     <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-100">
-                      <img src={stall.logo} alt={stall.name} className="w-full h-full object-cover" />
+                      <OptimizedImage src={stall.logo} alt={stall.name} width={56} height={56} className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -312,20 +293,26 @@ const OrderTracking: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-[var(--ion-text-color-secondary)] border-t border-[var(--ion-border-color)] pt-3">
-                  <span className="truncate">#{order.id.slice(-8).toUpperCase()}</span>
+                  <span className="truncate">{formatOrderCode(order.id)}</span>
                   {order.estimatedDeliveryTime && !cancelled && (
                     <span className="flex items-center gap-1">
                       <IonIcon icon={timeOutline} className="text-sm" />
                       {order.estimatedDeliveryTime}
                     </span>
                   )}
-                  {vendorUser && (
+                  {order.stallName && (
                     <span className="flex items-center gap-1">
                       <IonIcon icon={personOutline} className="text-sm" />
-                      {vendorUser.name}
+                      {order.stallName}
                     </span>
                   )}
                 </div>
+                {order.createdAt && (
+                  <div className="flex items-center gap-1.5 px-4 pt-2 pb-3 text-xs text-[var(--ion-text-color-secondary)] border-t border-[var(--ion-border-color)]">
+                    <IonIcon icon={documentTextOutline} className="text-sm shrink-0" />
+                    Placed on {formatOrderDate(order.createdAt)}
+                  </div>
+                )}
               </div>
 
               {/* Delivery Stages Progress Bar */}
@@ -425,21 +412,21 @@ const OrderTracking: React.FC = () => {
           {isDelivering && (
             <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-sm text-green-700 dark:text-green-400 text-center border border-green-200 dark:border-green-800">
               <IonIcon icon={bicycleOutline} className="align-middle mr-1" />
-              {riderUser
-                ? `Kuya ${riderUser.name.split(' ')[0]} is on the way!`
+              {order.riderName
+                ? `Kuya ${order.riderName.split(' ')[0]} is on the way!`
                 : 'Your rider is on the way!'}
-              {riderUser && (riderUser.phone || riderUser.licensePlate || riderReviewCount > 0) && (
+              {order.riderName && (order.riderPhone || order.riderPlate || riderReviewCount > 0) && (
                 <div className="mt-2 pt-2 border-t border-green-200 dark:border-green-800 text-left space-y-1">
-                  {riderUser.phone && (
+                  {order.riderPhone && (
                     <p className="m-0 text-xs">
                       <IonIcon icon={callOutline} className="align-middle mr-1" />
-                      {riderUser.phone}
+                      {order.riderPhone}
                     </p>
                   )}
-                  {riderUser.licensePlate && (
+                  {order.riderPlate && (
                     <p className="m-0 text-xs">
                       <IonIcon icon={bicycleOutline} className="align-middle mr-1" />
-                      {riderUser.licensePlate}
+                      {order.riderPlate}
                     </p>
                   )}
                   {riderReviewCount > 0 && (
@@ -461,9 +448,9 @@ const OrderTracking: React.FC = () => {
                 <span className="text-xs font-bold text-[var(--ion-text-color-secondary)] uppercase tracking-[0.3px]">Estimated Arrival</span>
               </div>
               <div className="px-4 pb-4 text-center">
-                {riderUser && (
+                {order.riderName && (
                   <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)] mb-1">
-                    {riderUser.name.split(' ')[0]} is on the way
+                    {order.riderName.split(' ')[0]} is on the way
                   </p>
                 )}
                 {remainingDistance != null ? (
@@ -500,7 +487,7 @@ const OrderTracking: React.FC = () => {
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #8B5CF6, #A78BFA)' }}>
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <OptimizedImage src={item.image} alt={item.name} width={44} height={44} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-base text-white/60 font-bold">{item.name.charAt(0)}</span>
                       )}
@@ -551,7 +538,7 @@ const OrderTracking: React.FC = () => {
           )}
 
           {/* Rider Info */}
-          {!loading && riderUser && (isDelivering || isDelivered) && (
+          {!loading && order.riderName && (isDelivering || isDelivered) && (
             <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <IonIcon icon={bicycleOutline} className="text-[var(--ion-color-primary)] text-lg" />
@@ -564,21 +551,25 @@ const OrderTracking: React.FC = () => {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[var(--ion-color-primary)]/10 flex items-center justify-center shrink-0">
-                  <IonIcon icon={personOutline} className="text-xl text-[var(--ion-color-primary)]" />
+                <div className="w-12 h-12 rounded-full bg-[var(--ion-color-primary)]/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  {order.riderAvatar ? (
+                    <OptimizedImage src={order.riderAvatar} alt={order.riderName} width={48} height={48} className="w-full h-full object-cover" />
+                  ) : (
+                    <IonIcon icon={personOutline} className="text-xl text-[var(--ion-color-primary)]" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)]">{riderUser.name}</p>
-                  {riderUser.phone && (
-                    <p className="m-0 mt-0.5 text-xs text-[var(--ion-text-color-secondary)]">
+                  <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)]">{order.riderName}</p>
+                  {order.riderPhone && (
+                    <a href={`tel:${order.riderPhone.replace(/\s/g, '')}`} className="m-0 mt-0.5 text-xs text-[var(--ion-text-color-secondary)] no-underline hover:text-[var(--ion-color-primary)]">
                       <IonIcon icon={callOutline} className="align-middle mr-1" />
-                      {riderUser.phone}
-                    </p>
+                      {order.riderPhone}
+                    </a>
                   )}
-                  {riderUser.licensePlate && (
+                  {order.riderPlate && (
                     <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">
                       <IonIcon icon={bicycleOutline} className="align-middle mr-1" />
-                      {riderUser.licensePlate}
+                      {order.riderPlate}
                     </p>
                   )}
                 </div>

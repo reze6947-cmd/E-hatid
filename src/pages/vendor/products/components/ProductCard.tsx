@@ -12,6 +12,7 @@ import {
 } from 'ionicons/icons';
 import { MenuItem } from '../../../../types';
 import { formatPrice } from '../utils';
+import OptimizedImage from '../../../../components/OptimizedImage';
 
 const toggleSizing = {
   '--background': 'var(--ion-border-color)',
@@ -33,11 +34,12 @@ const ProductImage: React.FC<{ product: MenuItem }> = ({ product }) => {
   const [failed, setFailed] = useState(false);
   if (product.image && !failed) {
     return (
-      <img
+      <OptimizedImage
         src={product.image}
         alt={product.name || 'Product'}
+        width={300}
+        height={300}
         className="w-full h-full object-cover"
-        loading="lazy"
         onError={() => setFailed(true)}
       />
     );

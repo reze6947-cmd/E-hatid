@@ -2,34 +2,29 @@
 import React, { useState } from 'react';
 import {
   IonButton,
-  IonInput,
-  IonItem,
   IonIcon,
-  IonText,
   IonLoading,
-  IonCheckbox,
-  IonLabel,
 } from '@ionic/react';
-import { arrowBackOutline, personOutline, mailOutline, lockClosedOutline, callOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
+import { arrowBackOutline, personOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const AdminRegister: React.FC = () => {
   const history = useHistory();
-  const { register } = useAuth();
-  const { isDarkMode } = useTheme();
-  const [formData, setFormData] = useState({
+  useAuth();
+  useTheme();
+  useState({
     name: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  useState(false);
+  useState(false);
+  const [loading] = useState(false);
+  const [error] = useState('');
 
   return (
     <>

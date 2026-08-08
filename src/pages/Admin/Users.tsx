@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { IonCard, IonCardContent, IonIcon, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonBadge, IonSpinner, IonInput, IonItem } from '@ionic/react';
+import { IonCard, IonCardContent, IonIcon, IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonInput, IonItem } from '@ionic/react';
 import { searchOutline, closeOutline, checkmarkCircle, closeCircle, personOutline, bicycleOutline, storefrontOutline, shieldCheckmarkOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
 import PageLoader from '../../components/PageLoader';
-import { fetchAllUsers, getRoleProfile, setRoleStatus, updateUserRole, updateUserDocument, getUserDocument } from '../../services/userService';
+import { fetchAllUsers, getRoleProfile, setRoleStatus, updateUserRole, updateUserDocument, removeUserRole } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { User } from '../../types';
 
-const roleIcon: Record<string, any> = {
+const roleIcon: Record<string, typeof personOutline> = {
   customer: personOutline,
   rider: bicycleOutline,
   vendor: storefrontOutline,
@@ -29,7 +28,6 @@ const statusBadge: Record<string, { label: string; color: string }> = {
 };
 
 const AdminUsers: React.FC = () => {
-  const history = useHistory();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +40,7 @@ const AdminUsers: React.FC = () => {
       try {
         const all = await fetchAllUsers();
         setUsers(all);
-      } catch { }
+      } catch { /* users load is best-effort */ }
       setLoading(false);
     };
     load();
@@ -51,7 +49,7 @@ const AdminUsers: React.FC = () => {
   const filtered = users.filter(u => {
     const matchesSearch = u.name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase());
     if (roleFilter === 'all') return matchesSearch;
-    return matchesSearch && u.roles?.includes(roleFilter as any);
+    return matchesSearch && u.roles?.includes(roleFilter as User['role']);
   });
 
   const handleApprove = async (uid: string, role: string) => {
@@ -71,8 +69,18 @@ const AdminUsers: React.FC = () => {
   };
 
   const handleAddAdmin = async (uid: string) => {
-    await updateUserRole(uid, 'admin' as any);
-    await updateUserDocument(uid, { isMasterAdmin: false } as any);
+    await updateUserRole(uid, 'admin');
+    await updateUserDocument(uid, { isMasterAdmin: false });
+    const fresh = await fetchAllUsers();
+    setUsers(fresh);
+    if (selectedUser?.id === uid) {
+      const updated = fresh.find(u => u.id === uid);
+      if (updated) setSelectedUser(updated);
+    }
+  };
+
+  const handleRemoveAdmin = async (uid: string) => {
+    await removeUserRole(uid, 'admin');
     const fresh = await fetchAllUsers();
     setUsers(fresh);
     if (selectedUser?.id === uid) {
@@ -90,8 +98,8 @@ const AdminUsers: React.FC = () => {
         <div>
           <div style={{ position: 'relative', marginBottom: '16px' }}>
             <IonIcon icon={searchOutline} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--ion-text-color-secondary)', fontSize: '16px', zIndex: 1 }} />
-            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden" style={{ '--padding-start': '36px', '--min-height': '44px', '--highlight-height': '0', '--background': 'var(--ion-card-background)' } as any}>
-              <IonInput type="text" placeholder="Search users..." value={search} onIonInput={e => setSearch(e.detail.value!)} className="text-sm" style={{ '--padding-start': '0', '--padding-end': '12px' } as any} />
+            <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden" style={{ '--padding-start': '36px', '--min-height': '44px', '--highlight-height': '0', '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
+              <IonInput type="text" placeholder="Search users..." value={search} onIonInput={e => setSearch(e.detail.value!)} className="text-sm" style={{ '--padding-start': '0', '--padding-end': '12px' } as React.CSSProperties} />
             </IonItem>
           </div>
 
@@ -160,12 +168,12 @@ const AdminUsers: React.FC = () => {
 
       <IonModal isOpen={!!selectedUser} onDidDismiss={() => setSelectedUser(null)}>
         <IonHeader>
-          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as any}>
+          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
             <IonButton slot="start" fill="clear" onClick={() => setSelectedUser(null)}><IonIcon icon={closeOutline} /></IonButton>
             <IonTitle>User Details</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent style={{ '--background': 'var(--ion-background-color)' } as any}>
+        <IonContent style={{ '--background': 'var(--ion-background-color)' } as React.CSSProperties}>
           {selectedUser && (
             <div style={{ padding: '16px' }}>
               <IonCard style={{ margin: '0 0 16px', background: 'var(--ion-card-background)' }}>
@@ -257,9 +265,18 @@ const AdminUsers: React.FC = () => {
                 </div>
               )}
 
+              {selectedUser.roles.includes('admin') && !selectedUser.isMasterAdmin && selectedUser.id !== currentUser?.id && (
+                <div style={{ marginBottom: '16px' }}>
+                  <IonButton expand="block" shape="round" color="medium" onClick={() => handleRemoveAdmin(selectedUser.id)}>
+                    <IonIcon icon={shieldCheckmarkOutline} style={{ marginRight: 8 }} />
+                    Remove Admin
+                  </IonButton>
+                </div>
+              )}
+
               <UserRoleTabs user={selectedUser} />
 
-              <IonButton expand="block" fill="outline" onClick={() => setSelectedUser(null)} style={{ '--border-color': 'var(--ion-border-color)', '--color': 'var(--ion-text-color-secondary)' } as any}>
+              <IonButton expand="block" fill="outline" onClick={() => setSelectedUser(null)} style={{ '--border-color': 'var(--ion-border-color)', '--color': 'var(--ion-text-color-secondary)' } as React.CSSProperties}>
                 Close
               </IonButton>
             </div>
@@ -335,7 +352,7 @@ const ProfileSection: React.FC<{ title: string; fields: { label: string; value: 
   );
 };
 
-const renderProfileContent = (profile: any, role: string) => {
+const renderProfileContent = (profile: Record<string, unknown> | null) => {
   if (!profile) return <p style={{ margin: 0, fontSize: '13px', color: 'var(--ion-text-color-secondary)' }}>No additional profile data</p>;
 
   const appType = profile.applicationType || 'individual';
@@ -373,7 +390,7 @@ const renderProfileContent = (profile: any, role: string) => {
   }
 
   const legacyFields = Object.entries(profile)
-    .filter(([key]) => !['status', 'submittedAt', 'applicationType', ...APPLICATION_INFO_FIELDS, ...INDIVIDUAL_ID_FIELDS, ...BUSINESS_FIELDS].includes(key as any))
+    .filter(([key]) => !['status', 'submittedAt', 'applicationType', ...APPLICATION_INFO_FIELDS, ...INDIVIDUAL_ID_FIELDS, ...BUSINESS_FIELDS].includes(key))
     .filter(([key]) => key !== 'status' && key !== 'submittedAt' && key !== 'applicationType')
     .map(([key, val]) => ({ label: SECTION_LABELS[key] || key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' '), value: String(val) }));
 
@@ -386,7 +403,7 @@ const renderProfileContent = (profile: any, role: string) => {
 
 const UserRoleTabs: React.FC<{ user: User }> = ({ user }) => {
   const [tab, setTab] = useState('');
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
 
   const roleTabs = (user.roles || []).filter(r => r !== 'admin' && r !== 'customer');
 
@@ -428,7 +445,7 @@ const UserRoleTabs: React.FC<{ user: User }> = ({ user }) => {
               <div><span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--ion-text-color-secondary)' }}>Address</span><p style={{ margin: '2px 0 0', fontSize: '13px', color: 'var(--ion-text-color)' }}>{user.address || '-'}</p></div>
             </div>
           ) : (
-            renderProfileContent(profile, tab)
+            renderProfileContent(profile)
           )}
         </IonCardContent>
       </IonCard>

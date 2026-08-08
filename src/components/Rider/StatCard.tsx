@@ -9,7 +9,7 @@ interface Props {
   gradientTo: string;
 }
 
-const StatCard: React.FC<Props> = ({ icon, label, value, gradientFrom, gradientTo }) => (
+const StatCard: React.FC<Props> = ({ icon, label, value, gradientFrom }) => (
   <div className="rounded-xl border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] p-4">
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: `${gradientFrom}20` }}>

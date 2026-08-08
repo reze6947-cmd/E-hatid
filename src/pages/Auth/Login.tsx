@@ -10,6 +10,9 @@ import { mailOutline, lockClosedOutline, eyeOutline, eyeOffOutline, arrowBackOut
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAuthErrorMessage } from '../../services/authService';
+import { getRoleRedirect } from '../../services/roleGuard';
+import { roleHomePaths } from '../../config/routesByRole';
+import { isVerifiedOrAdmin } from '../../utils/isVerifiedOrAdmin';
 
 const Login: React.FC = () => {
   const history = useHistory();
@@ -27,7 +30,19 @@ const Login: React.FC = () => {
     }
     setLoading(true);
     try {
-      await login(email, password);
+      const loggedInUser = await login(email, password);
+      if (!loggedInUser) return;
+      const userRoles = loggedInUser.roles || [];
+      if (!isVerifiedOrAdmin(loggedInUser)) {
+        history.replace('/verify-otp');
+      } else {
+        const targetRole = loggedInUser.activeRole || (userRoles.length === 1 ? userRoles[0] : null);
+        if (targetRole) {
+          history.replace(getRoleRedirect(loggedInUser, targetRole) || roleHomePaths[targetRole] || `/${targetRole}/home`);
+        } else {
+          history.replace('/select-role');
+        }
+      }
     } catch (err) {
       const msg = getAuthErrorMessage(err);
       if (msg === 'NO_ROLES') {
@@ -43,7 +58,7 @@ const Login: React.FC = () => {
   return (
     <>
       <div className="sticky top-0 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)]">
-        <IonButton fill="clear" onClick={() => history.push('/')} style={{ '--padding-start': '0', '--padding-end': '0', width: '44px', height: '44px' } as any}>
+        <IonButton fill="clear" onClick={() => history.push('/')} style={{ '--padding-start': '0', '--padding-end': '0', width: '44px', height: '44px' } as React.CSSProperties}>
           <IonIcon icon={arrowBackOutline} slot="icon-only" className="text-lg" />
         </IonButton>
       </div>
@@ -66,7 +81,7 @@ const Login: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs sm:text-sm font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Email</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--border': 'none', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--border': 'none', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={mailOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput
               type="email"
@@ -80,7 +95,7 @@ const Login: React.FC = () => {
 
         <div className="mb-3">
           <label className="block mb-2 text-xs sm:text-sm font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Password</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--border': 'none', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--border': 'none', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={lockClosedOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput
               type={showPassword ? 'text' : 'password'}
@@ -96,7 +111,7 @@ const Login: React.FC = () => {
         </div>
 
         <div className="text-right mb-6">
-          <IonButton fill="clear" size="small" className="font-semibold text-xs sm:text-sm" style={{ '--color': 'var(--ion-color-primary)' } as any}>
+          <IonButton fill="clear" size="small" className="font-semibold text-xs sm:text-sm" style={{ '--color': 'var(--ion-color-primary)' } as React.CSSProperties}>
             Forgot Password?
           </IonButton>
         </div>

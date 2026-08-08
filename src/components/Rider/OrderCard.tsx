@@ -2,6 +2,7 @@ import React from 'react';
 import { IonIcon } from '@ionic/react';
 import { storefrontOutline, personOutline, navigateOutline } from 'ionicons/icons';
 import type { Order } from '../../types';
+import { formatOrderCode, formatOrderDateTime } from '../../utils/orderFormat';
 
 interface Props {
   order: Order;
@@ -67,6 +68,13 @@ const OrderCard: React.FC<Props> = ({
         <div className="flex items-center gap-2 mb-3 text-xs text-[var(--ion-text-color-secondary)]">
           <IonIcon icon={navigateOutline} className="text-sm shrink-0" />
           <span>{distanceKm.toFixed(1)} km away</span>
+        </div>
+      )}
+
+      {(order.id || order.createdAt) && (
+        <div className="flex items-center justify-between gap-2 mb-3 pt-3 border-t border-[var(--ion-border-color)] text-xs text-[var(--ion-text-color-secondary)]">
+          <span className="font-mono font-medium">{formatOrderCode(order.id)}</span>
+          <span>{formatOrderDateTime(order.createdAt)}</span>
         </div>
       )}
 

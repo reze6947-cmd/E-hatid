@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { loginUser, registerUser, logoutUser, onAuthChanged, signInUser } from '../services/authService';
 import { createUserDocument, getUserDocument, updateUserDocument, updateUserRole, saveRoleProfile } from '../services/userService';
+import { getRoleRedirect } from '../services/roleGuard';
+import { roleHomePaths } from '../config/routesByRole';
 import { User } from '../types';
 import { UserRole } from '../types/auth';
 
@@ -24,7 +26,7 @@ interface AuthContextType {
   authLoading: boolean;
   activeRole: string | null;
   roles: string[];
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User | null>;
   register: (userData: Partial<User> & { password: string }) => Promise<void>;
   logout: () => void;
   continueAsGuest: () => void;
@@ -32,19 +34,60 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   isRoleAuthenticated: (role: UserRole) => boolean;
   setActiveRole: (role: string) => Promise<void>;
-  applyForRole: (role: string, formData: Record<string, any>) => Promise<void>;
+  switchRole: (role: string) => Promise<void>;
+  applyForRole: (role: string, formData: Record<string, unknown>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const normalizeUser = (data: any): User => {
-  const mapRole = (r: string) => r === 'user' ? 'customer' : r;
+const normalizeUser = (data: User): User => {
+  const mapRole = (r: string): User['role'] => (r === 'user' ? 'customer' : (r as User['role']));
   const rawRole = mapRole(data.role || 'customer');
   const roles = data.roles?.length ? data.roles.map((r: string) => mapRole(r)) : [rawRole];
   const activeRole = data.activeRole
     ? mapRole(data.activeRole)
     : (rawRole === 'admin' ? 'admin' : (roles[0] || rawRole));
   return { ...data, roles, activeRole };
+};
+
+// Pick a concrete default role so the navbar always has nav links.
+// Prefers the stored activeRole, then customer (consumers first), then the first available role.
+const resolveDefaultActiveRole = (roles: string[], docActiveRole?: string): string | null => {
+  const available = roles || [];
+  if (docActiveRole && available.includes(docActiveRole)) return docActiveRole;
+  if (available.includes('customer')) return 'customer';
+  return available[0] || null;
+};
+
+// The master admin owns every role with approved status and a verified customer doc.
+// Passes Firestore rules via the master final-state clause
+// (role == 'admin' && roles.hasAny(['admin']) && roleStatus.admin == 'approved').
+const MASTER_ROLES: ('customer' | 'rider' | 'admin' | 'vendor')[] = ['customer', 'vendor', 'rider', 'admin'];
+const MASTER_ROLE_STATUS: Record<string, 'none' | 'pending' | 'approved' | 'rejected'> = {
+  customer: 'approved',
+  rider: 'approved',
+  vendor: 'approved',
+  admin: 'approved',
+};
+
+const masterAdminBootstrap = (uid: string, email: string | undefined, current: User): Partial<User> | null => {
+  const MASTER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL as string | undefined;
+  if (!MASTER_EMAIL || email !== MASTER_EMAIL) return null;
+  const roles = current.roles || [];
+  const roleStatus = current.roleStatus || {};
+  const rolesMissing = !MASTER_ROLES.every(r => roles.includes(r));
+  const statusMissing = !Object.entries(MASTER_ROLE_STATUS).every(([r, s]) => roleStatus[r] === s);
+  if (!rolesMissing && !statusMissing && current.isMasterAdmin === true && current.emailVerified === true) {
+    return null;
+  }
+  return {
+    isMasterAdmin: true,
+    emailVerified: true,
+    role: 'admin',
+    roles: MASTER_ROLES,
+    roleStatus: MASTER_ROLE_STATUS,
+    activeRole: 'customer',
+  };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -86,15 +129,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         const normalized = normalizeUser(userData);
 
+        // Master admin bootstrap (idempotent; no write when already fully approved)
+        const bootstrap = masterAdminBootstrap(firebaseUser.uid, firebaseUser.email || undefined, normalized);
+        if (bootstrap) {
+          await updateUserDocument(firebaseUser.uid, bootstrap).catch(() => {});
+          Object.assign(normalized, bootstrap);
+        }
+
         // Restore activeRole from localStorage as fallback
         try {
           const cachedRole = localStorage.getItem('activeRole');
           const userRoles: string[] = normalized.roles || [];
           if (cachedRole && userRoles.includes(cachedRole) && cachedRole !== normalized.activeRole) {
             normalized.activeRole = cachedRole;
-            await updateUserDocument(firebaseUser.uid, { activeRole: cachedRole } as any).catch(() => {});
+            await updateUserDocument(firebaseUser.uid, { activeRole: cachedRole }).catch(() => {});
           }
-        } catch {}
+        } catch { /* cached role restore is best-effort */ }
+
+        // Ensure a concrete default role so the navbar is never empty
+        if (!normalized.roles || normalized.roles.length === 0) {
+          normalized.roles = ['customer'];
+        }
+        if (!normalized.activeRole || !normalized.roles.includes(normalized.activeRole as User['role'])) {
+          normalized.activeRole = resolveDefaultActiveRole(normalized.roles, normalized.activeRole) ?? undefined;
+        }
 
         setUser(normalized);
         localStorage.setItem('user', JSON.stringify(normalized));
@@ -138,36 +196,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       const normalized = normalizeUser(userData);
-        // Master admin auto-promotion
-        const MASTER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL as string | undefined;
-        if (MASTER_EMAIL && email === MASTER_EMAIL) {
-          if (!normalized.isMasterAdmin) {
-            await updateUserDocument(credential.user.uid, { isMasterAdmin: true } as any);
-            normalized.isMasterAdmin = true;
-          }
-          if (!normalized.roles.includes('admin')) {
-            await updateUserRole(credential.user.uid, 'admin' as any);
-            normalized.roles = [...(normalized.roles || []), 'admin'];
-            normalized.roleStatus = { ...normalized.roleStatus, admin: 'approved' };
-          }
-        }
-        const userRoles = normalized.roles;
-        if (!userRoles || userRoles.length === 0) {
-          normalized.roles = ['customer'];
-          normalized.activeRole = 'customer';
-        }
-        // Multi-role → role selector on next load
-        if (userRoles.length > 1) {
-          normalized.activeRole = undefined;
-        }
-        setUser(normalized);
-        setIsGuest(false);
-        localStorage.setItem('user', JSON.stringify(normalized));
-    } catch (e) {
+      // Master admin auto-promotion (idempotent; no write when already fully approved)
+      const isMaster = !!import.meta.env.VITE_ADMIN_EMAIL && email === import.meta.env.VITE_ADMIN_EMAIL;
+      const bootstrap = masterAdminBootstrap(credential.user.uid, email, normalized);
+      if (bootstrap) {
+        await updateUserDocument(credential.user.uid, bootstrap).catch(() => {});
+        Object.assign(normalized, bootstrap);
+      }
+      if (!normalized.roles || normalized.roles.length === 0) {
+        normalized.roles = ['customer'];
+      }
+      // Always land on a concrete role so the navbar is never empty.
+      // The master admin always starts in the customer (consumer) experience.
+      normalized.activeRole = isMaster
+        ? 'customer'
+        : (resolveDefaultActiveRole(normalized.roles, normalized.activeRole) ?? undefined);
+      setUser(normalized);
+      setIsGuest(false);
+      localStorage.setItem('activeRole', normalized.activeRole || '');
+      localStorage.setItem('user', JSON.stringify(normalized));
+      return normalized;
+    } finally {
       isLoggingInRef.current = false;
-      throw e;
     }
-    isLoggingInRef.current = false;
   };
 
   const register = async (userData: Partial<User> & { password: string }) => {
@@ -184,12 +235,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsGuest(false);
         localStorage.setItem('user', JSON.stringify(normalizeUser(userData)));
       }
-    } catch (e: any) {
-      if (e?.code === 'auth/email-already-in-use') {
+    } catch (e) {
+      const authError = e as { code?: string };
+      if (authError.code === 'auth/email-already-in-use') {
         const credential = await signInUser(profile.email!, password);
         const uid = credential.user.uid;
-        await updateUserRole(uid, 'customer' as any);
-        await updateUserDocument(uid, { emailVerified: false } as any);
+        try {
+          await updateUserRole(uid, 'customer');
+          await updateUserDocument(uid, { emailVerified: false });
+        } catch {
+          // Role/profile writes may be blocked by rules; sign-in itself already succeeded.
+        }
         const userData = await getUserDocument(uid);
         if (userData) {
           setUser(normalizeUser(userData));
@@ -219,7 +275,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(normalized);
     localStorage.setItem('user', JSON.stringify(normalized));
     try {
-      await updateUserDocument(user.id, data as any);
+      await updateUserDocument(user.id, data);
     } catch {
       // silently fail
     }
@@ -256,18 +312,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('activeRole', role);
     localStorage.setItem('user', JSON.stringify(updated));
     try {
-      await updateUserDocument(user.id, { activeRole: role } as any);
+      await updateUserDocument(user.id, { activeRole: role });
     } catch (err) {
       console.error('Failed to persist activeRole to Firestore:', err);
     }
   };
 
-  const applyForRole = async (role: string, formData: Record<string, any>) => {
+  const switchRole = async (role: string) => {
+    if (!user) return;
+    const userRoles: string[] = user.roles || [];
+    if (!userRoles.includes(role)) return;
+
+    await setActiveRole(role);
+    const target = getRoleRedirect(user, role) || roleHomePaths[role] || `/${role}/home`;
+    window.location.assign(target);
+  };
+
+  const applyForRole = async (role: string, formData: Record<string, unknown>) => {
     if (!user) throw new Error('Not logged in');
-    if (user.roles?.includes(role as any)) throw new Error('ALREADY_EXISTS');
+    if (user.roles?.includes(role as User['role'])) throw new Error('ALREADY_EXISTS');
     if (user.roleStatus?.[role] === 'pending') throw new Error('ALREADY_EXISTS');
 
-    await updateUserRole(user.id, role as any);
+    try {
+      await updateUserRole(user.id, role as User['role']);
+    } catch {
+      // Role assignment is granted by an admin after review; the application is still recorded below.
+    }
     await saveRoleProfile(user.id, role, formData);
 
     const fresh = await getUserDocument(user.id);
@@ -286,7 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       activeRole, roles,
       login, register, logout,
       continueAsGuest, updateUserProfile, refreshUser, isRoleAuthenticated,
-      setActiveRole, applyForRole,
+      setActiveRole, switchRole, applyForRole,
     }}>
       {children}
     </AuthContext.Provider>

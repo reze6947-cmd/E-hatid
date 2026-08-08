@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
-import { IonCard, IonCardContent, IonBadge, IonSegment, IonSegmentButton, IonLabel, IonButton } from '@ionic/react';
-import { useHistory } from 'react-router-dom';
+import { IonCard, IonCardContent, IonBadge, IonButton } from '@ionic/react';
 import AdminPageShell from '../../components/admin/AdminPageShell';
+import FilterPills from '../../components/FilterPills';
+
+interface OrderRow {
+  id: string;
+  stallName: string;
+  customerName: string;
+  status: string;
+  total: number;
+  riderName?: string;
+  createdAt: string;
+  cancelledAt?: string;
+}
 
 const AdminOrders: React.FC = () => {
-  const history = useHistory();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
 
   const statusList = ['pending', 'preparing', 'delivering', 'delivered', 'cancelled'];
 
@@ -31,13 +41,14 @@ const AdminOrders: React.FC = () => {
       title="Manage Orders"
       search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search by stall, customer, or order ID...' }}
     >
-      <div>
-        <IonSegment value={filterStatus} onIonChange={e => setFilterStatus(e.detail.value as string)} scrollable className="mb-4">
-          <IonSegmentButton value="all"><IonLabel>All</IonLabel></IonSegmentButton>
-          {statusList.map(s => (
-            <IonSegmentButton key={s} value={s}><IonLabel>{s.charAt(0).toUpperCase() + s.slice(1)}</IonLabel></IonSegmentButton>
-          ))}
-        </IonSegment>
+      <div className="mb-4">
+        <FilterPills
+          layoutId="admin-orders-status"
+          even
+          value={filterStatus}
+          onChange={setFilterStatus}
+          items={[{ id: 'all', label: 'All' }, ...statusList.map(s => ({ id: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))]}
+        />
       </div>
 
       <div>

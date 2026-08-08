@@ -10,7 +10,7 @@ import {
   IonSelect,
   IonSelectOption,
 } from '@ionic/react';
-import { personOutline, mailOutline, lockClosedOutline, callOutline, eyeOutline, eyeOffOutline, calendarOutline, arrowBackOutline } from 'ionicons/icons';
+import { personOutline, mailOutline, lockClosedOutline, eyeOutline, eyeOffOutline, calendarOutline, arrowBackOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAuthErrorMessage } from '../../services/authService';
@@ -86,7 +86,7 @@ const Register: React.FC = () => {
   return (
     <>
       <div className="sticky top-0 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)]">
-        <IonButton fill="clear" onClick={() => history.goBack()} style={{ '--padding-start': '0', '--padding-end': '0', width: '44px', height: '44px' } as any}>
+        <IonButton fill="clear" onClick={() => history.goBack()} style={{ '--padding-start': '0', '--padding-end': '0', width: '44px', height: '44px' } as React.CSSProperties}>
           <IonIcon icon={arrowBackOutline} slot="icon-only" className="text-lg" />
         </IonButton>
       </div>
@@ -109,7 +109,7 @@ const Register: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Full Name</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={personOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput placeholder="Your full name" value={formData.name} onIonChange={e => setFormData({...formData, name: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
           </IonItem>
@@ -117,7 +117,7 @@ const Register: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Email</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={mailOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput type="email" placeholder="your@email.com" value={formData.email} onIonChange={e => setFormData({...formData, email: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
           </IonItem>
@@ -126,14 +126,14 @@ const Register: React.FC = () => {
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Phone</label>
           <div className="flex gap-0">
-            <IonItem className="rounded-l-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px 0 0 12px', '--min-height': '48px', '--inner-box-shadow': 'none', width: '120px' } as any}>
+            <IonItem className="rounded-l-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px 0 0 12px', '--min-height': '48px', '--inner-box-shadow': 'none', width: '120px' } as React.CSSProperties}>
               <IonSelect value={countryCode} onIonChange={e => setCountryCode(e.detail.value)} interface="popover" className="[--color:var(--ion-text-color)] text-sm">
                 {COUNTRY_CODES.map(c => (
                   <IonSelectOption key={c.code} value={c.code}>{c.label}</IonSelectOption>
                 ))}
               </IonSelect>
             </IonItem>
-            <IonItem className="rounded-r-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '0 12px 12px 0', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+            <IonItem className="rounded-r-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '0 12px 12px 0', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
               <IonInput
                 type="tel"
                 placeholder="912 345 6789"
@@ -150,7 +150,7 @@ const Register: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Age</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={calendarOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput type="number" placeholder="Your age" value={formData.age} onIonChange={e => setFormData({...formData, age: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
           </IonItem>
@@ -158,7 +158,7 @@ const Register: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Delivery Address</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonInput placeholder="Enter your delivery address" value={formData.address} onIonChange={e => setFormData({...formData, address: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
           </IonItem>
           <OpenInGoogleMapsButton
@@ -170,7 +170,7 @@ const Register: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Password</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={lockClosedOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput
               type={showPassword ? 'text' : 'password'}
@@ -187,13 +187,13 @@ const Register: React.FC = () => {
 
         <div className="mb-4">
           <label className="block mb-2 text-xs font-semibold text-[var(--ion-text-color)] uppercase opacity-70">Confirm Password</label>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '48px', '--inner-box-shadow': 'none' } as React.CSSProperties}>
             <IonIcon icon={lockClosedOutline} slot="start" className="text-[var(--ion-color-primary)]" />
             <IonInput type="password" placeholder="••••••••" value={formData.confirmPassword} onIonChange={e => setFormData({...formData, confirmPassword: e.detail.value!})} className="[--color:var(--ion-text-color)]" />
           </IonItem>
         </div>
 
-        <IonItem lines="none" className="mb-6" style={{ '--background': 'transparent' } as any}>
+        <IonItem lines="none" className="mb-6" style={{ '--background': 'transparent' } as React.CSSProperties}>
           <IonCheckbox slot="start" checked={agreed} onIonChange={e => setAgreed(e.detail.checked)} />
           <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">
             I agree to the <span className="text-[var(--ion-color-primary)] font-bold">Terms of Service</span> and{' '}

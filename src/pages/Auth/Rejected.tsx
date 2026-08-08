@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonIcon } from '@ionic/react';
-import { closeCircleOutline, logOutOutline, refreshOutline } from 'ionicons/icons';
+import { closeCircleOutline, logOutOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 

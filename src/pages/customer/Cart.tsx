@@ -11,6 +11,7 @@ import {
 import { useHistory } from 'react-router-dom';
 
 import CartItem from '../../components/Cart/CartItem';
+import OptimizedImage from '../../components/OptimizedImage';
 
 import { useCart } from '../../context/CartContext';
 import { useOrders } from '../../context/OrderContext';
@@ -24,7 +25,7 @@ import type { Order, Stall } from '../../types';
 
 const UserCart: React.FC = () => {
   const history = useHistory();
-  const { items, updateQuantity, removeFromCart, clearCart, total, itemCount } = useCart();
+  const { items, updateQuantity, removeFromCart, clearCart, total } = useCart();
   const { addOrder } = useOrders();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -224,7 +225,7 @@ const UserCart: React.FC = () => {
                   <div className="flex items-center gap-3">
                     {stall.logo && (
                       <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-gray-100">
-                        <img src={stall.logo} alt={stall.name} className="w-full h-full object-cover" />
+                        <OptimizedImage src={stall.logo} alt={stall.name} width={48} height={48} className="w-full h-full object-cover" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -351,7 +352,7 @@ const UserCart: React.FC = () => {
                     className="min-h-[48px] sm:min-h-[56px] font-bold"
                     onClick={handlePayment}
                     disabled={loading || validating || user?.emailVerified !== true || feeError}
-                    style={{ '--background': user?.emailVerified === true && !feeError ? undefined : '#9CA3AF' } as any}
+                    style={{ '--background': user?.emailVerified === true && !feeError ? undefined : '#9CA3AF' } as React.CSSProperties}
                   >
                     {loading ? 'Processing...' : validating ? 'Checking address...' : user?.emailVerified === true ? `Pay ₱${finalTotal.toFixed(2)}` : 'Verify email to order'}
                   </IonButton>

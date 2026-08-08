@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSpinner, IonModal, IonHeader, IonToolbar, IonButtons, IonTitle, IonTextarea, IonToast } from '@ionic/react';
 import { trendingUpOutline, cartOutline, starOutline, peopleOutline, personOutline, checkmarkOutline, closeOutline, locationOutline, callOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -11,6 +11,7 @@ import { useOrders } from '../../context/OrderContext';
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/PageLoader';
+import { formatOrderCode, formatOrderDateTime } from '../../utils/orderFormat';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -39,7 +40,7 @@ const badgestyle = (status: string): React.CSSProperties => {
 
 const VendorDashboard: React.FC = () => {
   const history = useHistory();
-  const { logout, user } = useAuth();
+  const { user } = useAuth();
   const { updateOrderStatus: localUpdateStatus } = useOrders();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -211,8 +212,9 @@ const VendorDashboard: React.FC = () => {
                     <IonCardContent>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                         <div>
-                          <h3 className="m-0 mb-1 font-bold text-[var(--ion-text-color)]">#{order.id.slice(-5)}</h3>
-                          <p className="m-0 text-sm text-[var(--ion-text-color-secondary)]">{order.customerName || 'Unknown'}{order.customerPhone ? ` · ${order.customerPhone}` : ''}</p>
+                          <h3 className="m-0 mb-1 font-bold text-[var(--ion-text-color)]">{formatOrderCode(order.id)}</h3>
+                          <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">{formatOrderDateTime(order.createdAt)}</p>
+                          <p className="m-0 mt-0.5 text-sm text-[var(--ion-text-color-secondary)]">{order.customerName || 'Unknown'}{order.customerPhone ? ` · ${order.customerPhone}` : ''}</p>
                         </div>
                         <span style={badgestyle(order.status)}>{STATUS_BADGE[order.status]?.label || order.status}</span>
                       </div>
@@ -309,7 +311,7 @@ const VendorDashboard: React.FC = () => {
               onIonChange={e => setDeclineReason(e.detail.value!)}
               placeholder="e.g. User doesn't have proper details of their account"
               rows={4}
-              style={{ '--background': 'var(--ion-item-background)', borderRadius: '8px', padding: '8px' } as any}
+              style={{ '--background': 'var(--ion-item-background)', borderRadius: '8px', padding: '8px' } as React.CSSProperties}
             />
           </div>
         </IonContent>
@@ -331,8 +333,8 @@ const VendorDashboard: React.FC = () => {
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--ion-border-color)' }}>
                 <div>
-                  <h2 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: 'var(--ion-text-color)' }}>#{detailsOrder.id.slice(-5)}</h2>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>{new Date(detailsOrder.createdAt).toLocaleString()}</p>
+                  <h2 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: 'var(--ion-text-color)' }}>{formatOrderCode(detailsOrder.id)}</h2>
+                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>{formatOrderDateTime(detailsOrder.createdAt)}</p>
                 </div>
                 <span style={badgestyle(detailsOrder.status)}>{STATUS_BADGE[detailsOrder.status]?.label || detailsOrder.status}</span>
               </div>

@@ -8,6 +8,7 @@ import {
 } from '@ionic/react';
 import { closeOutline, add, remove, cartOutline, checkmarkCircle } from 'ionicons/icons';
 import { MenuItem, SelectedOption, SelectedAddOn } from '../../types';
+import OptimizedImage from '../OptimizedImage';
 
 interface MenuItemModalProps {
   item: MenuItem;
@@ -100,11 +101,12 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
   const content = (
     <>
       <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-[16/9] max-h-[50vh] landscape:max-h-[42vh] overflow-hidden rounded-none">
-        <img
+        <OptimizedImage
           src={item.image}
           alt={item.name}
+          width={960}
+          height={540}
           className="w-full h-full object-cover"
-          loading="lazy"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
@@ -272,7 +274,7 @@ const MenuItemModal: React.FC<MenuItemModalProps> = ({
       isOpen={isOpen}
       onDidDismiss={onClose}
       className="menu-item-modal"
-      style={{ '--width': 'min(calc(420px + 8vw), 620px)', '--max-width': 'min(calc(420px + 8vw), 620px)', '--max-height': '90vh', '--border-radius': '20px' } as any}
+      style={{ '--width': 'min(calc(420px + 8vw), 620px)', '--max-width': 'min(calc(420px + 8vw), 620px)', '--max-height': '90vh', '--border-radius': '20px' } as React.CSSProperties}
     >
       <IonContent style={{ '--background': 'var(--ion-background-color)' }}>
         {content}

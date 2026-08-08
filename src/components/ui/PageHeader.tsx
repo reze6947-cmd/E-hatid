@@ -1,5 +1,4 @@
 import React from 'react';
-import { IonHeader, IonToolbar, IonTitle, IonButtons } from '@ionic/react';
 
 interface Props {
   title: string;

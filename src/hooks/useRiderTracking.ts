@@ -99,7 +99,7 @@ export const useRiderTracking = (userId: string | undefined): UseRiderTrackingRe
       unsub();
       stopTracking();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [userId]);
 
   return { isTracking, activeOrderId, error, requestPermission };

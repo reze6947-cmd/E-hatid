@@ -7,7 +7,7 @@ import { notificationService } from './NotificationService';
  */
 class OrderTrackingService {
   private orders: Map<string, Order> = new Map();
-  private orderListeners: Map<string, Function[]> = new Map();
+  private orderListeners: Map<string, ((order: Order) => void)[]> = new Map();
 
   /**
    * CREATE ORDER - User places order
@@ -272,7 +272,7 @@ class OrderTrackingService {
   /**
    * Subscribe to order updates
    */
-  subscribeToOrder(orderId: string, callback: Function): () => void {
+  subscribeToOrder(orderId: string, callback: (order: Order) => void): () => void {
     if (!this.orderListeners.has(orderId)) {
       this.orderListeners.set(orderId, []);
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { IonButton, IonIcon, IonSpinner, IonToast, IonInput, IonTextarea, IonToggle, IonItem } from '@ionic/react';
-import { storefrontOutline, timeOutline, notificationsOutline, cameraOutline, personOutline, callOutline, locationOutline, logOutOutline, swapHorizontalOutline, checkmarkCircle, closeCircle, time, colorPaletteOutline } from 'ionicons/icons';
+import { IonButton, IonIcon, IonSpinner, IonToast, IonInput, IonTextarea, IonToggle, IonItem, IonModal, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/react';
+import { storefrontOutline, notificationsOutline, cameraOutline, personOutline, callOutline, locationOutline, logOutOutline, swapHorizontalOutline, checkmarkCircle, closeCircle, time, colorPaletteOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { Marker } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
@@ -10,13 +10,18 @@ import PageLoader from '../../components/PageLoader';
 
 import { useAuth } from '../../context/AuthContext';
 import { getStallByVendorId, createStall, updateStall } from '../../services/stallService';
+import { persistImage } from '../../services/imageStorage';
 import { getRoleProfile } from '../../services/userService';
-import { compressImage } from '../../utils/compressImage';
+import { isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB } from '../../utils/image';
+import OptimizedImage from '../../components/OptimizedImage';
 import { registerRefreshHandler } from '../../utils/refreshBus';
+import type { Stall } from '../../types';
+
+const ImageCropper = React.lazy(() => import('../../components/ImageCropper'));
 
 const VendorProfile: React.FC = () => {
   const history = useHistory();
-  const { user, updateUserProfile, logout, roles, activeRole, setActiveRole } = useAuth();
+  const { user, updateUserProfile, logout, roles, activeRole, switchRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [stallId, setStallId] = useState<string | null>(null);
@@ -32,7 +37,9 @@ const VendorProfile: React.FC = () => {
   const [stallLogo, setStallLogo] = useState('');
   const [accentColor, setAccentColor] = useState('#6366F1');
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [, setUploadingLogo] = useState(false);
+  const [coverCropSource, setCoverCropSource] = useState<string | null>(null);
+  const [logoCropSource, setLogoCropSource] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [stallLatitude, setStallLatitude] = useState<number | null>(null);
@@ -117,16 +124,18 @@ const VendorProfile: React.FC = () => {
         phone: vendorPhone,
         stallAddress,
       });
+      const savedCover = await persistImage(coverPhoto, `stalls/${user.id}/cover`);
+      const savedLogo = await persistImage(stallLogo, `stalls/${user.id}/logo`);
       const stallData = {
         id: user.id,
         name: stallName,
         description,
-        image: coverPhoto || '/default-stall.jpg',
+        image: savedCover || '/default-stall.jpg',
         rating: 0,
         deliveryTime: `${openTime} - ${closeTime}`,
         vendorId: user.id,
         category: 'Fast Food',
-        logo: stallLogo || '',
+        logo: savedLogo,
         accentColor,
         active,
         address: stallAddress,
@@ -134,7 +143,7 @@ const VendorProfile: React.FC = () => {
       if (stallId) {
         await updateStall(stallId, stallData);
       } else {
-        await createStall(stallData as any);
+        await createStall(stallData as unknown as Stall);
         setStallId(user.id);
       }
       setToastMessage('Settings saved successfully!');
@@ -148,32 +157,54 @@ const VendorProfile: React.FC = () => {
     }
   };
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !user) return;
+    if (!isImageFile(file)) {
+      setToastMessage('Please choose an image file (JPG, PNG, or WebP).');
+      setShowToast(true);
+      return;
+    }
+    if (isImageTooLarge(file)) {
+      setToastMessage(`Image is too large. Max size is ${MAX_IMAGE_SIZE_MB}MB.`);
+      setShowToast(true);
+      return;
+    }
     setUploadingCover(true);
     try {
-      const dataUrl = await compressImage(file, 800, 800, 400);
-      setCoverPhoto(dataUrl);
+      const dataUrl = await readFileAsDataURL(file);
+      setCoverCropSource(dataUrl);
     } catch (err) {
-      console.error('Error uploading cover:', err);
-      setToastMessage('Failed to upload cover photo');
+      console.error('Error reading cover:', err);
+      setToastMessage('Could not read that image. Try another file.');
       setShowToast(true);
     } finally {
       setUploadingCover(false);
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !user) return;
+    if (!isImageFile(file)) {
+      setToastMessage('Please choose an image file (JPG, PNG, or WebP).');
+      setShowToast(true);
+      return;
+    }
+    if (isImageTooLarge(file)) {
+      setToastMessage(`Image is too large. Max size is ${MAX_IMAGE_SIZE_MB}MB.`);
+      setShowToast(true);
+      return;
+    }
     setUploadingLogo(true);
     try {
-      const dataUrl = await compressImage(file, 200, 200, 200);
-      setStallLogo(dataUrl);
+      const dataUrl = await readFileAsDataURL(file);
+      setLogoCropSource(dataUrl);
     } catch (err) {
-      console.error('Error uploading logo:', err);
-      setToastMessage('Failed to upload logo');
+      console.error('Error reading logo:', err);
+      setToastMessage('Could not read that image. Try another file.');
       setShowToast(true);
     } finally {
       setUploadingLogo(false);
@@ -185,6 +216,7 @@ const VendorProfile: React.FC = () => {
   }
 
   return (
+    <>
     <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
       {/* Avatar */}
       <div className="text-center">
@@ -193,7 +225,7 @@ const VendorProfile: React.FC = () => {
           className="w-[88px] h-[88px] rounded-full mx-auto mb-4 cursor-pointer relative overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center"
         >
           {stallLogo ? (
-            <img src={stallLogo} alt="Logo" className="w-full h-full object-cover" />
+            <OptimizedImage src={stallLogo} alt="Logo" width={88} height={88} className="w-full h-full object-cover" />
           ) : (
             <span className="text-[36px] font-bold text-white">
               {stallName ? stallName.charAt(0).toUpperCase() : 'V'}
@@ -203,7 +235,7 @@ const VendorProfile: React.FC = () => {
             <IonIcon icon={cameraOutline} className="text-sm text-white" />
           </div>
         </div>
-        <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+        <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoSelect} />
         <p className="text-[10px] text-[var(--ion-text-color-secondary)] opacity-60 -mt-2 mb-2">Recommended: 512×512px square — shown on home page &amp; stall header</p>
         <h1 className="text-2xl font-bold text-[var(--ion-text-color)] m-0 mb-1">{stallName || 'My Stall'}</h1>
         <p className="text-sm text-[var(--ion-text-color-secondary)] m-0">{vendorName}</p>
@@ -219,7 +251,7 @@ const VendorProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={vendorName} onIonInput={e => setVendorName(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={vendorName} onIonInput={e => setVendorName(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -229,7 +261,7 @@ const VendorProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Phone</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput type="tel" value={vendorPhone} onIonInput={e => setVendorPhone(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput type="tel" value={vendorPhone} onIonInput={e => setVendorPhone(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -256,7 +288,7 @@ const VendorProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Stall Name</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={stallName} onIonInput={e => setStallName(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={stallName} onIonInput={e => setStallName(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -265,7 +297,7 @@ const VendorProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Description</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonTextarea value={description} onIonInput={e => setDescription(e.detail.value!)} rows={3} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--highlight-height': '0' } as any} />
+            <IonTextarea value={description} onIonInput={e => setDescription(e.detail.value!)} rows={3} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -275,7 +307,7 @@ const VendorProfile: React.FC = () => {
               <span className="text-xs text-[var(--ion-text-color-secondary)]">Open Time</span>
             </div>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput type="time" value={openTime} onIonInput={e => setOpenTime(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput type="time" value={openTime} onIonInput={e => setOpenTime(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
           <div>
@@ -283,7 +315,7 @@ const VendorProfile: React.FC = () => {
               <span className="text-xs text-[var(--ion-text-color-secondary)]">Close Time</span>
             </div>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput type="time" value={closeTime} onIonInput={e => setCloseTime(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput type="time" value={closeTime} onIonInput={e => setCloseTime(e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
         </div>
@@ -324,7 +356,7 @@ const VendorProfile: React.FC = () => {
             {uploadingCover ? (
               <IonSpinner name="crescent" />
             ) : coverPhoto ? (
-              <img src={coverPhoto} alt="Cover" className="w-full h-full object-contain" />
+              <OptimizedImage src={coverPhoto} alt="Cover" width={1200} height={600} className="w-full h-full object-contain" />
             ) : (
               <div className="flex flex-col items-center gap-1 text-[var(--ion-text-color-secondary)]">
                 <IonIcon icon={cameraOutline} className="text-2xl" />
@@ -332,7 +364,7 @@ const VendorProfile: React.FC = () => {
               </div>
             )}
           </div>
-          <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+          <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverSelect} />
         </div>
 
         <div>
@@ -408,7 +440,7 @@ const VendorProfile: React.FC = () => {
               const stIcon = st === 'approved' ? checkmarkCircle : st === 'rejected' ? closeCircle : time;
               const stColor = st === 'approved' ? '#10B981' : st === 'rejected' ? '#EF4444' : '#F59E0B';
               return (
-                <button key={role} disabled={disabled} onClick={() => setActiveRole(role)}
+                <button key={role} disabled={disabled} onClick={() => switchRole(role)}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-lg transition-colors text-sm ${
                     active ? 'bg-[var(--ion-color-primary)]/10' : 'hover:bg-[var(--ion-border-color)]/30'
                   } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -437,7 +469,48 @@ const VendorProfile: React.FC = () => {
       <IonToast isOpen={showToast} message={toastMessage} duration={3000} onDidDismiss={() => setShowToast(false)} position="bottom"
         color={toastMessage.includes('Failed') ? 'danger' : 'success'}
       />
+
+      <IonModal isOpen={!!coverCropSource || !!logoCropSource} onDidDismiss={() => { setCoverCropSource(null); setLogoCropSource(null); }}>
+        <IonHeader>
+          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
+            <IonButton slot="start" fill="clear" onClick={() => { setCoverCropSource(null); setLogoCropSource(null); }}>
+              <IonIcon icon={closeCircle} />
+            </IonButton>
+            <IonTitle>{coverCropSource ? 'Crop Cover Photo' : 'Crop Logo'}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent style={{ '--background': 'var(--ion-background-color)' } as React.CSSProperties}>
+          <React.Suspense
+            fallback={
+              <div className="h-64 sm:h-80 bg-[var(--ion-card-background)] flex items-center justify-center">
+                <IonSpinner name="crescent" />
+              </div>
+            }
+          >
+            {coverCropSource ? (
+              <ImageCropper
+                source={coverCropSource}
+                aspect={2}
+                outputWidth={1200}
+                outputHeight={600}
+                onCancel={() => setCoverCropSource(null)}
+                onApply={(dataUrl) => { setCoverPhoto(dataUrl); setCoverCropSource(null); }}
+              />
+            ) : logoCropSource ? (
+              <ImageCropper
+                source={logoCropSource}
+                aspect={1}
+                outputWidth={512}
+                outputHeight={512}
+                onCancel={() => setLogoCropSource(null)}
+                onApply={(dataUrl) => { setStallLogo(dataUrl); setLogoCropSource(null); }}
+              />
+            ) : null}
+          </React.Suspense>
+        </IonContent>
+      </IonModal>
     </div>
+    </>
   );
 };
 

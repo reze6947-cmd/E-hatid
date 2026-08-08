@@ -5,7 +5,7 @@ const MASTER_EMAIL = import.meta.env.VITE_ADMIN_EMAIL as string | undefined;
 export async function syncMasterAdminRole(uid: string, email: string): Promise<void> {
   if (!MASTER_EMAIL || email !== MASTER_EMAIL) return;
 
-  let userData = await getUserDocument(uid);
+  const userData = await getUserDocument(uid);
   if (!userData) {
     await createUserDocument(uid, {
       email,

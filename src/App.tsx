@@ -22,6 +22,9 @@ const CustomerCart = lazy(() => import('./pages/customer/Cart'));
 const CustomerLocationPicker = lazy(() => import('./pages/customer/LocationPicker'));
 const CustomerOrders = lazy(() => import('./pages/customer/Orders'));
 const CustomerOrderTracking = lazy(() => import('./pages/customer/OrderTracking'));
+const BlogIndex = lazy(() => import('./pages/Blog/BlogIndex'));
+const BlogPost = lazy(() => import('./pages/Blog/BlogPost'));
+const Help = lazy(() => import('./pages/Help'));
 const RiderDashboard = lazy(() => import('./pages/Rider/Dashboard'));
 const RiderOrders = lazy(() => import('./pages/Rider/Orders'));
 const RiderEarnings = lazy(() => import('./pages/Rider/Earnings'));
@@ -49,6 +52,7 @@ const ApprovalPending = lazy(() => import('./pages/Auth/ApprovalPending'));
 const ApplicationRejected = lazy(() => import('./pages/Auth/ApplicationRejected'));
 import ProtectedRoute from './components/ProtectedRoute';
 import StorageConsent from './components/StorageConsent';
+import ErrorBoundary from './components/ErrorBoundary';
 
 setupIonicReact({
   mode: 'ios',
@@ -66,6 +70,7 @@ const App: React.FC = () => {
   return (
   <IonApp>
     <IonReactRouter>
+      <ErrorBoundary>
       <Suspense fallback={<DeliveryLoader />}>
         <IonRouterOutlet>
           {/* Landing - standalone, no layout wrapper */}
@@ -88,10 +93,21 @@ const App: React.FC = () => {
             <L><GuestLocationPicker /></L>
           </ProtectedRoute>
 
-          {/* Stall Detail (guest + customer only) */}
-          <ProtectedRoute exact path="/stall/:id/menu" requireAuth={false} requiredRole="customer">
+          {/* Stall Detail - public (guests + all roles); add-to-cart gated in StallDetail */}
+          <Route exact path="/stall/:id/menu">
             <L><StallDetail /></L>
-          </ProtectedRoute>
+          </Route>
+
+          {/* Content pages - public, indexable */}
+          <Route exact path="/blog">
+            <L><BlogIndex /></L>
+          </Route>
+          <Route exact path="/blog/:slug">
+            <L><BlogPost /></L>
+          </Route>
+          <Route exact path="/help">
+            <L><Help /></L>
+          </Route>
 
           {/* Customer Routes */}
           <ProtectedRoute exact path="/customer/home" requiredRole="customer">
@@ -201,9 +217,10 @@ const App: React.FC = () => {
           </ProtectedRoute>
 
           {/* Legacy redirects */}
-          <Route exact path="/guest/stall/:id" render={({match}) => <Redirect to={`/stall/`+(match.params as any).id+`/menu`} />} />
+          <Route exact path="/guest/stall/:id" render={({match}) => <Redirect to={`/stall/`+(match.params as { id: string }).id+`/menu`} />} />
         </IonRouterOutlet>
       </Suspense>
+      </ErrorBoundary>
       <StorageConsent />
     </IonReactRouter>
   </IonApp>

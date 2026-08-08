@@ -47,7 +47,7 @@ const GuestCart: React.FC = () => {
         setDeliveryFee(info.fare);
         setRawDistance(info.distance_km);
         setChargedDistance(info.final_km);
-      } catch { }
+      } catch { /* fee calc is best-effort */ }
       setFeeLoading(false);
     };
     calcFee();

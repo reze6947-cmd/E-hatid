@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   IonButton,
   IonIcon,
   IonToast,
   IonInput,
   IonItem,
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonSpinner,
 } from '@ionic/react';
 import {
   personOutline,
@@ -20,6 +26,8 @@ import {
   bicycleOutline,
   locationOutline,
   cashOutline,
+  cameraOutline,
+  closeOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import PageLoader from '../../components/PageLoader';
@@ -27,9 +35,15 @@ import PageLoader from '../../components/PageLoader';
 import { useAuth } from '../../context/AuthContext';
 import { getRoleProfile, updateRoleProfile, updateUserDocument } from '../../services/userService';
 import { subscribeRiderOrders } from '../../services/orderService';
+import { isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB } from '../../utils/image';
+import { persistImage } from '../../services/imageStorage';
+import OptimizedImage from '../../components/OptimizedImage';
 import { SUFFIXES, PH_REGIONS, formatNationalPH, fromStoredPhone, toStoredPhone, splitFullName, joinName, joinAddress } from '../../utils/profile';
 import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 import type { Order } from '../../types';
+import { formatOrderCode } from '../../utils/orderFormat';
+
+const ImageCropper = React.lazy(() => import('../../components/ImageCropper'));
 
 const initialProfile = {
   name: '',
@@ -56,13 +70,16 @@ const initialProfile = {
 
 const RiderProfile: React.FC = () => {
   const history = useHistory();
-  const { user, logout, roles, activeRole, setActiveRole } = useAuth();
+  const { user, logout, roles, activeRole, switchRole, updateUserProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [profile, setProfile] = useState(initialProfile);
+  const [cropSource, setCropSource] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -167,7 +184,7 @@ const RiderProfile: React.FC = () => {
         licenseNumber: profile.licenseNumber,
         bankAccount: profile.bankAccount,
         bankName: profile.bankName,
-      } as any);
+      });
       await updateRoleProfile(user.id, 'rider', {
         fullName: composedName,
         firstName: profile.firstName,
@@ -205,6 +222,33 @@ const RiderProfile: React.FC = () => {
     history.push('/login');
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!isImageFile(file)) {
+      setToastMessage('Please choose an image file (JPG, PNG, or WebP).');
+      setShowToast(true);
+      return;
+    }
+    if (isImageTooLarge(file)) {
+      setToastMessage(`Image is too large. Max size is ${MAX_IMAGE_SIZE_MB}MB.`);
+      setShowToast(true);
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      setCropSource(dataUrl);
+    } catch (err) {
+      console.error('Error reading avatar:', err);
+      setToastMessage('Could not read that image. Try another file.');
+      setShowToast(true);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const verificationStatus = user?.roleStatus?.rider || 'pending';
   const verificationConfig = {
     approved: { icon: checkmarkCircle, color: '#10B981', label: 'Approved' },
@@ -233,11 +277,27 @@ const RiderProfile: React.FC = () => {
     <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
       {/* Avatar */}
       <div className="text-center">
-        <div className="w-[88px] h-[88px] rounded-full mx-auto mb-4 overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center">
-          <span className="text-[36px] font-bold text-white">
-            {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
-          </span>
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="w-[88px] h-[88px] rounded-full mx-auto mb-4 cursor-pointer relative overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center"
+        >
+          {user?.avatar ? (
+            <OptimizedImage src={user.avatar} alt="Profile" width={88} height={88} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[36px] font-bold text-white">
+              {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
+            </span>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 bg-black/40 py-1 flex items-center justify-center">
+            <IonIcon icon={cameraOutline} className="text-sm text-white" />
+          </div>
+          {uploadingAvatar && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <IonSpinner name="crescent" className="text-white" style={{ width: 22, height: 22 }} />
+            </div>
+          )}
         </div>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
         <h1 className="text-2xl font-bold text-[var(--ion-text-color)] m-0 mb-1">{profile.name}</h1>
         <div className="flex items-center justify-center gap-1 mb-1">
           <IonIcon icon={starOutline} className="text-sm text-[#F59E0B]" />
@@ -262,19 +322,19 @@ const RiderProfile: React.FC = () => {
             <div className="col-span-2 sm:col-span-1">
               <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">First Name</label>
               <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-                <IonInput value={profile.firstName} onIonInput={e => handleInputChange('firstName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+                <IonInput value={profile.firstName} onIonInput={e => handleInputChange('firstName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
               </IonItem>
             </div>
             <div className="col-span-2 sm:col-span-1">
               <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Middle Name <span className="opacity-60">(optional)</span></label>
               <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-                <IonInput value={profile.middleName} onIonInput={e => handleInputChange('middleName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+                <IonInput value={profile.middleName} onIonInput={e => handleInputChange('middleName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
               </IonItem>
             </div>
             <div className="col-span-2 sm:col-span-1">
               <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Last Name</label>
               <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-                <IonInput value={profile.lastName} onIonInput={e => handleInputChange('lastName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+                <IonInput value={profile.lastName} onIonInput={e => handleInputChange('lastName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
               </IonItem>
             </div>
             <div className="col-span-2 sm:col-span-1">
@@ -309,7 +369,7 @@ const RiderProfile: React.FC = () => {
           <div className="flex items-stretch">
             <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-[var(--ion-border-color)] bg-[var(--ion-background-color)] text-sm font-semibold text-[var(--ion-text-color)]">+63</span>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-r-lg overflow-hidden flex-1">
-              <IonInput type="tel" value={profile.phone} onIonInput={e => handleInputChange('phone', formatNationalPH(e.detail.value!))} placeholder="917 123 4567" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput type="tel" value={profile.phone} onIonInput={e => handleInputChange('phone', formatNationalPH(e.detail.value!))} placeholder="917 123 4567" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
           <p className="m-0 mt-1 text-[11px] text-[var(--ion-text-color-secondary)]">Philippine mobile number, e.g. 0917 123 4567</p>
@@ -327,25 +387,25 @@ const RiderProfile: React.FC = () => {
           <div className="col-span-2">
             <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Street / Unit</label>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput value={profile.addressStreet} onIonInput={e => handleInputChange('addressStreet', e.detail.value!)} placeholder="e.g. 123 Mabini St." className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput value={profile.addressStreet} onIonInput={e => handleInputChange('addressStreet', e.detail.value!)} placeholder="e.g. 123 Mabini St." className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
           <div className="col-span-2 sm:col-span-1">
             <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Barangay</label>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput value={profile.addressBarangay} onIonInput={e => handleInputChange('addressBarangay', e.detail.value!)} placeholder="e.g. Barangay San Jose" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput value={profile.addressBarangay} onIonInput={e => handleInputChange('addressBarangay', e.detail.value!)} placeholder="e.g. Barangay San Jose" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
           <div className="col-span-2 sm:col-span-1">
             <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">City / Municipality</label>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput value={profile.addressCity} onIonInput={e => handleInputChange('addressCity', e.detail.value!)} placeholder="e.g. Quezon City" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput value={profile.addressCity} onIonInput={e => handleInputChange('addressCity', e.detail.value!)} placeholder="e.g. Quezon City" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
           <div className="col-span-2 sm:col-span-1">
             <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">Province</label>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput value={profile.addressProvince} onIonInput={e => handleInputChange('addressProvince', e.detail.value!)} placeholder="e.g. Metro Manila" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput value={profile.addressProvince} onIonInput={e => handleInputChange('addressProvince', e.detail.value!)} placeholder="e.g. Metro Manila" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
           <div className="col-span-2 sm:col-span-1">
@@ -362,7 +422,7 @@ const RiderProfile: React.FC = () => {
           <div className="col-span-2">
             <label className="block mb-1 text-[11px] font-medium text-[var(--ion-text-color-secondary)]">ZIP Code</label>
             <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-              <IonInput type="tel" value={profile.addressZip} onIonInput={e => handleInputChange('addressZip', e.detail.value!.replace(/\D/g, '').slice(0, 4))} placeholder="e.g. 1100" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+              <IonInput type="tel" value={profile.addressZip} onIonInput={e => handleInputChange('addressZip', e.detail.value!.replace(/\D/g, '').slice(0, 4))} placeholder="e.g. 1100" className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
             </IonItem>
           </div>
         </div>
@@ -387,7 +447,7 @@ const RiderProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Vehicle Type</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={profile.vehicle} onIonInput={e => handleInputChange('vehicle', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={profile.vehicle} onIonInput={e => handleInputChange('vehicle', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -396,7 +456,7 @@ const RiderProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">License Plate</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={profile.licensePlate} onIonInput={e => handleInputChange('licensePlate', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={profile.licensePlate} onIonInput={e => handleInputChange('licensePlate', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -405,7 +465,7 @@ const RiderProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">License Number</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={profile.licenseNumber} onIonInput={e => handleInputChange('licenseNumber', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={profile.licenseNumber} onIonInput={e => handleInputChange('licenseNumber', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
       </div>
@@ -422,7 +482,7 @@ const RiderProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Bank Name</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={profile.bankName} onIonInput={e => handleInputChange('bankName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={profile.bankName} onIonInput={e => handleInputChange('bankName', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
 
@@ -431,7 +491,7 @@ const RiderProfile: React.FC = () => {
             <span className="text-xs text-[var(--ion-text-color-secondary)]">Account Number</span>
           </div>
           <IonItem className="ion-item-clean border border-[var(--ion-border-color)] rounded-lg overflow-hidden">
-            <IonInput value={profile.bankAccount} onIonInput={e => handleInputChange('bankAccount', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as any} />
+            <IonInput value={profile.bankAccount} onIonInput={e => handleInputChange('bankAccount', e.detail.value!)} className="text-sm" style={{ '--padding-start': '10px', '--padding-end': '10px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties} />
           </IonItem>
         </div>
       </div>
@@ -446,7 +506,7 @@ const RiderProfile: React.FC = () => {
           <div>
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-[var(--ion-text-color)]">
-                Order #{activeOrder.id.slice(-6)}
+                Order {formatOrderCode(activeOrder.id)}
               </span>
               <span
                 className="text-xs font-bold px-2.5 py-1 rounded-full capitalize"
@@ -519,7 +579,7 @@ const RiderProfile: React.FC = () => {
               const stIcon = st === 'approved' ? checkmarkCircle : st === 'rejected' ? closeCircle : time;
               const stColor = st === 'approved' ? '#10B981' : st === 'rejected' ? '#EF4444' : '#F59E0B';
               return (
-                <button key={role} disabled={disabled} onClick={() => setActiveRole(role)}
+                <button key={role} disabled={disabled} onClick={() => switchRole(role)}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-lg transition-colors text-sm ${
                     active ? 'bg-[var(--ion-color-primary)]/10' : 'hover:bg-[var(--ion-border-color)]/30'
                   } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -548,6 +608,41 @@ const RiderProfile: React.FC = () => {
       <IonToast isOpen={showToast} message={toastMessage} duration={3000} onDidDismiss={() => setShowToast(false)} position="bottom"
         color={toastMessage.includes('Failed') ? 'danger' : 'success'}
       />
+
+      <IonModal isOpen={!!cropSource} onDidDismiss={() => setCropSource(null)}>
+        <IonHeader>
+          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
+            <IonButton slot="start" fill="clear" onClick={() => setCropSource(null)}>
+              <IonIcon icon={closeOutline} />
+            </IonButton>
+            <IonTitle>Crop Profile Photo</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent style={{ '--background': 'var(--ion-background-color)' } as React.CSSProperties}>
+          <React.Suspense
+            fallback={
+              <div className="h-64 sm:h-80 bg-[var(--ion-card-background)] flex items-center justify-center">
+                <IonSpinner name="crescent" />
+              </div>
+            }
+          >
+            {cropSource && (
+              <ImageCropper
+                source={cropSource}
+                aspect={1}
+                outputWidth={512}
+                outputHeight={512}
+                onCancel={() => setCropSource(null)}
+                onApply={async (dataUrl) => {
+                  const avatar = await persistImage(dataUrl, `avatars/${user?.id}`);
+                  await updateUserProfile({ avatar });
+                  setCropSource(null);
+                }}
+              />
+            )}
+          </React.Suspense>
+        </IonContent>
+      </IonModal>
     </div>
   );
 };

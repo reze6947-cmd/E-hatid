@@ -1,8 +1,9 @@
 import { db } from '../firebaseConfig';
 import { collection, getDocs, query, where, doc, updateDoc, addDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 import { Order } from '../types';
 
-function convertTimestamps<T>(data: any): T {
+function convertTimestamps<T>(data: DocumentData): T {
   for (const key of Object.keys(data)) {
     if (data[key] && typeof data[key]?.toDate === 'function') {
       data[key] = data[key].toDate();

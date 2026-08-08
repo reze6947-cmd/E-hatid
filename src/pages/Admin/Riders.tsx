@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
 import { IonCard, IonCardContent, IonIcon, IonBadge, IonButton, IonSegment, IonSegmentButton, IonLabel } from '@ionic/react';
-import { bicycleOutline, trashOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
+import { trashOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import AdminPageShell from '../../components/admin/AdminPageShell';
+
+interface RiderRow {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  vehicle?: string;
+  licensePlate?: string;
+  totalDeliveries?: number;
+  rating?: number;
+  status: string;
+  isVerified: boolean;
+}
 
 const AdminRiders: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [riders, setRiders] = useState<any[]>([]);
+  const [riders, setRiders] = useState<RiderRow[]>([]);
 
   const filteredRiders = riders.filter(rider => {
     const matchesSearch = rider.name.toLowerCase().includes(searchQuery.toLowerCase()) || rider.email.toLowerCase().includes(searchQuery.toLowerCase());

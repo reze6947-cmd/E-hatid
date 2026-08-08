@@ -21,6 +21,19 @@ interface Suggestion {
   lon: string;
 }
 
+interface PhotonFeature {
+  properties: {
+    name?: string;
+    street?: string;
+    district?: string;
+    city?: string;
+    state?: string;
+  };
+  geometry: {
+    coordinates: [number, number];
+  };
+}
+
 const geocodeCache = new Map<string, Suggestion[]>();
 const reverseCache = new Map<string, Suggestion>();
 let lastGeocodeCall = 0;
@@ -117,7 +130,7 @@ const VendorLocationPicker: React.FC = () => {
           { headers: { 'User-Agent': 'E-Hatid/1.0' } }
         );
         const data = await res.json();
-        const results = (data.features || []).map((f: any) => {
+        const results = (data.features || []).map((f: PhotonFeature) => {
             const parts = [
               f.properties.name && f.properties.street
                 ? `${f.properties.name} ${f.properties.street}`
@@ -249,7 +262,7 @@ const VendorLocationPicker: React.FC = () => {
                 value={query}
                 onIonInput={e => { setQuery(e.detail.value || ''); setSelectedAddress(null); }}
                 className="[--color:var(--ion-text-color)] [--background:var(--ion-background-color)] border border-[var(--ion-border-color)] rounded-xl text-sm"
-                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as any}
+                style={{ '--padding-start': '48px', '--border-radius': '12px', '--highlight-height': '0', '--min-height': '44px' } as React.CSSProperties}
               />
               {fetching && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--ion-text-color-secondary)]">
@@ -261,7 +274,7 @@ const VendorLocationPicker: React.FC = () => {
             {suggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full z-[100] bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] rounded-b-xl shadow-lg max-h-[200px] overflow-y-auto">
                 {suggestions.map((s, i) => (
-                  <IonItem key={i} button onClick={() => selectSuggestion(s)} className="min-h-[44px] text-xs sm:text-sm" style={{ '--background': 'transparent', '--border-color': 'var(--ion-border-color)' } as any}>
+                  <IonItem key={i} button onClick={() => selectSuggestion(s)} className="min-h-[44px] text-xs sm:text-sm" style={{ '--background': 'transparent', '--border-color': 'var(--ion-border-color)' } as React.CSSProperties}>
                     <IonIcon icon={locationOutline} slot="start" className="text-[var(--ion-color-primary)]" />
                     <IonLabel className="truncate text-[var(--ion-text-color)]">{s.display}</IonLabel>
                   </IonItem>
@@ -289,7 +302,7 @@ const VendorLocationPicker: React.FC = () => {
       </div>
 
       {selectedAddress && selectedLocation && (
-        <IonFooter style={{ '--background': 'var(--ion-card-background)' } as any}>
+        <IonFooter style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
           <div className="border-t border-[var(--ion-border-color)] px-3 sm:px-4 py-3 sm:py-4">
             <div className="max-w-2xl mx-auto">
               <IonButton expand="block" size="large" shape="round"

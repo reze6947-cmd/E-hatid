@@ -14,6 +14,7 @@ import { openGoogleMapsDirections } from '../../utils/geocode';
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/PageLoader';
+import { formatOrderCode, formatOrderDate, formatOrderDateTime } from '../../utils/orderFormat';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -45,8 +46,8 @@ type FilterTab = 'all' | 'pending' | 'active' | 'completed' | 'cancelled';
 const TIMEOUT_MS = 30 * 60 * 1000;
 
 const VendorOrders: React.FC = () => {
-  const history = useHistory();
-  const { logout, user } = useAuth();
+  useHistory();
+  const { user } = useAuth();
   const { updateOrderStatus: localUpdateStatus } = useOrders();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -155,10 +156,11 @@ const VendorOrders: React.FC = () => {
     { tab: 'cancelled', label: 'Cancelled', icon: closeCircle, accent: 'text-[var(--ion-color-danger)]', count: orders.filter(o => o.status === 'cancelled').length },
   ];
 
-  const formatTime = (iso: string | Date | any) => {
+  const formatTime = (iso: string | Date | { toDate?: () => Date }) => {
     if (!iso) return '';
-    if (typeof iso?.toDate === 'function') iso = iso.toDate();
-    const d = typeof iso === 'string' ? new Date(iso) : iso;
+    const ts = iso as { toDate?: () => Date };
+    if (typeof ts?.toDate === 'function') iso = ts.toDate();
+    const d = typeof iso === 'string' ? new Date(iso) : (iso instanceof Date ? iso : new Date(0));
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
     const diffMin = Math.floor(diffMs / 60000);
@@ -219,12 +221,15 @@ const VendorOrders: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
                         <h3 style={{ margin: '0 0 4px', fontWeight: 700, color: 'var(--ion-text-color)' }}>
-                          #{order.id.slice(-5)}
+                          {formatOrderCode(order.id)}
                           <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--ion-text-color-secondary)', marginLeft: '8px' }}>
                             <IonIcon icon={timeOutline} style={{ verticalAlign: 'middle', marginRight: '2px' }} />
                             {formatTime(order.createdAt)}
                           </span>
                         </h3>
+                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>
+                          {formatOrderDate(order.createdAt)}
+                        </p>
                         <p style={{ margin: 0, fontSize: '14px', color: 'var(--ion-text-color-secondary)' }}>
                           {order.customerName || 'Unknown'}
                           {order.customerPhone && ` · ${order.customerPhone}`}
@@ -333,7 +338,7 @@ const VendorOrders: React.FC = () => {
               onIonChange={e => setDeclineReason(e.detail.value!)}
               placeholder="e.g. User doesn't have proper details of their account"
               rows={4}
-              style={{ '--background': 'var(--ion-item-background)', borderRadius: '8px', padding: '8px' } as any}
+              style={{ '--background': 'var(--ion-item-background)', borderRadius: '8px', padding: '8px' } as React.CSSProperties}
             />
           </div>
         </IonContent>
@@ -355,8 +360,8 @@ const VendorOrders: React.FC = () => {
             <div style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--ion-border-color)' }}>
                 <div>
-                  <h2 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: 'var(--ion-text-color)' }}>#{detailsOrder.id.slice(-5)}</h2>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>{new Date(detailsOrder.createdAt).toLocaleString()}</p>
+                  <h2 style={{ margin: '0 0 4px', fontSize: '18px', fontWeight: 700, color: 'var(--ion-text-color)' }}>{formatOrderCode(detailsOrder.id)}</h2>
+                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>{formatOrderDateTime(detailsOrder.createdAt)}</p>
                 </div>
                 <span style={badgestyle(detailsOrder.status)}>{STATUS_BADGE[detailsOrder.status]?.label || detailsOrder.status}</span>
               </div>

@@ -7,11 +7,13 @@ import { fetchRiderReviews, getRiderReviewStats } from '../../services/reviewSer
 import { Review } from '../../types';
 import RiderPageHeader from '../../components/Rider/RiderPageHeader';
 import PageLoader from '../../components/PageLoader';
+import { formatOrderCode } from '../../utils/orderFormat';
 
-const formatDate = (d: string | Date | any) => {
+const formatDate = (d: string | Date | { toDate?: () => Date }) => {
   if (!d) return '';
-  if (typeof d?.toDate === 'function') d = d.toDate();
-  const date = typeof d === 'string' ? new Date(d) : d;
+  const ts = d as { toDate?: () => Date };
+  if (typeof ts?.toDate === 'function') d = ts.toDate();
+  const date = typeof d === 'string' ? new Date(d) : (d instanceof Date ? d : new Date(0));
   return isNaN(date.getTime()) ? '' : date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
@@ -117,7 +119,7 @@ const RiderReviews: React.FC = () => {
                     <p className="m-0 text-sm text-[var(--ion-text-color)] leading-relaxed">{review.comment}</p>
                   )}
                   {review.orderId && (
-                    <p className="m-0 mt-2 text-xs text-[var(--ion-text-color-secondary)]">Order #{String(review.orderId).slice(-6).toUpperCase()}</p>
+                    <p className="m-0 mt-2 text-xs text-[var(--ion-text-color-secondary)]">Order {formatOrderCode(String(review.orderId))}</p>
                   )}
                 </div>
               ))}

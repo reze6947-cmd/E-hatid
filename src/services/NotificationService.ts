@@ -7,7 +7,7 @@ import { Notification, Message, Order } from '../types';
 class NotificationService {
   private notifications: Map<string, Notification[]> = new Map();
   private messages: Map<string, Message[]> = new Map();
-  private listeners: Map<string, Function[]> = new Map();
+  private listeners: Map<string, ((data: unknown) => void)[]> = new Map();
 
   /**
    * Create a notification
@@ -361,7 +361,7 @@ class NotificationService {
   /**
    * Subscribe to real-time updates
    */
-  subscribe(eventKey: string, callback: Function): () => void {
+  subscribe(eventKey: string, callback: (data: unknown) => void): () => void {
     if (!this.listeners.has(eventKey)) {
       this.listeners.set(eventKey, []);
     }
@@ -382,7 +382,7 @@ class NotificationService {
   /**
    * Emit events to subscribers
    */
-  private emit(eventKey: string, data: any): void {
+  private emit(eventKey: string, data: unknown): void {
     const callbacks = this.listeners.get(eventKey);
     if (callbacks) {
       callbacks.forEach(callback => callback(data));

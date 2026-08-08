@@ -19,16 +19,18 @@ import { updateOrderStatus } from '../../services/orderService';
 import { openGoogleMapsDirections } from '../../utils/geocode';
 import type { Order, User, Stall, RiderLocation } from '../../types';
 import LeafletMap, { type LeafletMapHandle } from '../../components/Map/LeafletMap';
+import OptimizedImage from '../../components/OptimizedImage';
 import { markerIcon, stallMarkerIcon, riderMarkerIcon } from '../../components/Map/mapIcons';
+import { formatOrderCode, formatOrderDateTime } from '../../utils/orderFormat';
 
 const RiderDelivery: React.FC = () => {
   const history = useHistory<{ order?: Order }>();
-  const { user } = useAuth();
+  useAuth();
   const initialOrder = history.location.state?.order;
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
   const [customerUser, setCustomerUser] = useState<User | null>(null);
   const [stall, setStall] = useState<Stall | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [riderLocation, setRiderLocation] = useState<RiderLocation | null>(null);
   const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null);
   const [deliveringId, setDeliveringId] = useState(false);
@@ -134,7 +136,7 @@ const RiderDelivery: React.FC = () => {
           (c: number[]) => [c[1], c[0]] as [number, number]
         );
         setRouteCoords(coords);
-      } catch { }
+      } catch { /* route fetch is best-effort */ }
     })();
     return () => { cancelled = true; };
   }, [stall?.latitude, stall?.longitude, riderLocation, order?.customerLatitude, order?.customerLongitude]);
@@ -224,7 +226,7 @@ const RiderDelivery: React.FC = () => {
             <div className="flex items-center gap-3 mb-3">
               {stall?.logo && (
                 <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-100">
-                  <img src={stall.logo} alt={stall.name} className="w-full h-full object-cover" />
+                  <OptimizedImage src={stall.logo} alt={stall.name} width={56} height={56} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
@@ -245,7 +247,8 @@ const RiderDelivery: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4 text-xs text-[var(--ion-text-color-secondary)] border-t border-[var(--ion-border-color)] pt-3">
-              <span className="truncate font-mono">#{order.id.slice(-8).toUpperCase()}</span>
+              <span className="truncate font-mono">{formatOrderCode(order.id)}</span>
+              <span className="truncate">{formatOrderDateTime(order.createdAt)}</span>
               <span>{order.items.length} item(s)</span>
               <span className="font-bold text-[var(--ion-color-primary)]">₱{order.total.toFixed(2)}</span>
             </div>

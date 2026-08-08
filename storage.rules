@@ -2,13 +2,18 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
+    function isAdmin() {
+      return request.auth != null
+        && firestore.get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles.hasAny(['admin']);
+    }
+
     // ============================================================
     // User avatars — owner can read/write, admin can manage
     // ============================================================
     match /avatars/{userId}/{allPaths=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
-        && request.auth.uid == userId
+        && (request.auth.uid == userId || isAdmin())
         && request.resource.size < 2 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
       allow delete: if false;
@@ -27,12 +32,12 @@ service firebase.storage {
     }
 
     // ============================================================
-    // Stall / product images — vendor can write their own, any auth user can read
+    // Stall / product images — vendor can write their own, admin can migrate, any auth user can read
     // ============================================================
     match /stalls/{vendorId}/{allPaths=**} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
-        && request.auth.uid == vendorId
+        && (request.auth.uid == vendorId || isAdmin())
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
       allow delete: if false;

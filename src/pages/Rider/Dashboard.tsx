@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  IonIcon,
   IonToast,
 } from '@ionic/react';
-import { cashOutline, checkmarkCircleOutline, navigateOutline, bicycleOutline } from 'ionicons/icons';
+import { cashOutline, checkmarkCircleOutline, bicycleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 

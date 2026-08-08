@@ -3,12 +3,15 @@ import { IonIcon } from '@ionic/react';
 import { logoFacebook, logoTwitter, logoInstagram } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import OptimizedImage from './OptimizedImage';
 
 const quickLinks = [
   { label: 'Home', path: '/guest/home' },
   { label: 'Browse Stalls', path: '/guest/home' },
   { label: 'Apply as a Vendor', path: '/apply/vendor' },
   { label: 'Apply as a Rider', path: '/apply/rider' },
+  { label: 'Help & FAQ', path: '/help' },
+  { label: 'Blog', path: '/blog' },
 ];
 
 const socialLinks = [
@@ -27,9 +30,11 @@ const AppFooter: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10 mb-8 sm:mb-10">
           {/* Brand */}
           <div className="space-y-3 sm:space-y-4">
-            <img
-              src={isDarkMode ? '/Logo/Logo-dark-mode.png' : '/Logo/Logo-light-mode.png'}
+            <OptimizedImage
+              src={isDarkMode ? '/Logo/Logo-dark-mode.svg' : '/Logo/Logo-light-mode.svg'}
               alt="E-Hatid"
+              width={160}
+              height={40}
               className="h-10 sm:h-14 object-contain"
             />
             <p className="text-xs sm:text-sm text-[var(--ion-text-color-secondary)] leading-relaxed max-w-xs">

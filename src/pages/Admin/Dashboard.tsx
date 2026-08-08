@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { IonCard, IonCardContent, IonIcon, IonButton } from '@ionic/react';
-import { peopleOutline, bicycleOutline, cartOutline, trendingUpOutline, warningOutline, checkmarkCircle, closeCircle, shieldCheckmarkOutline } from 'ionicons/icons';
+import { peopleOutline, bicycleOutline, cartOutline, trendingUpOutline, warningOutline, checkmarkCircle, closeCircle, shieldCheckmarkOutline, imageOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import AdminPageShell from '../../components/admin/AdminPageShell';
 import AdminStatCard from '../../components/admin/AdminStatCard';
 import PageLoader from '../../components/PageLoader';
-import { fetchAllUsers, fetchPendingApprovals, setRoleStatus } from '../../services/userService';
+import { fetchAllUsers, fetchPendingApprovals, setRoleStatus, migrateUserAvatar } from '../../services/userService';
+import { fetchStalls, migrateStallImages, saveMigratedStall } from '../../services/stallService';
 import { useAuth } from '../../context/AuthContext';
+import { User } from '../../types';
 
 const AdminDashboard: React.FC = () => {
   const history = useHistory();
   const { user } = useAuth();
   const [realStats, setRealStats] = useState({ totalUsers: 0, totalRiders: 0, totalOrders: 0, totalRevenue: 0 });
-  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -27,7 +31,7 @@ const AdminDashboard: React.FC = () => {
           totalRevenue: 0,
         });
         setPendingUsers(pending);
-      } catch { }
+      } catch { /* stats load is best-effort */ }
       setLoading(false);
     };
     load();
@@ -41,6 +45,35 @@ const AdminDashboard: React.FC = () => {
   const handleReject = async (uid: string, role: string) => {
     await setRoleStatus(uid, role, 'rejected');
     setPendingUsers(prev => prev.filter(x => x.id !== uid));
+  };
+
+  const handleMigrateImages = async () => {
+    setMigrating(true);
+    setMigrationResult(null);
+    let stallsMigrated = 0;
+    let stallImages = 0;
+    let avatarsMigrated = 0;
+    try {
+      const stalls = await fetchStalls();
+      for (const stall of stalls) {
+        const { updated, migrated } = await migrateStallImages(stall);
+        if (migrated > 0) {
+          await saveMigratedStall(updated);
+          stallsMigrated++;
+          stallImages += migrated;
+        }
+      }
+      const allUsers = await fetchAllUsers();
+      for (const u of allUsers) {
+        if (await migrateUserAvatar(u)) avatarsMigrated++;
+      }
+      setMigrationResult(`Done: ${stallsMigrated} stalls (${stallImages} images) and ${avatarsMigrated} avatars migrated.`);
+    } catch (err) {
+      console.error('Image migration failed:', err);
+      setMigrationResult('Migration failed. Check the console for details.');
+    } finally {
+      setMigrating(false);
+    }
   };
 
   const statCards = [
@@ -85,6 +118,29 @@ const AdminDashboard: React.FC = () => {
           </IonCard>
         </div>
       )}
+
+      <div style={{ marginTop: '16px' }}>
+        <IonCard style={{ margin: 0, background: 'var(--ion-card-background)', border: '1px solid #3B82F630' }}>
+          <IonCardContent style={{ padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#3B82F620', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IonIcon icon={imageOutline} style={{ fontSize: '20px', color: '#3B82F6' }} />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: 'var(--ion-text-color)' }}>Migrate Legacy Images</p>
+                <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>Move old base64 photos on stalls and avatars to Firebase Storage.</p>
+              </div>
+            </div>
+            <IonButton expand="block" shape="round" color="primary" disabled={migrating} onClick={handleMigrateImages}>
+              <IonIcon icon={imageOutline} style={{ marginRight: 8 }} />
+              {migrating ? 'Migrating…' : 'Run Migration'}
+            </IonButton>
+            {migrationResult && (
+              <p style={{ margin: '10px 0 0', fontSize: '12px', color: 'var(--ion-text-color-secondary)' }}>{migrationResult}</p>
+            )}
+          </IonCardContent>
+        </IonCard>
+      </div>
 
       {pendingUsers.length > 0 && (
         <div>

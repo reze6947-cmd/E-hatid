@@ -20,14 +20,16 @@ import {
   copyOutline,
 } from 'ionicons/icons';
 import { MenuItem, MenuItemOption, MenuItemAddOn } from '../../../../types';
-import { sanitizeMoney, isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB, inputClasses } from '../utils';
+import { sanitizeMoney, inputClasses } from '../utils';
+import { isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB } from '../../../../utils/image';
+import { isDataUrlImage, uploadImageDataUrl } from '../../../../services/imageStorage';
 import { useIsMobile } from '../hooks/useIsMobile';
 import SectionCard from './SectionCard';
 import ProductImageUploader from './ProductImageUploader';
 import OptionsEditor from './OptionsEditor';
 import AddOnsEditor from './AddOnsEditor';
 
-const ProductImageCropper = React.lazy(() => import('./ProductImageCropper'));
+const ImageCropper = React.lazy(() => import('../../../../components/ImageCropper'));
 
 interface ProductEditorModalProps {
   item: MenuItem;
@@ -73,6 +75,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
   const [image, setImage] = useState(item.image || '');
   const [cropSource, setCropSource] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [savingImage, setSavingImage] = useState(false);
   const [options, setOptions] = useState<MenuItemOption[]>(item.options || []);
   const [addOns, setAddOns] = useState<MenuItemAddOn[]>(item.addOns || []);
   const [nameTouched, setNameTouched] = useState(false);
@@ -152,8 +155,20 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
     setImageError(null);
   };
 
-  const handleSave = () => {
-    if (!isValid) return;
+  const handleSave = async () => {
+    if (!isValid || savingImage) return;
+    let savedImage = image;
+    if (isDataUrlImage(image)) {
+      setSavingImage(true);
+      try {
+        savedImage = await uploadImageDataUrl(image, `stalls/${item.stallId}/menu/${Date.now()}`);
+      } catch {
+        setImageError('Could not upload the photo. Please check your connection and try again.');
+        setSavingImage(false);
+        return;
+      }
+      setSavingImage(false);
+    }
     onSave({
       ...item,
       name,
@@ -162,7 +177,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
       category,
       available,
       popular,
-      image,
+      image: savedImage,
       options: options.filter(o => o.name.trim()),
       addOns: addOns.filter(a => a.name.trim()),
     });
@@ -250,7 +265,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
               </div>
             }
           >
-            <ProductImageCropper
+            <ImageCropper
               source={cropSource}
               onCancel={() => setCropSource(null)}
               onApply={dataUrl => { setImage(dataUrl); setCropSource(null); }}
@@ -502,11 +517,11 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({
         </IonButton>
         <button
           onClick={handleSave}
-          disabled={!isValid || (!hasChanges && !isNew)}
+          disabled={!isValid || savingImage || (!hasChanges && !isNew)}
           className="flex-[2] min-w-0 min-h-[48px] rounded-full bg-[var(--ion-color-primary)] hover:bg-[var(--ion-color-primary-shade)] text-white font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ion-color-primary)] focus-visible:ring-offset-2"
         >
           <IonIcon icon={checkmarkCircle} className="text-base" />
-          {item.name ? 'Save Changes' : 'Create Product'}
+          {savingImage ? 'Uploading…' : (item.name ? 'Save Changes' : 'Create Product')}
         </button>
       </div>
 

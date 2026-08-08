@@ -10,20 +10,21 @@ import { Review } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/PageLoader';
 
-const formatDate = (d: string | Date | any) => {
+const formatDate = (d: string | Date | { toDate?: () => Date }) => {
   if (!d) return '';
-  if (typeof d?.toDate === 'function') d = d.toDate();
-  const date = typeof d === 'string' ? new Date(d) : d;
+  const ts = d as { toDate?: () => Date };
+  if (typeof ts?.toDate === 'function') d = ts.toDate();
+  const date = typeof d === 'string' ? new Date(d) : (d instanceof Date ? d : new Date(0));
   return isNaN(date.getTime()) ? '' : date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 const VendorReviews: React.FC = () => {
-  const history = useHistory();
-  const { logout, user } = useAuth();
+  useHistory();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
-  const [stallId, setStallId] = useState<string | null>(null);
+  const [, setStallId] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [total, setTotal] = useState(0);
   const [distribution, setDistribution] = useState<number[]>([0, 0, 0, 0, 0]);

@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { navItemsByRole } from '../config/routesByRole';
 import RoleSwitcher from './RoleSwitcher';
+import OptimizedImage from './OptimizedImage';
 import { subscribeAvailableOrders, subscribeRiderOrders, subscribeCustomerOrders } from '../services/orderService';
 
 interface NavbarProps {
@@ -16,7 +17,7 @@ interface NavbarProps {
   hideMobileTabBar?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTabBar }) => {
+const Navbar: React.FC<NavbarProps> = ({ showBack, backHref, hideMobileTabBar }) => {
   const history = useHistory();
   const location = useLocation();
   const { user, activeRole, logout } = useAuth();
@@ -24,7 +25,7 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
   const { isDarkMode, toggleTheme } = useTheme();
 
   const isGuest = !user;
-  const links = navItemsByRole[isGuest ? 'guest' : (activeRole || '')] || [];
+  const links = navItemsByRole[isGuest ? 'guest' : (activeRole || '')] || (user ? navItemsByRole.customer : []) || [];
   const desktopLinks = links;
   const cartCount = itemCount;
   const [riderOrderCount, setRiderOrderCount] = useState(0);
@@ -93,10 +94,12 @@ const Navbar: React.FC<NavbarProps> = ({ title, showBack, backHref, hideMobileTa
                 <IonIcon icon={arrowBackOutline} slot="icon-only" className="text-lg" />
               </IonButton>
             )}
-            <img
-              src={isDarkMode ? '/Logo/Logo-dark-mode.png' : '/Logo/Logo-light-mode.png'}
+            <OptimizedImage
+              src={isDarkMode ? '/Logo/Logo-dark-mode.svg' : '/Logo/Logo-light-mode.svg'}
               alt="E-Hatid"
-              style={{ width: 54, height: 54 }}
+              width={54}
+              height={54}
+              priority
               className="object-contain"
             />
           </div>

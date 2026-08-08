@@ -9,8 +9,13 @@ import {
   IonLabel,
   IonSpinner,
   IonToast,
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
 } from '@ionic/react';
-import { personOutline, mailOutline, callOutline, locationOutline, logOutOutline, cameraOutline, checkmarkCircleOutline, closeCircleOutline, swapHorizontalOutline, checkmarkCircle, time, closeCircle } from 'ionicons/icons';
+import { personOutline, mailOutline, callOutline, locationOutline, logOutOutline, cameraOutline, checkmarkCircleOutline, closeCircleOutline, swapHorizontalOutline, checkmarkCircle, time, closeCircle, closeOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { Marker } from 'react-leaflet';
 import LeafletMap from '../../components/Map/LeafletMap';
@@ -18,7 +23,11 @@ import { profileMarkerIcon } from '../../components/Map/mapIcons';
 import OpenInGoogleMapsButton from '../../components/ui/OpenInGoogleMapsButton';
 
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
+import { isImageFile, isImageTooLarge, readFileAsDataURL, MAX_IMAGE_SIZE_MB } from '../../utils/image';
+import { persistImage } from '../../services/imageStorage';
+import OptimizedImage from '../../components/OptimizedImage';
+
+const ImageCropper = React.lazy(() => import('../../components/ImageCropper'));
 
 const COUNTRY_CODES = [
   { code: '+63', label: 'PH +63' },
@@ -57,7 +66,7 @@ const formatPhone = (digits: string, code: string) => {
 };
 
 const UserProfile: React.FC = () => {
-  const { user, updateUserProfile, logout, roles, activeRole, setActiveRole, refreshUser } = useAuth();
+  const { user, updateUserProfile, logout, roles, activeRole, switchRole, refreshUser } = useAuth();
   const history = useHistory();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,11 +86,13 @@ const UserProfile: React.FC = () => {
   const [phoneError, setPhoneError] = useState(
     currentNumber && currentNumber.length < 7 ? 'Phone must be at least 7 digits' : currentNumber === '' ? 'Phone is required' : ''
   );
-  const [address] = useState(user?.address || '');
+  useState(user?.address || '');
   const [birthDate, setBirthDate] = useState(user?.birthDate || '');
   const [saving, setSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [cropSource, setCropSource] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const phoneInputRef = useRef<HTMLIonInputElement>(null);
 
   const ageFromBirthDate = (d: string) => {
@@ -126,7 +137,7 @@ const UserProfile: React.FC = () => {
     const c = user?.created_at;
     if (!c) return '2024';
     try {
-      const d = typeof (c as any)?.toDate === 'function' ? (c as any).toDate() : new Date(c as any);
+      const d = typeof c === 'object' && 'toDate' in c ? c.toDate() : new Date(c as string | number | Date);
       return isNaN(d.getTime()) ? '2024' : d.getFullYear().toString();
     } catch {
       return '2024';
@@ -152,14 +163,31 @@ const UserProfile: React.FC = () => {
     refreshUser();
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateUserProfile({ avatar: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    if (!isImageFile(file)) {
+      setToastMessage('Please choose an image file (JPG, PNG, or WebP).');
+      setShowToast(true);
+      return;
+    }
+    if (isImageTooLarge(file)) {
+      setToastMessage(`Image is too large. Max size is ${MAX_IMAGE_SIZE_MB}MB.`);
+      setShowToast(true);
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      setCropSource(dataUrl);
+    } catch (err) {
+      console.error('Error reading avatar:', err);
+      setToastMessage('Could not read that image. Try another file.');
+      setShowToast(true);
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSave = async () => {
@@ -190,13 +218,18 @@ const UserProfile: React.FC = () => {
           className="w-[88px] h-[88px] rounded-full mx-auto mb-4 cursor-pointer relative overflow-hidden bg-[var(--ion-color-primary)] flex items-center justify-center"
         >
           {user?.avatar ? (
-            <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+            <OptimizedImage src={user.avatar} alt="Profile" width={88} height={88} className="w-full h-full object-cover" />
           ) : (
             <IonIcon icon={personOutline} className="text-[44px] text-white" />
           )}
           <div className="absolute bottom-0 left-0 right-0 bg-black/40 py-1 flex items-center justify-center">
             <IonIcon icon={cameraOutline} className="text-sm text-white" />
           </div>
+          {uploadingAvatar && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <IonSpinner name="crescent" className="text-white" style={{ width: 22, height: 22 }} />
+            </div>
+          )}
         </div>
         <input
           ref={fileInputRef}
@@ -217,7 +250,7 @@ const UserProfile: React.FC = () => {
             <IonIcon icon={personOutline} className="mr-2 text-[var(--ion-color-primary)]" />
             <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Full Name</IonLabel>
           </div>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as React.CSSProperties}>
             <IonInput value={name} onIonChange={e => setName(e.detail.value!)} className="[--color:var(--ion-text-color)] text-sm" />
           </IonItem>
         </div>
@@ -231,7 +264,7 @@ const UserProfile: React.FC = () => {
               {user?.emailVerified ? 'Verified' : 'Unverified'}
             </span>
           </div>
-          <IonItem className="rounded-xl overflow-hidden opacity-70" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+          <IonItem className="rounded-xl overflow-hidden opacity-70" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as React.CSSProperties}>
             <IonInput type="email" value={email} readonly className="[--color:var(--ion-text-color)] text-sm" />
           </IonItem>
           {emailError && <span className="text-[var(--ion-color-danger)] text-xs mt-1 block">{emailError}</span>}
@@ -241,7 +274,7 @@ const UserProfile: React.FC = () => {
           <div className="flex items-center mb-2">
             <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Birth Date</IonLabel>
           </div>
-          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+          <IonItem className="rounded-xl overflow-hidden" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as React.CSSProperties}>
             <IonInput type="date" value={birthDate} onIonChange={e => setBirthDate(e.detail.value || '')} className="[--color:var(--ion-text-color)] text-sm" />
           </IonItem>
         </div>
@@ -252,14 +285,14 @@ const UserProfile: React.FC = () => {
             <IonLabel className="text-xs text-[var(--ion-text-color-secondary)]">Phone</IonLabel>
           </div>
           <div className="flex gap-2">
-            <IonItem className="rounded-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)', width: '130px' } as any}>
+            <IonItem className="rounded-xl overflow-hidden shrink-0" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)', width: '130px' } as React.CSSProperties}>
               <IonSelect value={countryCode} onIonChange={handleCountryCodeChange} interface="popover" className="[--color:var(--ion-text-color)] text-sm">
                 {COUNTRY_CODES.map(c => (
                   <IonSelectOption key={c.code} value={c.code}>{c.label}</IonSelectOption>
                 ))}
               </IonSelect>
             </IonItem>
-            <IonItem className="rounded-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as any}>
+            <IonItem className="rounded-xl overflow-hidden flex-1" style={{ '--background': 'var(--ion-card-background)', '--border-radius': '12px', '--min-height': '44px', '--inner-box-shadow': 'none', border: '1px solid var(--ion-border-color)' } as React.CSSProperties}>
               <IonInput
                 ref={phoneInputRef}
                 type="tel"
@@ -328,6 +361,41 @@ const UserProfile: React.FC = () => {
         onDidDismiss={() => setShowToast(false)}
       />
 
+      <IonModal isOpen={!!cropSource} onDidDismiss={() => setCropSource(null)}>
+        <IonHeader>
+          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
+            <IonButton slot="start" fill="clear" onClick={() => setCropSource(null)}>
+              <IonIcon icon={closeOutline} />
+            </IonButton>
+            <IonTitle>Crop Profile Photo</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent style={{ '--background': 'var(--ion-background-color)' } as React.CSSProperties}>
+          <React.Suspense
+            fallback={
+              <div className="h-64 sm:h-80 bg-[var(--ion-card-background)] flex items-center justify-center">
+                <IonSpinner name="crescent" />
+              </div>
+            }
+          >
+            {cropSource && (
+              <ImageCropper
+                source={cropSource}
+                aspect={1}
+                outputWidth={512}
+                outputHeight={512}
+                onCancel={() => setCropSource(null)}
+                onApply={async (dataUrl) => {
+                  const avatar = await persistImage(dataUrl, `avatars/${user?.id}`);
+                  await updateUserProfile({ avatar });
+                  setCropSource(null);
+                }}
+              />
+            )}
+          </React.Suspense>
+        </IonContent>
+      </IonModal>
+
       <div className="xl:hidden w-full">
         {roles.length > 1 && (
           <div className="bg-[var(--ion-card-background)] rounded-2xl p-4 border border-[var(--ion-border-color)]">
@@ -346,7 +414,7 @@ const UserProfile: React.FC = () => {
                 <button
                   key={role}
                   disabled={disabled}
-                  onClick={() => setActiveRole(role)}
+                  onClick={() => switchRole(role)}
                   className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-lg transition-colors text-sm ${
                     active ? 'bg-[var(--ion-color-primary)]/10' : 'hover:bg-[var(--ion-border-color)]/30'
                   } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}

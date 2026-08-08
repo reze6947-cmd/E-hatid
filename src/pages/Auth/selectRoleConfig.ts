@@ -1,6 +1,6 @@
 import {
   personOutline, shieldCheckmarkOutline,
-  carOutline, storefrontOutline, checkmarkCircle, logOutOutline,
+  carOutline, storefrontOutline, logOutOutline,
 } from 'ionicons/icons';
 
 export interface RoleEntry {

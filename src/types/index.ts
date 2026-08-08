@@ -1,3 +1,5 @@
+export type FirestoreTimestamp = string | number | Date | { toDate: () => Date };
+
 export interface User {
   id: string;
   name: string;
@@ -25,7 +27,7 @@ export interface User {
   isMasterAdmin?: boolean;
   roleStatus: Record<string, 'none' | 'pending' | 'approved' | 'rejected'>;
   emailVerified?: boolean;
-  created_at?: any;
+  created_at?: FirestoreTimestamp;
   accountStatus?: 'pending' | 'active' | 'rejected';
   verificationStatus?: 'pending' | 'approved' | 'rejected';
   stallName?: string;
@@ -36,7 +38,7 @@ export interface User {
   bankAccount?: string;
   bankName?: string;
   otpCode?: string;
-  otpExpiresAt?: any;
+  otpExpiresAt?: FirestoreTimestamp;
   latitude?: number;
   longitude?: number;
 }
@@ -210,6 +212,10 @@ export interface Order {
   createdAt: string | Date;
   deliveryAddress?: string;
   riderId?: string;
+  riderName?: string;
+  riderPhone?: string;
+  riderPlate?: string;
+  riderAvatar?: string;
   estimatedDeliveryTime?: string;
   customerLatitude?: number;
   customerLongitude?: number;
@@ -225,7 +231,7 @@ export interface Order {
 export interface RiderLocation {
   lat: number;
   lng: number;
-  updatedAt: any;
+  updatedAt?: FirestoreTimestamp;
   riderId: string;
 }
 
@@ -249,7 +255,7 @@ export interface Activity {
   severity?: 'low' | 'medium' | 'high' | 'info' | 'warning' | 'critical';
   timestamp: string;
   createdAt?: string | Date;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface Message {
@@ -300,7 +306,7 @@ export interface Notification {
   message: string;
   read?: boolean;
   isRead?: boolean;
-  data?: any;
+  data?: unknown;
   createdAt: string | Date;
 }
 

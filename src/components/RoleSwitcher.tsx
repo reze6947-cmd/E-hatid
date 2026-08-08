@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { swapHorizontalOutline, checkmarkCircle, time, closeCircle } from 'ionicons/icons';
-import { useHistory } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { roleHomePaths } from '../config/routesByRole';
 
 const statusIcon: Record<string, string> = {
-  approved: checkmarkCircle as any,
-  pending: time as any,
-  rejected: closeCircle as any,
+  approved: checkmarkCircle,
+  pending: time,
+  rejected: closeCircle,
 };
 
 const statusColor: Record<string, string> = {
@@ -18,17 +16,15 @@ const statusColor: Record<string, string> = {
 };
 
 const RoleSwitcher: React.FC = () => {
-  const { user, roles, setActiveRole, activeRole } = useAuth();
-  const history = useHistory();
+  const { user, roles, switchRole, activeRole } = useAuth();
   const [open, setOpen] = useState(false);
 
   if (!user || roles.length <= 1) return null;
 
   const handleSwitch = async (role: string) => {
     try {
-      await setActiveRole(role);
+      await switchRole(role);
       setOpen(false);
-      history.push(roleHomePaths[role] || '/');
     } catch (err) {
       console.error('Role switch failed:', err);
     }
@@ -72,7 +68,7 @@ const RoleSwitcher: React.FC = () => {
                   }}
                 >
                   <span style={{ flex: 1, textAlign: 'left', textTransform: 'capitalize' }}>{role}</span>
-                  <IonIcon icon={statusIcon[st] || time as any} style={{ fontSize: '14px', color: statusColor[st] || '#999' }} />
+                  <IonIcon icon={statusIcon[st] || time} style={{ fontSize: '14px', color: statusColor[st] || '#999' }} />
                 </button>
               );
             })}

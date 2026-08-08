@@ -6,9 +6,11 @@ import { useHistory } from 'react-router-dom';
 interface AuthRequiredModalProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  description?: string;
 }
 
-const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose }) => {
+const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose, title, description }) => {
   const history = useHistory();
 
   const goTo = (path: string) => {
@@ -45,10 +47,10 @@ const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({ isOpen, onClose }
           <IonIcon icon={personAddOutline} style={{ fontSize: '36px', color: '#fff' }} />
         </div>
         <h2 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: 'var(--ion-text-color)' }}>
-          Create an account to check out
+          {title || 'Create an account to order'}
         </h2>
         <p style={{ margin: 0, fontSize: '14px', color: 'var(--ion-text-color-secondary)', lineHeight: 1.5 }}>
-          You can keep browsing and adding to your cart, but you'll need an account to place your order.
+          {description || 'You need an account to add items to your cart and place orders. Creating one takes less than a minute.'}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
           <IonButton

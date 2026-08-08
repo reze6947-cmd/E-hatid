@@ -10,7 +10,7 @@ import {
   IonTitle,
   IonContent,
 } from '@ionic/react';
-import { checkmarkCircleOutline, closeOutline, storefrontOutline, personOutline, callOutline, locationOutline, cashOutline, alertCircleOutline } from 'ionicons/icons';
+import { closeOutline, storefrontOutline, personOutline, callOutline, locationOutline, cashOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import PageLoader from '../../components/PageLoader';
 import { useAuth } from '../../context/AuthContext';
@@ -22,6 +22,7 @@ import RiderPageHeader from '../../components/Rider/RiderPageHeader';
 import SegmentTabs from '../../components/Rider/SegmentTabs';
 import EmptyState from '../../components/Rider/EmptyState';
 import { useDeclinedOrders } from '../../hooks/useDeclinedOrders';
+import { formatOrderCode, formatOrderDateTime } from '../../utils/orderFormat';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   ready: { label: 'Ready', color: '#F59E0B' },
@@ -101,7 +102,14 @@ const RiderOrders: React.FC = () => {
     if (!user) return;
     setClaimingId(order.id);
     try {
-      await updateOrderStatus(order.id, { status: 'delivering', riderId: user.id });
+      await updateOrderStatus(order.id, {
+        status: 'delivering',
+        riderId: user.id,
+        riderName: user.name,
+        riderPhone: user.phone,
+        riderPlate: user.licensePlate,
+        riderAvatar: user.avatar,
+      });
       setToastMessage('Order accepted');
       setShowToast(true);
     } catch (err) {
@@ -289,8 +297,9 @@ const RiderOrders: React.FC = () => {
                   <p className="m-0 mt-1 text-xs text-[var(--ion-text-color-secondary)]">
                     {detailsOrder.items.length} item(s) · ₱{detailsOrder.total.toFixed(2)}
                   </p>
+                  <p className="m-0 mt-0.5 text-xs text-[var(--ion-text-color-secondary)]">{formatOrderDateTime(detailsOrder.createdAt)}</p>
                 </div>
-                <span className="text-xs text-[var(--ion-text-color-secondary)]">#{detailsOrder.id.slice(-5)}</span>
+                <span className="text-xs text-[var(--ion-text-color-secondary)]">{formatOrderCode(detailsOrder.id)}</span>
               </div>
 
               {detailsOrder.customerName && (
@@ -343,7 +352,7 @@ const RiderOrders: React.FC = () => {
                 variant="accept"
                 expand="block"
                 loading={claimingId === detailsOrder.id}
-                onClick={(e) => { setDetailsOrder(null); handleAccept(detailsOrder); }}
+                onClick={() => { setDetailsOrder(null); handleAccept(detailsOrder); }}
               >
                 Accept Order
               </RiderActionButton>

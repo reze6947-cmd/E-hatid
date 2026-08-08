@@ -34,6 +34,6 @@ const errorMessages: Record<string, string> = {
 };
 
 export const getAuthErrorMessage = (error: unknown): string => {
-  const code = (error as any)?.code as string | undefined;
+  const code = (error as { code?: string })?.code;
   return errorMessages[code || ''] || (error as Error)?.message || 'An unexpected error occurred';
 };

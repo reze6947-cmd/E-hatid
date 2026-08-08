@@ -38,6 +38,17 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // Master admin bootstrap
+    // The user whose SERVER-VERIFIED Firebase Auth email matches the
+    // address below may promote only their OWN account to admin.
+    // Keep this in sync with VITE_ADMIN_EMAIL in .env.
+    // ============================================================
+    function isMasterAdmin() {
+      return isAuthenticated()
+        && request.auth.token.email == 'admin@ehatid.com';
+    }
+
+    // ============================================================
     // Allowed write fields for users updating their own profile
     // ============================================================
     function allowedUserFields() {
@@ -47,7 +58,8 @@ service cloud.firestore {
               'bankAccount', 'bankName', 'riderAvailable',
               'firstName', 'middleName', 'lastName', 'suffix',
               'addressStreet', 'addressBarangay', 'addressCity',
-              'addressProvince', 'addressRegion', 'addressZip'];
+              'addressProvince', 'addressRegion', 'addressZip',
+              'activeRole'];
     }
 
     function isAllowedUserWrite() {
@@ -64,10 +76,28 @@ service cloud.firestore {
     // ============================================================
     match /users/{uid} {
       allow read: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
-      allow create: if isAdmin();
+      // A user may create their own account document, but only as a customer.
+      // Role promotions (rider/vendor/admin) must be granted by an admin / Cloud Function.
+      // The master admin may instead bootstrap their own document directly as an admin.
+      allow create: if isAuthenticated()
+                  && request.auth.uid == uid
+                  && (
+                    (request.resource.data.role == 'customer'
+                      && request.resource.data.roles.hasOnly(['customer']))
+                    || (isMasterAdmin()
+                      && request.resource.data.role == 'admin'
+                      && request.resource.data.roles.hasOnly(['admin']))
+                  );
       allow update: if isAuthenticated() && (
         (request.auth.uid == uid && isAllowedUserWrite())
         || isAdmin()
+        || (isMasterAdmin() && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['isMasterAdmin']))
+        || (isMasterAdmin() && request.auth.uid == uid
+            && request.resource.data.role == 'admin'
+            && request.resource.data.roles.hasAny(['admin'])
+            && request.resource.data.roleStatus.admin == 'approved')
       );
       allow delete: if isAdmin();
     }
@@ -145,7 +175,8 @@ service cloud.firestore {
     // ============================================================
     match /reviews/{reviewId} {
 
-      allow read: if isAuthenticated();
+      // Public read so anyone (including guests browsing a stall) can view reviews.
+      allow read: if true;
 
       allow create: if isAuthenticated()
                   && request.resource.data.userId == request.auth.uid

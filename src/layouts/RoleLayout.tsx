@@ -4,13 +4,14 @@ import { useLocation } from 'react-router-dom';
 import { chevronDownOutline } from 'ionicons/icons';
 import Navbar from '../components/Navbar';
 import AppFooter from '../components/AppFooter';
+import Seo from '../components/Seo';
 import { useAuth } from '../context/AuthContext';
 import RiderTrackingIndicator from '../components/RiderTrackingIndicator';
 import { runRefreshHandler } from '../utils/refreshBus';
 
 const noMobileTabPaths = ['/verify-otp'];
 const noNavbarPaths = ['/login', '/register', '/role-selection', '/select-role', '/apply/vendor', '/apply/rider', '/admin/register'];
-
+const privatePrefixes = ['/customer', '/rider', '/vendor', '/admin', '/login', '/register', '/select-role', '/verify-otp', '/apply', '/approval-pending', '/application-rejected', '/guest/cart', '/guest/location'];
 const showFooterForRoles = ['customer', 'stall'];
 
 const RoleLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
@@ -22,9 +23,13 @@ const RoleLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const hideMobileTab = noMobileTabPaths.some(p => path.startsWith(p));
   const showFooter = showFooterForRoles.some(r => path.startsWith(`/${r}/`));
   const isRider = activeRole === 'rider' || path.startsWith('/rider/');
+  const isPrivate = privatePrefixes.some(p => path.startsWith(p));
 
   return (
     <>
+      {isPrivate && (
+        <Seo title="E-Hatid" description="E-Hatid — food delivery in the Philippines." noindex />
+      )}
       {showNavbar && <Navbar hideMobileTabBar={hideMobileTab} />}
 
       <IonContent>

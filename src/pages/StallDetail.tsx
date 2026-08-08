@@ -11,7 +11,11 @@ import { useAuth } from '../context/AuthContext';
 import MenuItemModal from '../components/Stall/MenuItemModal';
 import AuthRequiredModal from '../components/Auth/AuthRequiredModal';
 import PageLoader from '../components/PageLoader';
+import FilterPills from '../components/FilterPills';
 import ProductCard from '../components/Stall/ProductCard';
+import OptimizedImage from '../components/OptimizedImage';
+import Seo from '../components/Seo';
+import { SITE_URL } from '../config/seo';
 import { registerRefreshHandler } from '../utils/refreshBus';
 import { haversineKm, minutesFromKm, getStoredCoords } from '../utils/geocode';
 
@@ -26,7 +30,7 @@ const StallDetail: React.FC = () => {
   const [reviewStats, setReviewStats] = useState({ average: 0, total: 0, distribution: [0, 0, 0, 0, 0] as number[] });
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const history = useHistory();
-  const { user } = useAuth();
+  const { user, activeRole } = useAuth();
   const { addToCart, items } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<string>('');
@@ -115,13 +119,15 @@ const StallDetail: React.FC = () => {
       })
     : [];
 
+  const canOrder = !!user && activeRole === 'customer';
+
   const goToCart = useCallback(() => {
-    if (user) {
+    if (canOrder) {
       history.push('/customer/cart');
     } else {
       setShowAuthModal(true);
     }
-  }, [history, user]);
+  }, [history, canOrder]);
   const navItems = [
     ...(popularItems.length > 0 ? [{ id: 'popular', label: '🔥 Popular' }] : []),
     ...categories.map(c => ({ id: c, label: c }))
@@ -137,8 +143,12 @@ const StallDetail: React.FC = () => {
     selectedAddOns: SelectedAddOn[];
     specialInstructions: string;
   }) => {
+    if (!canOrder) {
+      setShowAuthModal(true);
+      return;
+    }
     addToCart({ ...input, item: { ...input.item, stallId: id } });
-  }, [addToCart, id]);
+  }, [addToCart, id, canOrder]);
 
   const handleCloseModal = useCallback(() => {
     setSelectedItem(null);
@@ -212,14 +222,51 @@ const StallDetail: React.FC = () => {
 
   return (
     <>
+      <Seo
+        title={`${stall.name} — Menu & Delivery`}
+        description={
+          stall.description
+            ? `${stall.description} Order ${stall.name} food delivery online — ${stall.deliveryTime}, delivery fee ₱${stall.deliveryFee}.`
+            : `Order ${stall.name} food delivery online with E-Hatid — ${stall.deliveryTime}, delivery fee ₱${stall.deliveryFee}.`
+        }
+        keywords={`${stall.name}, ${stall.cuisine || ''}, ${stall.category || ''}, food delivery, order ${stall.name} online, food delivery near me`.replace(/,\s*,/g, ',').replace(/,\s*$/, '')}
+        canonicalPath={`/stall/${stall.id}/menu`}
+        image={stall.image && /^https?:\/\//.test(stall.image) ? stall.image : undefined}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Restaurant',
+          name: stall.name,
+          description: stall.description,
+          url: `${SITE_URL}/stall/${stall.id}/menu`,
+          servesCuisine: stall.cuisine || stall.category || 'Filipino',
+          priceRange: '₱₱',
+          image: stall.image && /^https?:\/\//.test(stall.image) ? stall.image : undefined,
+          address: stall.address ? {
+            '@type': 'PostalAddress',
+            streetAddress: stall.address,
+          } : undefined,
+          geo: stall.latitude != null && stall.longitude != null ? {
+            '@type': 'GeoCoordinates',
+            latitude: stall.latitude,
+            longitude: stall.longitude,
+          } : undefined,
+          aggregateRating: reviewStats.total > 0 ? {
+            '@type': 'AggregateRating',
+            ratingValue: Number(reviewStats.average.toFixed(1)),
+            reviewCount: reviewStats.total,
+          } : undefined,
+        }}
+      />
       <div className="max-w-7xl mx-auto">
         {/* Banner */}
-        <div className="relative w-full h-[180px] sm:h-[220px] md:h-[280px] lg:h-[350px] overflow-hidden bg-[var(--ion-background-color)]">
-          <img
+        <div className="relative w-full aspect-[2/1] overflow-hidden bg-[var(--ion-background-color)]">
+          <OptimizedImage
             src={stall.image}
             alt={stall.name}
+            width={1216}
+            height={608}
+            priority
             className="w-full h-full object-cover"
-            loading="lazy"
             onError={(e) => { e.currentTarget.style.display = 'none'; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -230,11 +277,12 @@ const StallDetail: React.FC = () => {
           <div className="flex items-start gap-4 pt-4 md:pt-5">
             {stall.logo && (
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border border-[var(--ion-border-color)] bg-[var(--ion-card-background)] shrink-0">
-                <img
+                <OptimizedImage
                   src={stall.logo}
                   alt={`${stall.name} logo`}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
-                  loading="lazy"
                 />
               </div>
             )}
@@ -283,30 +331,20 @@ const StallDetail: React.FC = () => {
 
         {/* Sticky Category Navigation */}
         {navItems.length > 1 && (
-          <div className="sticky top-0 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)] mt-4 overflow-x-auto no-scrollbar">
-            <div className="flex gap-3 p-1 rounded-full w-max min-w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-              {navItems.map(nav => (
-                <button
-                  key={nav.id}
-                  onClick={() => {
-                    setActiveSection(nav.id);
-                    const el = sectionRefMap.current.get(nav.id);
+          <div className="sticky top-0 z-20 bg-[var(--ion-card-background)] border-b border-[var(--ion-border-color)] mt-4">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 flex items-center gap-3">
+              <div className="flex-1 min-w-0">
+                <FilterPills
+                  layoutId="stall-pill"
+                  value={activeSection}
+                  onChange={(id) => {
+                    setActiveSection(id);
+                    const el = sectionRefMap.current.get(id);
                     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className="relative min-w-[88px] sm:min-w-[100px] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95 rounded-full"
-                >
-                  {activeSection === nav.id && (
-                    <motion.div
-                      layoutId="active-pill"
-                      className="absolute inset-0 bg-[var(--ion-color-primary)] rounded-full"
-                      transition={{ type: "spring", stiffness: 300, damping: 50, mass: 1.2 }}
-                    />
-                  )}
-                  <span className={`relative z-10 block truncate ${activeSection === nav.id ? "text-white" : "text-gray-500 dark:text-gray-300"}`}>
-                    {nav.label}
-                  </span>
-                </button>
-              ))}
+                  items={navItems}
+                />
+              </div>
               {cartCount > 0 && (
                 <button
                   type="button"
@@ -512,6 +550,10 @@ const StallDetail: React.FC = () => {
       <AuthRequiredModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        title={user ? 'Switch to your Customer role to order' : 'Create an account to order'}
+        description={user
+          ? `You're signed in as ${activeRole || 'this role'}. Switch to the Customer role to add items and place orders.`
+          : 'You need an account to add items to your cart and place orders. Creating one takes less than a minute.'}
       />
     </>
   );

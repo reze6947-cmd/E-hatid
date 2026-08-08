@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { IonButton, IonInput, IonItem, IonLabel, IonSpinner, IonToast } from '@ionic/react';
+import { IonButton, IonInput, IonItem, IonSpinner, IonToast } from '@ionic/react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import AdminPageShell from '../../components/admin/AdminPageShell';
@@ -81,7 +81,7 @@ const AdminDeliveryConfig: React.FC = () => {
                     value={String(config[f.key])}
                     onIonInput={e => setConfig(prev => ({ ...prev, [f.key]: Number(e.detail.value) }))}
                     className="text-sm"
-                    style={{ '--padding-start': '12px', '--padding-end': '12px', '--min-height': '40px', '--highlight-height': '0' } as any}
+                    style={{ '--padding-start': '12px', '--padding-end': '12px', '--min-height': '40px', '--highlight-height': '0' } as React.CSSProperties}
                   />
                 </IonItem>
               </div>

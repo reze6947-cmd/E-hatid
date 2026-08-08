@@ -40,7 +40,7 @@ const AdminPageShell: React.FC<AdminPageShellProps> = ({
             '--icon-color': 'var(--ion-color-primary)',
             '--color': 'var(--ion-text-color)',
             padding: '0', height: '48px', marginTop: '12px',
-          } as any}
+          } as React.CSSProperties}
         />
       )}
     </div>

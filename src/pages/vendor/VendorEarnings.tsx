@@ -8,10 +8,11 @@ import { fetchOrdersByVendor, getEarningsStats } from '../../services/orderServi
 import { Order } from '../../types';
 import PageHeader from '../../components/ui/PageHeader';
 import PageLoader from '../../components/PageLoader';
+import { formatOrderCode, formatOrderDateTime } from '../../utils/orderFormat';
 
 const VendorEarnings: React.FC = () => {
-  const history = useHistory();
-  const { logout, user } = useAuth();
+  useHistory();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -103,13 +104,13 @@ const VendorEarnings: React.FC = () => {
                       <IonCard key={i} className="m-0 rounded-xl shadow">
                         <IonCardContent>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-[var(--ion-color-primary)]">#{txn.id.slice(-5)}</span>
+                            <span className="font-semibold text-[var(--ion-color-primary)]">{formatOrderCode(txn.id)}</span>
                             <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full ${
                               txn.status === 'delivered' ? 'bg-[var(--ion-color-success)]/10 text-[var(--ion-color-success)]' : 'bg-[var(--ion-color-primary)]/10 text-[var(--ion-color-primary)]'
                             }`}>{txn.status === 'delivered' ? 'Paid' : txn.status}</span>
                           </div>
                           <p className="m-0 mb-2 text-sm text-[var(--ion-text-color)]">{txn.customerName || 'Unknown customer'}</p>
-                          <p className="m-0 text-sm text-[var(--ion-text-color-secondary)]">{new Date(txn.createdAt).toLocaleString()}</p>
+                          <p className="m-0 text-sm text-[var(--ion-text-color-secondary)]">{formatOrderDateTime(txn.createdAt)}</p>
                           <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--ion-border-color)]">
                             <span className="text-xs font-medium text-[var(--ion-text-color-secondary)]">Amount</span>
                             <span className="text-base font-bold text-[var(--ion-text-color)]">₱{txn.total.toFixed(2)}</span>

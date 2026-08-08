@@ -4,10 +4,13 @@ import { imageOutline, checkmarkCircle } from 'ionicons/icons';
 import Cropper, { type Area } from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
 
-interface ProductImageCropperProps {
+interface ImageCropperProps {
   source: string;
   onCancel: () => void;
   onApply: (dataUrl: string) => void;
+  aspect?: number;
+  outputWidth?: number;
+  outputHeight?: number;
 }
 
 const loadImage = (src: string): Promise<HTMLImageElement> =>
@@ -18,7 +21,14 @@ const loadImage = (src: string): Promise<HTMLImageElement> =>
     img.src = src;
   });
 
-const ProductImageCropper: React.FC<ProductImageCropperProps> = ({ source, onCancel, onApply }) => {
+const ImageCropper: React.FC<ImageCropperProps> = ({
+  source,
+  onCancel,
+  onApply,
+  aspect = 1,
+  outputWidth = 300,
+  outputHeight = 300,
+}) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -28,11 +38,11 @@ const ProductImageCropper: React.FC<ProductImageCropperProps> = ({ source, onCan
     try {
       const img = await loadImage(source);
       const canvas = document.createElement('canvas');
-      canvas.width = 300;
-      canvas.height = 300;
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      ctx.drawImage(img, croppedAreaPixels.x, croppedAreaPixels.y, croppedAreaPixels.width, croppedAreaPixels.height, 0, 0, 300, 300);
+      ctx.drawImage(img, croppedAreaPixels.x, croppedAreaPixels.y, croppedAreaPixels.width, croppedAreaPixels.height, 0, 0, outputWidth, outputHeight);
       onApply(canvas.toDataURL('image/jpeg', 0.85));
     } catch (err) {
       console.error('Failed to crop image:', err);
@@ -46,7 +56,7 @@ const ProductImageCropper: React.FC<ProductImageCropperProps> = ({ source, onCan
           image={source}
           crop={crop}
           zoom={zoom}
-          aspect={1}
+          aspect={aspect}
           onCropChange={setCrop}
           onZoomChange={setZoom}
           onCropComplete={(_, pixelCrop) => setCroppedAreaPixels(pixelCrop)}
@@ -79,4 +89,4 @@ const ProductImageCropper: React.FC<ProductImageCropperProps> = ({ source, onCan
   );
 };
 
-export default ProductImageCropper;
+export default ImageCropper;

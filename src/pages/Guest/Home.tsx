@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import { IonButton, IonIcon, IonSearchbar } from '@ionic/react';
 import { locationOutline, starOutline, chevronForwardOutline, timeOutline, carOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -8,11 +7,13 @@ import { useCart } from '../../context/CartContext';
 import { fetchStalls, getCategories } from '../../services/stallService';
 import { Stall } from '../../types/index';
 import PageLoader from '../../components/PageLoader';
+import FilterPills from '../../components/FilterPills';
+import OptimizedImage from '../../components/OptimizedImage';
 
 const GuestHome: React.FC = () => {
   const history = useHistory();
   const { user, isAuthenticated } = useAuth();
-  const { itemCount } = useCart();
+  useCart();
   const [stalls, setStalls] = useState<Stall[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -44,8 +45,8 @@ const GuestHome: React.FC = () => {
     return 'Good evening';
   };
 
-  const handleSearch = (e: any) => {
-    setSearchQuery(e.detail.value || '');
+  const handleSearch = (e: CustomEvent) => {
+    setSearchQuery((e.detail as { value?: string }).value || '');
   };
 
   if (initialLoading) {
@@ -83,28 +84,12 @@ const GuestHome: React.FC = () => {
         </div>
 
         {/* Categories */}
-        <div className="py-1 sm:py-2 overflow-x-auto no-scrollbar">
-          <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-full w-max min-w-full">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className="relative min-w-[90px] px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors rounded-full"
-              >
-                {selectedCategory === cat && (
-                  <motion.div
-                    layoutId="active-pill"
-                    className="absolute inset-0 bg-(--ion-color-primary) rounded-full"
-                    transition={{ type: "spring", stiffness: 300, damping: 50, mass: 1.2 }}
-                  />
-                )}
-                <span className={`relative z-10 block truncate ${selectedCategory === cat ? "text-white" : "text-gray-500 dark:text-gray-300"}`}>
-                  {cat}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <FilterPills
+          layoutId="guest-home-pill"
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+          items={categories.map(cat => ({ id: cat, label: cat }))}
+        />
 
         {/* Main Content */}
         <div className="py-2 sm:py-4">
@@ -129,7 +114,7 @@ const GuestHome: React.FC = () => {
               {stalls.map((stall) => (
                 <div key={stall.id} className="rounded-2xl overflow-hidden bg-(--ion-card-background) border border-(--ion-border-color) shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer" onClick={() => history.push(`/stall/${stall.id}/menu`)}>
                   <div className="relative aspect-4/3 overflow-hidden" data-initial={stall.name.charAt(0)}>
-                    <img src={stall.logo || stall.image} alt={stall.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('img-failed'); }} />
+                    <OptimizedImage src={stall.logo || stall.image} alt={stall.name} width={480} height={360} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('img-failed'); }} />
                     <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
                     <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex items-center gap-1 bg-white/90 dark:bg-dark-card/90 text-gray-800 dark:text-gray-200 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
                       <IonIcon icon={starOutline} className="text-amber-500 text-xs" />

@@ -2,20 +2,18 @@ import React, { useEffect, useState } from 'react';
 import {
   IonButton,
   IonIcon,
-  IonBadge,
 } from '@ionic/react';
 import { receiptOutline, bicycleOutline, checkmarkCircle } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 import { useOrders } from '../../context/OrderContext';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../firebaseConfig';
-import { Order, User } from '../../types';
-import { getUserDocument } from '../../services/userService';
+import { subscribeCustomerOrders } from '../../services/orderService';
+import { Order } from '../../types';
 import { hasReviewedOrder } from '../../services/reviewService';
 import ReviewModal from '../../components/Reviews/ReviewModal';
 import PageLoader from '../../components/PageLoader';
+import { formatOrderCode, formatOrderDateTime, toDate } from '../../utils/orderFormat';
 
 const STATUS_BADGE: Record<string, { color: string; label: string }> = {
   pending: { color: '#F59E0B', label: 'Pending' },
@@ -28,7 +26,7 @@ const STATUS_BADGE: Record<string, { color: string; label: string }> = {
 };
 
 const getBadgeColor = (status: string) => {
-  return (STATUS_BADGE[status]?.color || '#9CA3AF') as any;
+  return STATUS_BADGE[status]?.color || '#9CA3AF';
 };
 
 const UserOrders: React.FC = () => {
@@ -38,18 +36,12 @@ const UserOrders: React.FC = () => {
   const [firestoreOrders, setFirestoreOrders] = useState<Order[]>([]);
   const [loadingFirestore, setLoadingFirestore] = useState(true);
   const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
-  const [riderUsers, setRiderUsers] = useState<Record<string, User>>({});
   const [reviewedOrders, setReviewedOrders] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!user) { setLoadingFirestore(false); return; }
-    const q = query(collection(db, 'orders'), where('userId', '==', user.id));
-    const unsub = onSnapshot(q, snapshot => {
-      const items: Order[] = [];
-      snapshot.forEach(doc => {
-        items.push({ id: doc.id, ...doc.data() } as Order);
-      });
-      setFirestoreOrders(items);
+    const unsub = subscribeCustomerOrders(user.id, orders => {
+      setFirestoreOrders(orders);
       setLoadingFirestore(false);
     });
     return () => unsub();
@@ -69,29 +61,10 @@ const UserOrders: React.FC = () => {
       const aActive = a.status !== 'delivered' && a.status !== 'cancelled';
       const bActive = b.status !== 'delivered' && b.status !== 'cancelled';
       if (aActive !== bActive) return aActive ? -1 : 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return (toDate(b.createdAt)?.getTime() ?? 0) - (toDate(a.createdAt)?.getTime() ?? 0);
     });
     return result;
   }, [firestoreOrders, localOrders]);
-
-  // Fetch rider user docs (name, license plate) for orders with an assigned rider
-  useEffect(() => {
-    const riderIds = new Set<string>();
-    mergedOrders.forEach(o => { if (o.riderId) riderIds.add(o.riderId); });
-    if (riderIds.size === 0) return;
-    let cancelled = false;
-    (async () => {
-      const result: Record<string, User> = {};
-      for (const id of Array.from(riderIds)) {
-        try {
-          const u = await getUserDocument(id);
-          if (u) result[id] = u;
-        } catch {}
-      }
-      if (!cancelled) setRiderUsers(prev => ({ ...prev, ...result }));
-    })();
-    return () => { cancelled = true; };
-  }, [mergedOrders]);
 
   // Track which delivered orders already have a review (only-review-once)
   const refreshReviewed = async (orderId: string) => {
@@ -152,7 +125,7 @@ const UserOrders: React.FC = () => {
                         {order.stallName || 'Order'}
                       </span>
                       <span className="text-xs text-[var(--ion-text-color-secondary)] block mt-0.5">
-                        Order #{order.id.slice(-6).toUpperCase()}
+                        Order {formatOrderCode(order.id)}
                       </span>
                     </div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold shrink-0" style={{ backgroundColor: getBadgeColor(order.status) + '1A', color: getBadgeColor(order.status), border: '1px solid ' + getBadgeColor(order.status) + '30' }}>{STATUS_BADGE[order.status]?.label || order.status}</span>
@@ -163,7 +136,7 @@ const UserOrders: React.FC = () => {
                         {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                       </p>
                       <p className="m-0 text-xs text-[var(--ion-text-color-secondary)]">
-                        {new Date(order.createdAt).toLocaleDateString()} {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {formatOrderDateTime(order.createdAt)}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -185,12 +158,12 @@ const UserOrders: React.FC = () => {
                     </div>
                   </div>
 
-                  {order.riderId && riderUsers[order.riderId] && (
+                  {order.riderId && order.riderName && (
                     <div className="mt-2 pt-2 border-t border-[var(--ion-border-color)] flex items-center gap-1.5 text-xs text-[var(--ion-text-color-secondary)]">
                       <IonIcon icon={bicycleOutline} className="text-sm text-[var(--ion-color-primary)] shrink-0" />
-                      <span className="truncate">{riderUsers[order.riderId].name}</span>
-                      {riderUsers[order.riderId].licensePlate && (
-                        <span className="truncate font-medium">· {riderUsers[order.riderId].licensePlate}</span>
+                      <span className="truncate">{order.riderName}</span>
+                      {order.riderPlate && (
+                        <span className="truncate font-medium">· {order.riderPlate}</span>
                       )}
                     </div>
                   )}

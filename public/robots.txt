@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /guest/
+Disallow: /customer
+Disallow: /rider
+Disallow: /vendor
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /select-role
+Disallow: /verify-otp
+Disallow: /apply
+Disallow: /approval-pending
+Disallow: /application-rejected
+Disallow: /guest/cart
+Disallow: /guest/location
+
+Sitemap: https://ehatid.vercel.app/sitemap.xml

@@ -2,6 +2,7 @@ import React from 'react';
 import { IonButton, IonIcon } from '@ionic/react';
 import { add, flame, checkmarkCircle } from 'ionicons/icons';
 import { MenuItem as MenuItemType } from '../../types';
+import OptimizedImage from '../OptimizedImage';
 
 interface MenuItemProps {
   item: MenuItemType;
@@ -13,7 +14,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ item, onAdd, quantity }) => {
   return (
     <div className="rounded-xl overflow-hidden bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group">
       <div className="relative aspect-[4/3] overflow-hidden">
-        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <OptimizedImage src={item.image} alt={item.name} width={480} height={360} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300"></div>
 
         {item.popular && (

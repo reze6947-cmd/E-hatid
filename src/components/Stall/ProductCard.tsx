@@ -2,6 +2,7 @@ import React from 'react';
 import { IonIcon, IonButton } from '@ionic/react';
 import { add, flame } from 'ionicons/icons';
 import { MenuItem } from '../../types';
+import OptimizedImage from '../OptimizedImage';
 
 interface ProductCardProps {
   item: MenuItem;
@@ -17,11 +18,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, stallImage, onItemClick
       onClick={() => onItemClick(item)}
     >
       <div className="relative w-24 xs:w-28 sm:w-32 md:w-40 lg:w-48 xl:w-56 shrink-0 self-start aspect-square overflow-hidden bg-[var(--ion-background-color)]">
-        <img
+        <OptimizedImage
           src={item.image || stallImage}
           alt={item.name}
+          width={224}
+          height={224}
           className="w-full h-full object-cover"
-          loading="lazy"
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />
         {showPopularBadge && (

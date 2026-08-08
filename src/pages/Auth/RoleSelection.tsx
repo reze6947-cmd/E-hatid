@@ -3,12 +3,11 @@ import { IonIcon } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { personOutline, checkmarkCircle } from 'ionicons/icons';
 import { useAuth } from '../../context/AuthContext';
-import { getRoleRedirect } from '../../services/roleGuard';
 import { selectRoleConfig } from './selectRoleConfig';
 
 const RoleSelection: React.FC = () => {
   const history = useHistory();
-  const { user, roles, setActiveRole, logout } = useAuth();
+  const { roles, switchRole, logout } = useAuth();
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const cfg = selectRoleConfig;
@@ -28,9 +27,7 @@ const RoleSelection: React.FC = () => {
   const handleSelect = async (role: string) => {
     setSelected(role);
     setLoading(true);
-    await setActiveRole(role);
-    const redirect = getRoleRedirect(user!, role);
-    history.replace(redirect || cfg.roleHomePaths[role] || `/${role}/home`);
+    await switchRole(role);
   };
 
   return (

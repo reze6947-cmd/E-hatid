@@ -131,7 +131,7 @@ const VerifyOtp: React.FC = () => {
               setOtp(val);
             }}
             className="w-full max-w-[280px] mx-auto text-center text-3xl sm:text-4xl font-bold tracking-[0.5em] [--color:var(--ion-text-color)] [--placeholder-color:var(--ion-text-color-secondary)] [--background:var(--ion-card-background)] [--padding-start:16px] [--padding-end:16px] [--padding-top:16px] [--padding-bottom:16px] border-2 border-[var(--ion-color-primary)] rounded-xl"
-            style={{ '--border-radius': '12px', '--highlight-height': '0' } as any}
+            style={{ '--border-radius': '12px', '--highlight-height': '0' } as React.CSSProperties}
           />
         </div>
 

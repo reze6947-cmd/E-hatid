@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import {
-  IonContent, IonSearchbar, IonSegment, IonSegmentButton, IonLabel, IonCard, IonCardContent,
+  IonContent, IonCard, IonCardContent,
   IonIcon, IonBadge, IonButton, IonModal, IonHeader, IonToolbar, IonTitle, IonBackButton, IonTextarea,
   IonItem, IonSelect, IonSelectOption,
 } from '@ionic/react';
-import { warningOutline, alertCircleOutline, checkmarkCircleOutline, closeCircleOutline, personOutline, timeOutline, pencilOutline, shieldCheckmarkOutline } from 'ionicons/icons';
+import { warningOutline, shieldCheckmarkOutline } from 'ionicons/icons';
 import { Report } from '../../types';
 import AdminPageShell from '../../components/admin/AdminPageShell';
+import FilterPills from '../../components/FilterPills';
 
 const AdminReports: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,10 +35,6 @@ const AdminReports: React.FC = () => {
     return colors[s] || '#9CA3AF';
   };
 
-  const updateReportStatus = (id: string, status: string) => {
-    setReports(reports.map(r => r.id === id ? { ...r, status: status as Report['status'], updatedAt: new Date() } : r));
-  };
-
   const openDetails = (report: Report) => {
     setSelectedReport(report);
     setNewStatus(report.status);
@@ -58,19 +55,35 @@ const AdminReports: React.FC = () => {
         search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search reports...' }}
       >
         <div>
-          <IonSegment value={filterStatus} onIonChange={e => setFilterStatus(e.detail.value as string)} scrollable className="mb-4">
-            <IonSegmentButton value="all"><IonLabel>All</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="open"><IonLabel>Open</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="under_review"><IonLabel>Review</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="resolved"><IonLabel>Resolved</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="rejected"><IonLabel>Rejected</IonLabel></IonSegmentButton>
-          </IonSegment>
-          <IonSegment value={filterPriority} onIonChange={e => setFilterPriority(e.detail.value as string)} className="mb-4">
-            <IonSegmentButton value="all"><IonLabel>All Priority</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="high"><IonLabel>🔥 High</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="medium"><IonLabel>⚡ Medium</IonLabel></IonSegmentButton>
-            <IonSegmentButton value="low"><IonLabel>💤 Low</IonLabel></IonSegmentButton>
-          </IonSegment>
+          <div className="mb-4">
+            <FilterPills
+              layoutId="admin-reports-status"
+              even
+              value={filterStatus}
+              onChange={setFilterStatus}
+              items={[
+                { id: 'all', label: 'All' },
+                { id: 'open', label: 'Open' },
+                { id: 'under_review', label: 'Review' },
+                { id: 'resolved', label: 'Resolved' },
+                { id: 'rejected', label: 'Rejected' },
+              ]}
+            />
+          </div>
+          <div className="mb-4">
+            <FilterPills
+              layoutId="admin-reports-priority"
+              even
+              value={filterPriority}
+              onChange={setFilterPriority}
+              items={[
+                { id: 'all', label: 'All Priority' },
+                { id: 'high', label: '🔥 High' },
+                { id: 'medium', label: '⚡ Medium' },
+                { id: 'low', label: '💤 Low' },
+              ]}
+            />
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <IonCard style={{ margin: 0, background: 'var(--ion-card-background)' }}>
@@ -122,12 +135,12 @@ const AdminReports: React.FC = () => {
 
       <IonModal isOpen={showDetails} onDidDismiss={() => setShowDetails(false)}>
         <IonHeader>
-          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as any}>
+          <IonToolbar style={{ '--background': 'var(--ion-card-background)' } as React.CSSProperties}>
             <IonButton slot="start" fill="clear" onClick={() => setShowDetails(false)}><IonBackButton /></IonButton>
             <IonTitle>Report Details</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent style={{ '--background': 'var(--ion-background-color)' } as any}>
+        <IonContent style={{ '--background': 'var(--ion-background-color)' } as React.CSSProperties}>
           {selectedReport && (
             <div style={{ padding: '16px' }}>
               <IonCard style={{ margin: 0, background: 'var(--ion-card-background)' }}>

@@ -3,6 +3,7 @@ import React from 'react';
 import { IonButton, IonIcon } from '@ionic/react';
 import { add, remove, trash } from 'ionicons/icons';
 import { CartItem as CartItemType } from '../../types';
+import OptimizedImage from '../OptimizedImage';
 
 interface CartItemProps {
   item: CartItemType;
@@ -18,7 +19,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRemove })
   return (
     <div className="flex flex-col xs:flex-row gap-2.5 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm">
       <div className="relative w-full xs:w-20 sm:w-24 aspect-square shrink-0 mx-auto xs:mx-0">
-        <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+        <OptimizedImage src={item.image} alt={item.name} width={96} height={96} className="w-full h-full object-cover rounded-lg" />
       </div>
 
       <div className="flex flex-col flex-1 min-w-0 w-full">

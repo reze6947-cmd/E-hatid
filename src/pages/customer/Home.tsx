@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import {
   IonSearchbar,
   IonIcon,
@@ -15,6 +14,10 @@ import { registerRefreshHandler } from '../../utils/refreshBus';
 import { reverseGeocode, haversineKm, minutesFromKm, getStoredCoords } from '../../utils/geocode';
 
 import PageLoader from '../../components/PageLoader';
+import FilterPills from '../../components/FilterPills';
+import OptimizedImage from '../../components/OptimizedImage';
+import Seo from '../../components/Seo';
+import { SITE_KEYWORDS } from '../../config/seo';
 import { Stall } from '../../types/index';
 import {
   locationOutline,
@@ -33,7 +36,7 @@ const NEAREST_LIMIT = 12;
 const CustomerHome: React.FC = () => {
   const history = useHistory();
   const { user, isAuthenticated, updateUserProfile } = useAuth();
-  const { itemCount } = useCart();
+  useCart();
   const [allStalls, setAllStalls] = useState<Stall[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -142,7 +145,7 @@ const CustomerHome: React.FC = () => {
     return 'Good evening';
   };
 
-  const handleSearch = (e: any) => {
+  const handleSearch = (e: CustomEvent) => {
     setSearchQuery(e.detail.value || '');
   };
 
@@ -208,15 +211,25 @@ const CustomerHome: React.FC = () => {
 
   return (
     <>
+      {user ? (
+        <Seo title="Home" description="Order food delivery near you on E-Hatid." noindex />
+      ) : (
+        <Seo
+          title="Food Stalls &amp; Delivery Near You"
+          description="Browse food stalls near you, compare delivery fees, and order food delivery online with E-Hatid."
+          keywords={SITE_KEYWORDS}
+          canonicalPath="/guest/home"
+        />
+      )}
 
       <div className="w-full flex-1 md:pt-8 pb-10 flex flex-col space-y-3 sm:space-y-4">
         {/* Header Section */}
         <div>
           <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-extrabold text-[var(--ion-text-color)] m-0 truncate">
-            {getGreeting()}{user?.name ? `, ${user.name}` : ''}!
+            {user ? `${getGreeting()}${user.name ? `, ${user.name}` : ''}!` : 'Food Stalls & Delivery Near You'}
           </h1>
           <p className="text-sm xs:text-base sm:text-lg text-[var(--ion-text-color-secondary)] mt-1 sm:mt-2">
-            What would you like to eat today?
+            {user ? 'What would you like to eat today?' : 'Browse local food stalls and order food delivery online.'}
           </p>
         </div>
 
@@ -257,28 +270,12 @@ const CustomerHome: React.FC = () => {
         </div>
 
         {/* Categories */}
-        <div className="overflow-x-auto no-scrollbar">
-          <div className="flex gap-3 bg-[var(--ion-card-background)] p-1 rounded-full w-max min-w-full">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className="relative min-w-[100px] px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95 rounded-full"
-              >
-                {selectedCategory === cat && (
-                  <motion.div
-                    layoutId="active-pill"
-                    className="absolute inset-0 bg-[var(--ion-color-primary)] rounded-full"
-                    transition={{ type: "spring", stiffness: 300, damping: 50, mass: 1.2 }}
-                  />
-                )}
-                <span className={`relative z-10 block truncate ${selectedCategory === cat ? "text-white" : "text-gray-500 dark:text-gray-300"}`}>
-                  {cat}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <FilterPills
+          layoutId="customer-home-pill"
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+          items={categories.map(cat => ({ id: cat, label: cat }))}
+        />
 
         {/* Main Content */}
         <div className="min-h-[400px] flex flex-col">
@@ -312,7 +309,7 @@ const CustomerHome: React.FC = () => {
                     >
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm transition-all duration-200 group-hover:scale-105 group-active:scale-95">
                         {stall.logo || stall.image ? (
-                          <img src={stall.logo || stall.image} alt={stall.name} className="w-full h-full object-cover" loading="lazy" />
+                          <OptimizedImage src={stall.logo || stall.image} alt={stall.name} width={80} height={80} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[var(--ion-color-primary)] text-white text-2xl font-bold">
                             {stall.name.charAt(0).toUpperCase()}
@@ -381,7 +378,7 @@ const CustomerHome: React.FC = () => {
               {filteredStalls.map((stall) => (
                 <div key={stall.id} id={`stall-${stall.id}`} className={`rounded-2xl overflow-hidden bg-[var(--ion-card-background)] border border-[var(--ion-border-color)] shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${nearestStall?.id === stall.id && nearestShow ? 'ring-2 ring-[var(--ion-color-primary)]' : ''}`} onClick={() => history.push(`/stall/${stall.id}/menu`)}>
                   <div className="relative aspect-square overflow-hidden" data-initial={stall.name.charAt(0)}>
-                    <img src={stall.logo || stall.image} alt={stall.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('img-failed'); }} />
+                    <OptimizedImage src={stall.logo || stall.image} alt={stall.name} width={400} height={400} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('img-failed'); }} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                     {nearestStall?.id === stall.id && nearestShow && (
                       <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex items-center gap-1 bg-[var(--ion-color-primary)] text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">

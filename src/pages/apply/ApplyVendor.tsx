@@ -5,9 +5,8 @@ import {
   IonItem,
   IonIcon,
   IonLoading,
-  IonText,
 } from '@ionic/react';
-import { arrowBackOutline, personOutline, mailOutline, callOutline, businessOutline, checkmarkCircleOutline, timeOutline, closeCircleOutline, locationOutline, informationCircleOutline, folderOpenOutline, fileTrayFullOutline, idCardOutline, imageOutline, alertCircleOutline } from 'ionicons/icons';
+import { arrowBackOutline, personOutline, mailOutline, callOutline, businessOutline, checkmarkCircleOutline, timeOutline, closeCircleOutline, locationOutline, informationCircleOutline, folderOpenOutline, fileTrayFullOutline, idCardOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { submitApplicationDoc } from '../../services/userService';
@@ -217,7 +216,7 @@ const ApplyVendor: React.FC = () => {
           uploadedUrls.representativeIdImageUrl = await uploadFile(files.representativeIdImage, user!.id, 'representative-id');
         }
       }
-    } catch (uploadErr: any) {
+    } catch (uploadErr) {
       console.error('Upload error:', uploadErr);
       setSubmitError('Failed to upload document. Check connection or file size.');
       setLoading(false);
@@ -225,7 +224,7 @@ const ApplyVendor: React.FC = () => {
       return;
     }
 
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
       ...formData,
       ...uploadedUrls,
       applicationType,
@@ -234,10 +233,15 @@ const ApplyVendor: React.FC = () => {
     try {
       setUploadProgress('Submitting application...');
       await applyForRole('vendor', payload);
-    } catch (roleErr: any) {
+    } catch (roleErr) {
       console.error('Role application error:', roleErr);
-      if (roleErr?.message === 'ALREADY_EXISTS') setSubmitError('Already applied or already have this role');
-      else if (roleErr?.message === 'EMAIL_NOT_VERIFIED') setSubmitError('Please verify your email before applying');
+      const roleErrMessage = roleErr instanceof Error
+        ? roleErr.message
+        : typeof roleErr === 'object' && roleErr !== null && 'message' in roleErr
+          ? String((roleErr as { message: unknown }).message)
+          : undefined;
+      if (roleErrMessage === 'ALREADY_EXISTS') setSubmitError('Already applied or already have this role');
+      else if (roleErrMessage === 'EMAIL_NOT_VERIFIED') setSubmitError('Please verify your email before applying');
       else setSubmitError('Submission failed. Please try again.');
       setLoading(false);
       setUploadProgress('');
@@ -246,7 +250,7 @@ const ApplyVendor: React.FC = () => {
 
     try {
       await submitApplicationDoc(user!.id, 'vendor', payload);
-    } catch (docErr: any) {
+    } catch (docErr) {
       console.error('Application doc error:', docErr);
     }
 
@@ -255,14 +259,14 @@ const ApplyVendor: React.FC = () => {
     history.replace('/approval-pending?role=vendor');
   };
 
-  const inputStyle = { '--color': 'var(--ion-text-color)' } as any;
-  const itemStyle = { marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as any;
+  const inputStyle = { '--color': 'var(--ion-text-color)' } as React.CSSProperties;
+  const itemStyle = { marginBottom: '0', '--background': 'var(--ion-card-background)', '--border': '1px solid var(--ion-border-color)' } as React.CSSProperties;
   const labelStyle: React.CSSProperties = { display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--ion-text-color)', textTransform: 'uppercase', opacity: 0.7 };
   const selectStyle: React.CSSProperties = { width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--ion-border-color)', background: 'var(--ion-card-background)', color: 'var(--ion-text-color)', fontFamily: 'inherit', fontSize: '14px' };
   const errorTextStyle: React.CSSProperties = { margin: '4px 0 0', fontSize: '12px', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '4px' };
 
-  const renderField = (key: string, label: string, placeholder: string, icon: string, type: any = 'text') => (
-    <div style={{ marginBottom: '14px' }} data-error={!!errors[key] ? 'true' : undefined}>
+  const renderField = (key: string, label: string, placeholder: string, icon: string, type: 'text' | 'email' | 'tel' = 'text') => (
+    <div style={{ marginBottom: '14px' }} data-error={errors[key] ? 'true' : undefined}>
       <label style={labelStyle}>{label}</label>
       <IonItem style={itemStyle}>
         <IonIcon icon={icon} slot="start" color="primary" />
@@ -273,7 +277,7 @@ const ApplyVendor: React.FC = () => {
   );
 
   const renderSelect = (key: string, label: string, options: string[], placeholder: string) => (
-    <div style={{ marginBottom: '14px' }} data-error={!!errors[key] ? 'true' : undefined}>
+    <div style={{ marginBottom: '14px' }} data-error={errors[key] ? 'true' : undefined}>
       <label style={labelStyle}>{label}</label>
       <select value={formData[key]} onChange={e => updateField(key, e.target.value)} style={selectStyle}>
         <option value="">{placeholder}</option>
@@ -284,7 +288,7 @@ const ApplyVendor: React.FC = () => {
   );
 
   const renderFileInput = (key: string, label: string, hint?: string) => (
-    <div data-error={!!errors[key] ? 'true' : undefined}>
+    <div data-error={errors[key] ? 'true' : undefined}>
       <label style={labelStyle}>{label}</label>
       {hint && <p className="text-xs text-[var(--ion-text-color-secondary)] mb-2">{hint}</p>}
       {files[key] ? (

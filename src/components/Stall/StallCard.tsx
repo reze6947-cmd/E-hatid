@@ -1,8 +1,9 @@
 // src/components/Stall/StallCard.tsx
 import React from 'react';
-import { IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonBadge, IonIcon } from '@ionic/react';
+import { IonIcon } from '@ionic/react';
 import { star, timeOutline, bicycleOutline } from 'ionicons/icons';
 import { Stall } from '../../types';
+import OptimizedImage from '../OptimizedImage';
 
 interface StallCardProps {
   stall: Stall;
@@ -16,10 +17,13 @@ const StallCard: React.FC<StallCardProps> = ({ stall, onClick }) => {
       onClick={onClick}
     >
       <div className="relative w-full aspect-[4/3] overflow-hidden">
-        <img
+        <OptimizedImage
           src={stall.image}
           alt={stall.name}
+          width={480}
+          height={360}
           className="w-full h-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />
         <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex items-center gap-1 bg-white/90 text-gray-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
           <IonIcon icon={star} className="text-amber-500 text-xs" />

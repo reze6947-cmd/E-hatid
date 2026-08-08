@@ -66,14 +66,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         <Redirect to="/login" />
       ) : requiredRole && (
         Array.isArray(requiredRole)
-          ? !requiredRole.some(r => roles.includes(r as any)) || (roles.length > 1 && (!activeRole || !requiredRole.includes(activeRole as any)))
-          : !roles.includes(requiredRole as any) || (roles.length > 1 && activeRole !== requiredRole)
+          ? !requiredRole.some(r => roles.includes(r))
+          : !roles.includes(requiredRole)
       ) ? (
         <Redirect to={homePath} />
       ) : !requireAuth && user && !(requiredRole && (
         Array.isArray(requiredRole)
-          ? requiredRole.some(r => roles.includes(r as any))
-          : roles.includes(requiredRole as any)
+          ? requiredRole.some(r => roles.includes(r))
+          : roles.includes(requiredRole)
       )) ? (
         <Redirect to={homePath} />
       ) : (
