@@ -52,6 +52,15 @@ E-Hatid is a food-and-rides delivery app where you can switch between being a **
 
 **Backward compat:** `OptimizedImage` passes `src` straight through, so already-stored base64 images still render until the admin runs the migration.
 
+### Rules & Indexes Audit (paste into Firebase manually)
+- `firestore.rules` audited against real client/function usage:
+  - **Fixed a gap:** `Rider/Delivery.tsx` used to read the customer's `users/{uid}` doc, which the (correct) owner-or-admin read rule blocks. It now renders `order.customerName` / `order.customerPhone` / `order.deliveryAddress` (already snapshot onto the order at creation in `customer/Cart.tsx`) — no cross-user read.
+  - **Tightened `applications` read** → owner-or-admin (was any authenticated user, exposing other applicants' data). No client reads applications directly today.
+  - **Tightened `notifications` create** → only notifications addressed to yourself (was open spam vector; Firestore notifications are unused by the client — in-memory `NotificationService` is used).
+- `storage.rules` — Phase 4 admin overrides (`isAdmin()` via Firestore lookup) on `/avatars` + `/stalls`.
+- `firestore.indexes.json` — required composite indexes are the four `otp_requests` ones used by Cloud Functions. Others (orders/stalls/reviews/notifications/messages) are optional future-proofing; the app sorts client-side.
+- Firebase Console has no paste for indexes JSON — create them by hand (list is in `toupdate.md` §E).
+
 ### Blog & Help Content (SEO pillar pages)
 - `src/config/faq.ts` — shared FAQ list (imported by Landing, Help page, FAQ JSON-LD).
 - `src/content/blogPosts.ts` — 3 posts ("How much does delivery cost in the Philippines?", "How to start a food stall online", "How to become a delivery rider").

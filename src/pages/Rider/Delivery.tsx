@@ -13,11 +13,10 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useAuth } from '../../context/AuthContext';
 import { subscribeRiderLocation } from '../../services/riderLocationService';
-import { getUserDocument } from '../../services/userService';
 import { fetchStallById } from '../../services/stallService';
 import { updateOrderStatus } from '../../services/orderService';
 import { openGoogleMapsDirections } from '../../utils/geocode';
-import type { Order, User, Stall, RiderLocation } from '../../types';
+import type { Order, Stall, RiderLocation } from '../../types';
 import LeafletMap, { type LeafletMapHandle } from '../../components/Map/LeafletMap';
 import OptimizedImage from '../../components/OptimizedImage';
 import { markerIcon, stallMarkerIcon, riderMarkerIcon } from '../../components/Map/mapIcons';
@@ -28,7 +27,6 @@ const RiderDelivery: React.FC = () => {
   useAuth();
   const initialOrder = history.location.state?.order;
   const [order, setOrder] = useState<Order | null>(initialOrder || null);
-  const [customerUser, setCustomerUser] = useState<User | null>(null);
   const [stall, setStall] = useState<Stall | null>(null);
   const [, setLoading] = useState(true);
   const [riderLocation, setRiderLocation] = useState<RiderLocation | null>(null);
@@ -94,13 +92,6 @@ const RiderDelivery: React.FC = () => {
   useEffect(() => {
     if (!order) return;
     const tasks: Promise<void>[] = [];
-    if (order.userId) {
-      tasks.push(
-        getUserDocument(order.userId).then(u => {
-          if (mountedRef.current) setCustomerUser(u);
-        })
-      );
-    }
     if (order.stallId) {
       tasks.push(
         fetchStallById(order.stallId).then(s => {
@@ -109,7 +100,7 @@ const RiderDelivery: React.FC = () => {
       );
     }
     Promise.all(tasks).catch(() => {});
-  }, [order?.userId, order?.stallId]);
+  }, [order?.stallId]);
 
   // Subscribe to own rider location
   useEffect(() => {
@@ -368,7 +359,7 @@ const RiderDelivery: React.FC = () => {
         )}
 
         {/* Customer Info */}
-        {customerUser && (
+        {order && (order.customerName || order.customerPhone || order.deliveryAddress) && (
           <div className="bg-[var(--ion-card-background)] rounded-2xl border border-[var(--ion-border-color)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <IonIcon icon={personOutline} className="text-[var(--ion-color-primary)] text-lg" />
@@ -379,11 +370,11 @@ const RiderDelivery: React.FC = () => {
                 <IonIcon icon={personOutline} className="text-xl text-[var(--ion-color-primary)]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)]">{customerUser.name}</p>
-                {customerUser.phone && (
+                <p className="m-0 text-sm font-semibold text-[var(--ion-text-color)]">{order.customerName || 'Customer'}</p>
+                {order.customerPhone && (
                   <p className="m-0 mt-0.5 text-xs text-[var(--ion-text-color-secondary)]">
                     <IonIcon icon={callOutline} className="align-middle mr-1" />
-                    {customerUser.phone}
+                    {order.customerPhone}
                   </p>
                 )}
                 {order.deliveryAddress && (

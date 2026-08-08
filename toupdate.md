@@ -72,10 +72,27 @@ after launching. The app code has placeholders pointing at `https://ehatid.verce
 - [ ] In Firebase Console, confirm the enabled sign-in methods / APIs the app uses
       (email + password, OTP via Cloud Functions, Firestore, Storage) for the
       production Firebase project.
-- [ ] **Publish the updated `storage.rules`** to the production Firebase project
-      (Rules → Storage → firebase storage rules → Publish). The new `isAdmin()`
-      override is required for the image migration button to write to vendors'
-      stall/avatar paths.
+
+### Publish rules & indexes (Firebase Console → Rules)
+
+- [ ] **Firestore → Rules**: paste the contents of **`firestore.rules`** and Publish.
+      Keep `admin@ehatid.com` (or change it in both the rules AND `.env`).
+- [ ] **Storage → Rules**: paste the contents of **`storage.rules`** and Publish.
+      The `isAdmin()` override is required for the image migration button to write
+      to vendors' stall/avatar paths.
+- [ ] **Firestore → Indexes**: create the composite indexes listed in
+      **`firestore.indexes.json`** (there is no paste-into-console for indexes JSON —
+      create them by hand). The ones actually required by the code are on
+      `otp_requests`:
+      1. `userId ASC` + `createdAt DESC`
+      2. `userId ASC` + `isUsed ASC` + `createdAt DESC`
+      3. `email ASC` + `createdAt ASC`
+      4. `ipAddress ASC` + `createdAt ASC`
+      The `orders`, `stalls`, `reviews`, `notifications`, and `messages` indexes in
+      the file are optional/future-proofing — the app sorts client-side today.
+
+### After rules are live
+
 - [ ] **Run the image migration once**, in production, after deploying: Admin →
       Admin Dashboard → "Migrate Legacy Images" → **Run Migration**. This moves
       existing base64 photos out of Firestore into Storage (idempotent — safe to

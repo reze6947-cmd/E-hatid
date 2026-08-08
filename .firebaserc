@@ -1,7 +1,8 @@
 {
   "projects": {
     "ridingap": "ridingapp-c7874",
-    "ridingapp": "ridingapp-c7874"
+    "ridingapp": "ridingapp-c7874",
+    "default": "ridingapp-c7874"
   },
   "targets": {},
   "etags": {}
