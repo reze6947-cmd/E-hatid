@@ -52,7 +52,7 @@ service cloud.firestore {
     // Allowed write fields for users updating their own profile
     // ============================================================
     function allowedUserFields() {
-      return ['name', 'phone', 'age', 'avatar', 'address', 'password',
+      return ['name', 'phone', 'age', 'birthDate', 'avatar', 'address', 'password',
               'latitude', 'longitude',
               'vehicle', 'licensePlate', 'licenseNumber',
               'bankAccount', 'bankName', 'riderAvailable',

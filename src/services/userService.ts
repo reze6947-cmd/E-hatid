@@ -21,6 +21,7 @@ export const createUserDocument = async (uid: string, data: Partial<User>) => {
     email: data.email || '',
     phone: data.phone || '',
     age: typeof data.age === 'number' ? data.age : 0,
+    birthDate: data.birthDate || '',
     address: data.address || '',
     role,
     roles: data.roles || [role],
